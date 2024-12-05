@@ -1,0 +1,216 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Resource Files\shader">
+      <UniqueIdentifier>{b55c8079-4ac1-4020-9873-1e6a3b8a73e1}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="glad.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="object.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="camera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="initBuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="initMaze.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="texture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="stb.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="frameBuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Light.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PlayerClass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MovableStateClass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="initBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="initMaze.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="object.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="texture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="frameBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Light.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayerClass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MovableStateClass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\def.vert">
+      <Filter>Resource Files\shader</Filter>
+    </None>
+    <None Include="shaders\def.frag">
+      <Filter>Resource Files\shader</Filter>
+    </None>
+    <None Include="shaders\cam.frag">
+      <Filter>Resource Files\shader</Filter>
+    </None>
+    <None Include="shaders\cam.vert">
+      <Filter>Resource Files\shader</Filter>
+    </None>
+    <None Include="shaders\light.frag">
+      <Filter>Resource Files\shader</Filter>
+    </None>
+    <None Include="shaders\shadow.frag">
+      <Filter>Resource Files\shader</Filter>
+    </None>
+    <None Include="shaders\shadow.vert" />
+    <None Include="shaders\shadow.geom" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="img\214-normal.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="img\abcde.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="img\brick.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="img\CharIdle.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="img\CharIdleNorm.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="img\charRun.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="img\charRunNorm.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="img\CharTipToe.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="img\CharTipToeNorm.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="img\charWalk.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="img\charWalkNorm.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="img\cubeBedTexture.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="img\cubeTableTexture.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="img\MapOverlay.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="img\marble star.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="img\scary.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="img\skin.jpeg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="img\SpriteNorm-0000.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="img\why-so-serious.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="img\playerAni\crouch0001-Sheet.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="img\playerAni\crouchNormal0001-Sheet.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="img\playerAni\crouchWalk0001-Sheet.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="img\playerAni\crouchWalkNormal0001-Sheet.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="img\playerAni\dive0001-Sheet.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="img\playerAni\diveNormal0001-Sheet.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="img\playerAni\idle0001-Sheet.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="img\playerAni\idleNormal0001-Sheet.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="img\playerAni\roll0001-Sheet.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="img\playerAni\rollNormal0001-Sheet.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="img\playerAni\run0001-Sheet.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="img\playerAni\runNormal0001-Sheet.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="img\playerAni\walk0001-Sheet.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="img\playerAni\walkNormal0001-Sheet.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+</Project>
