@@ -76,8 +76,11 @@ int main()
      // Generate a random float
      cout << Rand(gen) << endl;
 
-      for (int index = 0; index < pow(mz.count, 2.0f)/10.0f; index++) ligh.push_back(Light(vec3(((int)(mz.count * Rand(gen)) + ((Rand(gen) - 0.5f) * (0.8f - mz.thk))) * mz.size, 0.3f, ((int)(mz.count * Rand(gen)) + ((Rand(gen) - 0.5f) * (0.8f - mz.thk))) * mz.size)));
-    
+      for (int index = 0; index < pow(mz.count, 2.0f); index++) 
+      {
+        if(Rand(gen)<0.5f)  ligh.push_back(Light(vec3((index%mz.count) * mz.size, 0.3f,(index/mz.count) * mz.size)));
+
+      }
       player = PlayerClass(vec3(0.0f, 0.0f, 0.5f), vec3(0.0f, -3.1415 / 2.0f, 0.0f));
      createShadowFramebufferCube shBF = createShadowFramebufferCube(500);
     // uncomment this call to draw in wireframe polygons.
@@ -192,13 +195,16 @@ int main()
             glUniform3f(glGetUniformLocation(shaderLightProgram, "color"), ligh[t].col.x, ligh[t].col.y, ligh[t].col.z);
             ligh[t].obj.draw(shaderLightProgram);
         }
-        glBindFramebuffer(GL_FRAMEBUFFER,0);
 
-        glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
-        
 
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glEnable(GL_DEPTH_TEST); // Enable depth testing
+
+
+
+
+
+
+        cam.FB.bind(true);
+
         glEnable(GL_BLEND); // Enable depth testing
         glDepthFunc(GL_LEQUAL); // Near things obscure far things
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -206,10 +212,6 @@ int main()
         glBlendFunc(GL_ONE, GL_ONE);
         glEnable(GL_CULL_FACE);
         glCullFace(GL_FRONT);
-        // Clear the canvas before we start drawing on it.
-
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
-
 
         glUseProgram(cam.shader);
         glUniform3f(glGetUniformLocation(cam.shader, "camPos"), cam.pos.x, cam.pos.y, cam.pos.z);
@@ -225,19 +227,43 @@ int main()
         for (int t = 0; t < ligh.size(); t++) {
 
             glActiveTexture(GL_TEXTURE4);
-            if (length(ligh[t].pos - cam.pos) < 6.5f)
+           // if (length(ligh[t].pos - cam.pos) < 6.5f)
             {
-            glBindTexture(GL_TEXTURE_CUBE_MAP, ligh[t].depthTex);
+                glBindTexture(GL_TEXTURE_CUBE_MAP, ligh[t].depthTex);
 
 
-            glUniform3f(glGetUniformLocation(cam.shader, "lightPos"), ligh[t].pos.x, ligh[t].pos.y, ligh[t].pos.z);
-            
+                glUniform3f(glGetUniformLocation(cam.shader, "lightPos"), ligh[t].pos.x, ligh[t].pos.y, ligh[t].pos.z);
+
                 cam.draw();
             }
         }
         glUniform1i(glGetUniformLocation(cam.shader, "light"), 1);
-        
         cam.draw();
+
+
+
+
+
+
+        glBindFramebuffer(GL_FRAMEBUFFER,0);
+
+        glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+        
+
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glEnable(GL_DEPTH_TEST); // Enable depth testing
+        
+        // Clear the canvas before we start drawing on it.
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
+
+
+
+        glUseProgram(cam.ScreenShader);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, cam.FB.ColTex);
+        cam.drawScreen();
+
 
 
         // draw our first triangle
@@ -291,7 +317,7 @@ void processInput(GLFWwindow* window)
     }
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
     {
-        cam.pos.y += -0.01f;
+        player.inp->acc.y += 0.5f;
     }
     if (!firstClicke && glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
     {

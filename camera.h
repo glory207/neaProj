@@ -16,9 +16,12 @@ public:
     camera(glm::vec3 pos, glm::vec3 rot);
     camera();
     void draw();
+    void drawScreen();
     std::vector<glm::mat4> matrix(float aspect);
     GframeBuffer GFB;
+    FrameBuffer FB;
     GLuint shader;
+    GLuint ScreenShader;
     GLuint VAO;
 };
 

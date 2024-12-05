@@ -51,6 +51,7 @@
     <None Include="shaders\def.frag" />
     <None Include="shaders\def.vert" />
     <None Include="shaders\light.frag" />
+    <None Include="shaders\screen.frag" />
     <None Include="shaders\shadow.frag" />
     <None Include="shaders\shadow.geom" />
     <None Include="shaders\shadow.vert" />

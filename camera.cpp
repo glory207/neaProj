@@ -3,8 +3,8 @@ camera::camera(){}
 camera::camera(glm::vec3 pos, glm::vec3 rot){
     this->pos = pos;
     this->rot = rot;
-    GFB = GframeBuffer(glm::vec2(1024));
-
+    GFB = GframeBuffer(glm::vec2(500));
+    FB = FrameBuffer(glm::vec2(500));
     std::vector<float> vertPos = { 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0 };
     std::vector<int> indices = { 2, 1, 0, 3, 2, 0 };
     GLuint BP,BI;
@@ -27,6 +27,7 @@ camera::camera(glm::vec3 pos, glm::vec3 rot){
     glBindVertexArray(0); 
 
     shader = initShader("shaders/cam.vert", "shaders/cam.frag");
+    ScreenShader = initShader("shaders/cam.vert", "shaders/screen.frag");
 }
 void camera::draw() {
     glUniform1i(glGetUniformLocation(shader, "ColT"), 0);
@@ -34,6 +35,12 @@ void camera::draw() {
     glUniform1i(glGetUniformLocation(shader, "NormT"), 2);
     glUniform1i(glGetUniformLocation(shader, "NormFT"), 3);
     glUniform1i(glGetUniformLocation(shader, "uSamplerS"), 4);
+
+    glBindVertexArray(VAO);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+}
+void camera::drawScreen() {
+    glUniform1i(glGetUniformLocation(ScreenShader, "ColT"), 0);
 
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);

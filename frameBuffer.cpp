@@ -58,7 +58,6 @@ GframeBuffer::GframeBuffer(glm::vec2 sz) {
 GframeBuffer::GframeBuffer() {
 
 }
-
 void GframeBuffer::bind(bool clear) {
 	glViewport(0, 0, size.x, size.y);
 
@@ -77,6 +76,9 @@ void GframeBuffer::bind(bool clear) {
 	if (clear) glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 }
+
+
+
 
 createShadowFramebufferCube::createShadowFramebufferCube() {}
 createShadowFramebufferCube::createShadowFramebufferCube(float sz) {
@@ -176,3 +178,54 @@ void createShadowFramebufferCube::bind(bool clear,int i, GLuint depthTex) {
 
 	if (clear) glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
+
+
+
+FrameBuffer::FrameBuffer(glm::vec2 sz) {
+	size = sz;
+	glGenTextures(1, &ColTex);
+	glGenFramebuffers(1, &FB);
+	GLuint RB;
+	glGenRenderbuffers(1, &RB);
+
+	//Col
+	glBindTexture(GL_TEXTURE_2D, ColTex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, FB);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ColTex, 0);
+
+
+	glBindRenderbuffer(GL_RENDERBUFFER, RB);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, size.x, size.y);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RB);
+
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+FrameBuffer::FrameBuffer() {
+
+}
+void FrameBuffer::bind(bool clear) {
+	glViewport(0, 0, size.x, size.y);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, FB);
+	glClearColor(0.0, 0.0, 0.0, 0.0); // Clear to black, fully opaque
+	glClearDepth(1.0); // Clear everything
+	glEnable(GL_DEPTH_TEST); // Enable depth testing
+	glEnable(GL_BLEND); // Enable depth testing
+	glDepthFunc(GL_LEQUAL); // Near things obscure far things
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//   GL_enable(GL_CULL_FACE);
+	glCullFace(GL_FRONT);
+	// Clear the canvas before we start drawing on it.
+
+
+	if (clear) glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+}
+

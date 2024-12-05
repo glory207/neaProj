@@ -1,8 +1,8 @@
 #include "initMaze.h"
 Maze::Maze(){
-    size = 1.2f;
+    size = 2.0f;
     thk = 0.4f;
-    count = 50;
+    count = 20;
     for (int i = 0; i < count * count; i++)
     {
         nodes.push_back(*new Cell(i, count,thk));

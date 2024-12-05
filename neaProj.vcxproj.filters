@@ -111,6 +111,7 @@
     </None>
     <None Include="shaders\shadow.vert" />
     <None Include="shaders\shadow.geom" />
+    <None Include="shaders\screen.frag" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="img\214-normal.jpg">

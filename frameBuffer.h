@@ -17,6 +17,17 @@ public:
 	GframeBuffer();
 };
 
+class FrameBuffer
+{
+public:
+	GLuint ColTex;
+	GLuint FB;
+	glm::vec2 size;
+	void bind(bool clear);
+	FrameBuffer(glm::vec2 sz);
+	FrameBuffer();
+};
+
 class createShadowFramebufferCube {
 
 public:
