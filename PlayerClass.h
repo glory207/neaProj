@@ -57,7 +57,7 @@ public:
 
     InputObject* inp;
     StateClass* cur;
-    virtual void Enter() = 0;
+    virtual int Enter() = 0;
     virtual int update(float deltaTime) = 0;
     virtual void Exit() = 0;
 

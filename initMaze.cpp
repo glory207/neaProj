@@ -2,7 +2,7 @@
 Maze::Maze(){
     size = 1.2f;
     thk = 0.4f;
-    count = 20;
+    count = 50;
     for (int i = 0; i < count * count; i++)
     {
         nodes.push_back(*new Cell(i, count,thk));
@@ -290,8 +290,8 @@ void Cell::conect(Cell* sender){
         std::vector<Cell*>::iterator it = std::find(Conectablednodes.begin(), Conectablednodes.end(), sender);
         if (it != Conectablednodes.end())
         {
-            Conectednodes.push_back(sender);
             Conectablednodes.erase(it);
+            Conectednodes.push_back(sender);
         }
     }
       
@@ -317,6 +317,7 @@ void Cell::conect(Cell* sender){
               Conectednodes.push_back(Conectablednodes[rnd]);
               (*Conectablednodes[rnd]).conect(this);
             }
+            //else if(asd)
             else if(asd || rand() % 10 == 1)
             {
               Conectednodes.push_back(Conectablednodes[rnd]);

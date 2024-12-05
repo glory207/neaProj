@@ -8,6 +8,7 @@
 #include "PlayerClass.h"
 #include "Light.h"
 #include<glm/gtc/matrix_transform.hpp>
+#include<gl/GL.h>
 #include <random>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -173,7 +174,7 @@ int main()
                 // cout << ligh[t].pos.x << endl;
             }
         }
-        cout << nb << endl;
+
 
         //glViewport(0, 0, 1024, 1024);
 
@@ -220,15 +221,19 @@ int main()
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, cam.GFB.NomTex);
         glActiveTexture(GL_TEXTURE3);
-            glActiveTexture(GL_TEXTURE4);
         glBindTexture(GL_TEXTURE_2D, cam.GFB.NomFTex);
         for (int t = 0; t < ligh.size(); t++) {
+
+            glActiveTexture(GL_TEXTURE4);
+            if (length(ligh[t].pos - cam.pos) < 6.5f)
+            {
             glBindTexture(GL_TEXTURE_CUBE_MAP, ligh[t].depthTex);
 
 
             glUniform3f(glGetUniformLocation(cam.shader, "lightPos"), ligh[t].pos.x, ligh[t].pos.y, ligh[t].pos.z);
-            if (length(ligh[t].pos - cam.pos) < 2.5f) 
+            
                 cam.draw();
+            }
         }
         glUniform1i(glGetUniformLocation(cam.shader, "light"), 1);
         

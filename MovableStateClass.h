@@ -10,7 +10,7 @@ public:
     virtual ~MovableState() {}
     MovableState(InputObject* inp, StateClass* sender);
 
-    virtual void Enter();
+    virtual int Enter();
     virtual int update(float deltaTime);
     virtual void Exit();
 };
@@ -25,7 +25,7 @@ public:
     virtual ~IdleState() {}
     IdleState(InputObject* inp, MovableState* sender);
 
-    virtual void Enter();
+    virtual int Enter();
     virtual int update(float deltaTime);
     virtual void Exit();
 };
@@ -37,7 +37,7 @@ public:
     virtual ~IdleStoodState() {}
     IdleStoodState(InputObject* inp, IdleState* sender);
 
-    virtual void Enter();
+    virtual int Enter();
     virtual int update(float deltaTime);
     virtual void Exit();
 };
@@ -48,7 +48,7 @@ public:
     virtual ~IdleCrouchState() {}
     IdleCrouchState(InputObject* inp, IdleState* sender);
 
-    virtual void Enter();
+    virtual int Enter();
     virtual int update(float deltaTime);
     virtual void Exit();
 };
@@ -63,7 +63,7 @@ public:
     virtual ~MotionState() {}
     MotionState(InputObject* inp, MovableState* sender);
 
-    virtual void Enter();
+    virtual int Enter();
     virtual int update(float deltaTime);
     virtual void Exit();
 };
@@ -76,7 +76,7 @@ public:
     virtual ~WalkState() {}
     WalkState(InputObject* inp, MotionState* sender);
 
-    virtual void Enter();
+    virtual int Enter();
     virtual int update(float deltaTime);
     virtual void Exit();
 };
@@ -88,7 +88,7 @@ public:
     virtual ~RunState() {}
     RunState(InputObject* inp, MotionState* sender);
 
-    virtual void Enter();
+    virtual int Enter();
     virtual int update(float deltaTime);
     virtual void Exit();
 };
@@ -100,7 +100,7 @@ public:
     virtual ~CrawlState() {}
     CrawlState(InputObject* inp, MotionState* sender);
 
-    virtual void Enter();
+    virtual int Enter();
     virtual int update(float deltaTime);
     virtual void Exit();
 };
@@ -124,7 +124,7 @@ public:
     virtual ~InAirState() {}
     InAirState(InputObject* inp, MovableState* sender);
 
-    virtual void Enter();
+    virtual int Enter();
     virtual int update(float deltaTime);
     virtual void Exit();
 };
@@ -136,7 +136,7 @@ public:
     virtual ~DiveState() {}
     DiveState(InputObject* inp, InAirState* sender);
 
-    virtual void Enter();
+    virtual int Enter();
     virtual int update(float deltaTime);
     virtual void Exit();
 };
@@ -148,7 +148,7 @@ public:
     virtual ~RollState() {}
     RollState(InputObject* inp, InAirState* sender);
 
-    virtual void Enter();
+    virtual int Enter();
     virtual int update(float deltaTime);
     virtual void Exit();
 };
@@ -160,7 +160,7 @@ public:
     virtual ~FallingState() {}
     FallingState(InputObject* inp, InAirState* sender);
 
-    virtual void Enter();
+    virtual int Enter();
     virtual int update(float deltaTime);
     virtual void Exit();
 };
