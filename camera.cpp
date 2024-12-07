@@ -3,8 +3,8 @@ camera::camera(){}
 camera::camera(glm::vec3 pos, glm::vec3 rot){
     this->pos = pos;
     this->rot = rot;
-    GFB = GframeBuffer(glm::vec2(500));
-    FB = FrameBuffer(glm::vec2(500));
+    GFB = GframeBuffer(glm::vec2(1024));
+    FB = FrameBuffer(glm::vec2(1024));
     std::vector<float> vertPos = { 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0 };
     std::vector<int> indices = { 2, 1, 0, 3, 2, 0 };
     GLuint BP,BI;

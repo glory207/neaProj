@@ -8,6 +8,7 @@ class Light
 public:
 	Light();
 	GLuint depthTex;
+	GLuint64 handle;
 	Light(glm::vec3 pos);
 	void update(float deltaTime);
 	glm::vec3 acc;

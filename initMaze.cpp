@@ -1,6 +1,6 @@
 #include "initMaze.h"
 Maze::Maze(){
-    size = 2.0f;
+    size = 3.0f;
     thk = 0.4f;
     count = 20;
     for (int i = 0; i < count * count; i++)
@@ -44,7 +44,7 @@ Maze::Maze(){
     
     buffers = initBuffers(lst1);
     obj = SpObj(glm::vec3(0), glm::vec3(0), glm::vec3(size),buffers,0,5);
-    obj.textOff = glm::vec4(0.0f,0.0f, size * 1.5f, size * 1.5f);
+    obj.textOff = glm::vec4(0.0f,0.0f, size * 2.2f, size * 2.2f);
 }
 std::vector<glm::vec2> Maze::makeLines(int tp,int  sd,int  p0,int  p1,int  p2,int  p3,bool  swch,float thin){
       std::vector<glm::vec2> lst;

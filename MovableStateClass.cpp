@@ -10,12 +10,12 @@ MovableState::MovableState(InputObject* inp, StateClass* sender) {
 }
 int MovableState::Enter() {
 	
-	cout << "MovableState" << endl;
+	//cout << "MovableState" << endl;
 	cur->Enter();
 	return 0;
 }
 int MovableState::update(float deltaTime) {
-	//cout << (*inp).inp.x << " " << inp->inp.y << endl;
+	////cout << (*inp).inp.x << " " << inp->inp.y << endl;
 	if (!inp->Grounded && cur != inAir)
 	{
 		cur = inAir;
@@ -50,7 +50,7 @@ IdleState::IdleState(InputObject* inp, MovableState* sender) {
 	cur = stood;
 }
 int IdleState::Enter() {
-	cout << "IdleState" << endl;
+	//cout << "IdleState" << endl;
 	if (inp->SP) {
 		cur = crouched;
 	}
@@ -76,7 +76,7 @@ IdleStoodState::IdleStoodState(InputObject* inp, IdleState* sender) {
 	this->inp = inp;
 }
 int IdleStoodState::Enter() {
-	cout << "IdleStoodState" << endl;
+	//cout << "IdleStoodState" << endl;
 
 	inp->animation[0] = 2;
 	inp->animation[1] = 7;
@@ -99,7 +99,7 @@ IdleCrouchState::IdleCrouchState(InputObject* inp, IdleState* sender) {
 	this->inp = inp;
 }
 int IdleCrouchState::Enter() {
-	cout << "IdleCrouchState" << endl;
+	//cout << "IdleCrouchState" << endl;
 
 	inp->animation[0] = 17;
 	inp->animation[1] = 18;
@@ -131,7 +131,7 @@ MotionState::MotionState(InputObject* inp, MovableState* sender) {
 	cur = walk;
 }
 int MotionState::Enter() {
-	cout << "MotionState" << endl;
+	//cout << "MotionState" << endl;
 	if (length(inp->inp) < 0.05f) {
 		sender->cur = sender->idle;
 		sender->cur->Enter(); return 0;
@@ -162,7 +162,7 @@ WalkState::WalkState(InputObject* inp, MotionState* sender) {
 }
 int WalkState::Enter() {
 
-	cout << "WalkState" << endl;
+	//cout << "WalkState" << endl;
 	if (inp->SP) {
 		sender->cur = sender->crawl;
 		sender->cur->Enter(); return 0;
@@ -198,7 +198,7 @@ RunState::RunState(InputObject* inp, MotionState* sender) {
 }
 int RunState::Enter() {
 
-	cout << "RunState" << endl;
+	//cout << "RunState" << endl;
 	if (!inp->SH) {
 		sender->cur = sender->walk;
 		sender->cur->Enter(); return 0;
@@ -238,7 +238,7 @@ CrawlState::CrawlState(InputObject* inp, MotionState* sender) {
 }
 int CrawlState::Enter() {
 
-	cout << "CrawlState" << endl;
+	//cout << "CrawlState" << endl;
 	if (!inp->SP) {
 		sender->cur = sender->walk;
 		sender->cur->Enter(); return 0;
@@ -284,7 +284,7 @@ InAirState::InAirState(InputObject* inp, MovableState* sender) {
 	cur = fall;
 }
 int InAirState::Enter() {
-	cout << "InAirState" << endl;
+	//cout << "InAirState" << endl;
 
 	inp->resistance = vec3(1,1,1);
 	if (inp->SH && inp->SP) {
@@ -320,7 +320,7 @@ DiveState::DiveState(InputObject* inp, InAirState* sender) {
 }
 int DiveState::Enter() {
 
-	cout << "DiveState" << endl;
+	//cout << "DiveState" << endl;
 
 	inp->animation[0] = 21;
 	inp->animation[1] = 22;
@@ -352,7 +352,7 @@ RollState::RollState(InputObject* inp, InAirState* sender) {
 }
 int RollState::Enter() {
 
-	cout << "RollState" << endl;
+	//cout << "RollState" << endl;
 	inp->acc.y = -0.1f;
 	if (length(inp->acc) < 0.5f)
 	{
@@ -393,7 +393,7 @@ FallingState::FallingState(InputObject* inp, InAirState* sender) {
 }
 int FallingState::Enter() {
 
-	cout << "FallingState" << endl;
+	//cout << "FallingState" << endl;
 
 	return 0;
 }

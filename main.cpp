@@ -22,6 +22,7 @@ void processInput(GLFWwindow* window);
  PlayerClass player;
 bool firstClick = false;
 bool firstClicke = false;
+int adee = 1;
 
 int main()
 {
@@ -74,15 +75,44 @@ int main()
      std::uniform_real_distribution<float> Rand(0.0f, 1.0f); // Range [0, 1]
 
      // Generate a random float
-     cout << Rand(gen) << endl;
-
-      for (int index = 0; index < pow(mz.count, 2.0f); index++) 
-      {
-        if(Rand(gen)<0.5f)  ligh.push_back(Light(vec3((index%mz.count) * mz.size, 0.3f,(index/mz.count) * mz.size)));
-
-      }
-      player = PlayerClass(vec3(0.0f, 0.0f, 0.5f), vec3(0.0f, -3.1415 / 2.0f, 0.0f));
+     //cout << Rand(gen) << endl;
      createShadowFramebufferCube shBF = createShadowFramebufferCube(500);
+
+     player = PlayerClass(vec3(0.0f, 0.0f, 0.5f), vec3(0.0f, -3.1415 / 2.0f, 0.0f));
+
+     glDisable(GL_BLEND);
+     glDisable(GL_CULL_FACE);
+
+     glViewport(0, 0, 500, 500);
+
+     // for (int t = 0; t < pow(mz.count, 2.0f); t++)
+      for (int t = 0; t < 2; t++)
+      {
+          ligh.push_back(Light(vec3((t%mz.count) * mz.size, 0.3f,(t/mz.count) * mz.size)));
+
+          shBF.bind(true, 0, ligh[t].depthTex);
+          glUseProgram(shaderShadowProgram);
+          for (int i = 0; i < 6; i++)
+          {
+              float fov = (0.5f * 3.14159265358979323846f);
+              float zNear = 0.01f;
+              float zFar = 100.0f;
+              glm::mat4 projectionMatrix;
+              glm::mat4 view;
+              glm::mat4 rotationMatrix;
+              projectionMatrix = glm::perspective(fov, 1.0f, zNear, zFar);
+              view = glm::lookAt(ligh[t].obj.pos, ligh[t].pos + shBF.target[i], shBF.up[i]);
+              rotationMatrix = view;
+              view = projectionMatrix * view;
+              std::string ii = "uProjectionMatrix[" + std::to_string(i) + "]";
+              glUniformMatrix4fv(glGetUniformLocation(shaderShadowProgram, ii.c_str()), 1, GL_FALSE, glm::value_ptr(view));
+          }
+          glUniform3f(glGetUniformLocation(shaderShadowProgram, "lpos"), ligh[t].pos.x, ligh[t].pos.y, ligh[t].pos.z);
+          mz.obj.draw(shaderShadowProgram);
+          player.draw(0, shaderShadowProgram);
+      }
+
+
     // uncomment this call to draw in wireframe polygons.
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -138,10 +168,12 @@ int main()
         if(deltaTime < 1.0f){
         processInput(window);
         for (int t = 0; t < ligh.size(); t++) {
-            mz.collide(&ligh[t].pos, &ligh[t].acc, vec2(0.04f));
+            mz.collide(&ligh[t].pos, &ligh[t].acc, vec2(0.075f));
             ligh[t].update(deltaTime);
         }
-        player.inp->Grounded = mz.collide(&player.inp->pos, nullptr, vec2(0.05f, 0.0f));
+        float ty = player.inp->acc.y;
+        player.inp->Grounded = mz.collide(&player.inp->pos, &player.inp->acc, vec2(0.05f, 0.0f));
+        player.inp->acc.y = ty;
         player.update(deltaTime);
         }
         // render
@@ -152,7 +184,9 @@ int main()
         glViewport(0, 0, 500,500);
         int nb = 0;
         for (int t = 0; t < ligh.size(); t++) {
-            if (length(ligh[t].pos - cam.pos) < 2.5f) {
+           
+            if (length(ligh[t].pos - cam.pos) < 7.0f) {
+               // glMakeTextureHandleResidentARB(ligh[t].handle);
                 nb++;
                 shBF.bind(true, 0, ligh[t].depthTex);
                 glUseProgram(shaderShadowProgram);
@@ -175,7 +209,10 @@ int main()
                 mz.obj.draw(shaderShadowProgram);
                 player.draw(curTime, shaderShadowProgram);
                 // cout << ligh[t].pos.x << endl;
+               // glMakeTextureHandleNonResidentARB(ligh[t].handle);
             }
+           
+
         }
 
 
@@ -193,6 +230,7 @@ int main()
         glUniformMatrix4fv(glGetUniformLocation(shaderLightProgram, "uProjectionMatrix"), 1, GL_FALSE, glm::value_ptr(ma[0]));
         for (int t = 0; t < ligh.size(); t++) {
             glUniform3f(glGetUniformLocation(shaderLightProgram, "color"), ligh[t].col.x, ligh[t].col.y, ligh[t].col.z);
+            if (length(ligh[t].pos - cam.pos) < 9.5f)
             ligh[t].obj.draw(shaderLightProgram);
         }
 
@@ -224,18 +262,43 @@ int main()
         glBindTexture(GL_TEXTURE_2D, cam.GFB.NomTex);
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_2D, cam.GFB.NomFTex);
+        int e = 0;
+        for(int i = 0; i < 11; i ++) 
+        {
+            std::string ii = "uSamplerS[" + std::to_string(i) + "]";
+            glUniformHandleui64ARB(glGetUniformLocation(cam.shader, ii.c_str()), ligh[0].handle);
+        }
         for (int t = 0; t < ligh.size(); t++) {
 
-            glActiveTexture(GL_TEXTURE4);
-           // if (length(ligh[t].pos - cam.pos) < 6.5f)
+            
+            if (length(ligh[t].pos - player.inp->pos) < 9.0f)
             {
-                glBindTexture(GL_TEXTURE_CUBE_MAP, ligh[t].depthTex);
+               // glBindTexture(GL_TEXTURE_CUBE_MAP, ligh[t].depthTex);
+                std::string ii = "uSamplerS[" + std::to_string(e) + "]";
+                glUniformHandleui64ARB(glGetUniformLocation(cam.shader, ii.c_str()), ligh[t].handle);
+                 ii = "lightPos[" + std::to_string(e) + "]";
 
+                glUniform3f(glGetUniformLocation(cam.shader, ii.c_str()), ligh[t].pos.x, ligh[t].pos.y, ligh[t].pos.z);
 
-                glUniform3f(glGetUniformLocation(cam.shader, "lightPos"), ligh[t].pos.x, ligh[t].pos.y, ligh[t].pos.z);
+                if (e == 10) {
+                    glUniform1i(glGetUniformLocation(cam.shader, "lighC"), 11);
 
-                cam.draw();
+                    cam.draw();
+                    e = 0;
+                }
+                else
+                {
+                     e++;
+                }
+               
             }
+            
+            
+        }
+        if (e > 0) {
+            glUniform1i(glGetUniformLocation(cam.shader, "lighC"), e);
+
+            cam.draw();
         }
         glUniform1i(glGetUniformLocation(cam.shader, "light"), 1);
         cam.draw();
@@ -317,7 +380,7 @@ void processInput(GLFWwindow* window)
     }
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
     {
-        player.inp->acc.y += 0.5f;
+        player.inp->acc.y += 0.2f;
     }
     if (!firstClicke && glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
     {
@@ -327,6 +390,15 @@ void processInput(GLFWwindow* window)
     else if (glfwGetKey(window, GLFW_KEY_E) != GLFW_PRESS)
     {
         firstClicke = false;
+
+    }
+    if (!firstClicke && glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
+    {
+        adee = 1;
+    }
+    else if (glfwGetKey(window, GLFW_KEY_F) != GLFW_PRESS)
+    {
+        adee = 2;
 
     }
 

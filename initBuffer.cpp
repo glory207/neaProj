@@ -229,12 +229,12 @@ BufferGroup initBuffers(std::vector<glm::vec2> pointss) {
         texturePos.push_back(0);
         texturePos.push_back(dis);
 
-     //   indices.push_back(i + 2);
-     //   indices.push_back(i + 1);
-     //   indices.push_back(i);
-     //   indices.push_back(i + 3);
-     //   indices.push_back(i + 2);
-     //   indices.push_back(i);
+         indices.push_back(i + 2);
+         indices.push_back(i + 1);
+         indices.push_back(i);
+         indices.push_back(i + 3);
+         indices.push_back(i + 2);
+         indices.push_back(i);
     }
 
     BufferGroup bg;
