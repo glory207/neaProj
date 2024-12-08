@@ -4,9 +4,6 @@
 BufferGroup initBuffers(std::vector<glm::vec2> pointss) {
     std::vector<float> positions;
     std::vector<float> texturePos;
-    std::vector<float> normals;
-    std::vector<float> tangent;
-    std::vector<float> bitangent;
     std::vector<int> indices;
     float size = 0.5f;
     for (int i = 0; i < pointss.size() - 2; i += 2) {
@@ -47,32 +44,20 @@ BufferGroup initBuffers(std::vector<glm::vec2> pointss) {
             invDet * (-UV1.x * edge0.z + UV0.x * edge1.z)
         );
         edge0 = glm::cross(edge1, edge0);
-        for (int k = 0; k < 4; k++)
-        {
-            tangent.push_back(tan.x);
-            tangent.push_back(tan.y);
-            tangent.push_back(tan.z);
-            bitangent.push_back(bitan.x);
-            bitangent.push_back(bitan.y);
-            bitangent.push_back(bitan.z);
-
-            normals.push_back(edge0.x);
-            normals.push_back(edge0.y);
-            normals.push_back(edge0.z);
-        }
+        
 
 
-
-        positions.push_back(pointss[i].x);
-        positions.push_back(0);
-        positions.push_back(pointss[i].y);
-        texturePos.push_back(0);
-        texturePos.push_back(size);
 
         positions.push_back(pointss[i + 1].x);
         positions.push_back(0);
         positions.push_back(pointss[i + 1].y);
         texturePos.push_back(dis);
+        texturePos.push_back(size);
+
+        positions.push_back(pointss[i].x);
+        positions.push_back(0);
+        positions.push_back(pointss[i].y);
+        texturePos.push_back(0);
         texturePos.push_back(size);
 
 
@@ -82,19 +67,23 @@ BufferGroup initBuffers(std::vector<glm::vec2> pointss) {
         texturePos.push_back(0);
         texturePos.push_back(0);
 
-
         positions.push_back(pointss[i + 1].x);
         positions.push_back(size);
         positions.push_back(pointss[i + 1].y);
         texturePos.push_back(dis);
         texturePos.push_back(0);
 
+
+
+
+        indices.push_back((i * 2) + 1);
         indices.push_back((i * 2));
-        indices.push_back((i * 2) + 1);
         indices.push_back((i * 2) + 2);
-        indices.push_back((i * 2) + 1);
+       
         indices.push_back((i * 2) + 3);
         indices.push_back((i * 2) + 2);
+        indices.push_back((i * 2) );
+
     }
 
     {
@@ -136,20 +125,6 @@ BufferGroup initBuffers(std::vector<glm::vec2> pointss) {
             invDet * (-UV1.y * edge0.z + UV0.x * edge1.z)
         );
 
-
-        for (int k = 0; k < 4; k++)
-        {
-            normals.push_back(0.0f);
-            normals.push_back(1.0f);
-            normals.push_back(0.0f);
-            tangent.push_back(tan.x);
-            tangent.push_back(tan.y);
-            tangent.push_back(tan.z);
-            bitangent.push_back(bitan.x);
-            bitangent.push_back(bitan.y);
-            bitangent.push_back(bitan.z);
-        }
-
         positions.push_back(pointss[pointss.size() - 1].x);
         positions.push_back(0);
         positions.push_back(pointss[pointss.size() - 1].y);
@@ -179,30 +154,16 @@ BufferGroup initBuffers(std::vector<glm::vec2> pointss) {
         indices.push_back(i);
         indices.push_back(i + 1);
         indices.push_back(i + 2);
-        indices.push_back(i);
+
         indices.push_back(i + 2);
         indices.push_back(i + 3);
+        indices.push_back(i);
 
         //
 
         i += 4;
 
 
-        for (int k = 0; k < 4; k++)
-        {
-            normals.push_back(0.0f);
-            normals.push_back(-1.0f);
-            normals.push_back(0.0f);
-            tangent.push_back(tan.x);
-            tangent.push_back(tan.y);
-            tangent.push_back(tan.z);
-            bitangent.push_back(bitan.x);
-            bitangent.push_back(bitan.y);
-            bitangent.push_back(bitan.z);
-        }
-
-
-
         positions.push_back(pointss[pointss.size() - 1].x);
         positions.push_back(size);
         positions.push_back(pointss[pointss.size() - 1].y);
@@ -229,24 +190,20 @@ BufferGroup initBuffers(std::vector<glm::vec2> pointss) {
         texturePos.push_back(0);
         texturePos.push_back(dis);
 
-         indices.push_back(i + 2);
-         indices.push_back(i + 1);
-         indices.push_back(i);
-         indices.push_back(i + 3);
-         indices.push_back(i + 2);
-         indices.push_back(i);
+      indices.push_back(i + 1);
+      indices.push_back(i);
+      indices.push_back(i + 2);
+      
+      indices.push_back(i + 3);
+      indices.push_back(i + 2);
+      indices.push_back(i);
     }
 
     BufferGroup bg;
 
 
-
     bg.positions = initB(positions);
     bg.texturePos = initB(texturePos);
-    bg.normal = initB(normals);
-    bg.bitangent = initB(bitangent);
-    bg.tangent = initB(tangent);
-    bg.bitangent = initB(bitangent);
     bg.indices = initE(indices);
     bg.length = indices.size();
     return  bg;
@@ -268,12 +225,9 @@ int initE(std::vector<int> pointss) {
 }
 
 BufferGroup::BufferGroup() {};
-BufferGroup::BufferGroup(GLuint positions, GLuint texturePos, GLuint normal, GLuint tangent, GLuint bitangent, GLuint indices, GLuint length) {
+BufferGroup::BufferGroup(GLuint positions, GLuint texturePos, GLuint indices, GLuint length) {
     this->positions = positions;
     this->texturePos = texturePos;
-    this->normal = normal;
-    this->tangent = tangent;
-    this->bitangent = bitangent;
     this->indices = indices;
     this->length = length;
 }
@@ -336,7 +290,7 @@ float textureCoordinatesCube[9][8] = {
 
 BufferGroup initCubeBuffer(std::vector<int> i) {
 
-    BufferGroup bg = BufferGroup(initPositionBuffer2(i), initTextureBuffer(i), initNormalBuffer(i), initTangentBuffer(i), initbiTangentBuffer(i), initIndexBuffer2(i), i.size() * 6);
+    BufferGroup bg = BufferGroup(initPositionBuffer2(i), initTextureBuffer(i), initIndexBuffer2(i), i.size() * 6);
 
     return bg;
 }
@@ -345,133 +299,22 @@ GLuint initIndexBuffer2(std::vector<int> i) {
 
     std::vector<int> indices;
     for (int j = 0; j < i.size(); j++) {
-        std::vector<int> v2 = { 2 + (4 * j), 1 + (4 * j), 0 + (4 * j), 3 + (4 * j), 2 + (4 * j), 0 + (4 * j) };
+        std::vector<int> v2 = {
+            1 + (4 * j),
+            0 + (4 * j),
+            2 + (4 * j),
+
+
+            3 + (4 * j),
+            2 + (4 * j),
+            0 + (4 * j),
+
+        };
         indices.insert(indices.end(), v2.begin(), v2.end());
     }
 
     return initE(indices);
 
-}
-GLuint initNormalBuffer(std::vector<int> i) {
-
-    std::vector<float> positions;
-    for (int j = 0; j < i.size(); j++) {
-
-        glm::vec3 edge1 = glm::vec3(
-            positionsCube[i[j]][3] - positionsCube[i[j]][0],
-            positionsCube[i[j]][4] - positionsCube[i[j]][1],
-            positionsCube[i[j]][5] - positionsCube[i[j]][2]
-        );
-
-        glm::vec3 edge0 = glm::vec3(
-            positionsCube[i[j]][6] - positionsCube[i[j]][0],
-            positionsCube[i[j]][7] - positionsCube[i[j]][1],
-            positionsCube[i[j]][8] - positionsCube[i[j]][2]
-        );
-
-        edge0 = glm::cross(edge1, edge0);
-        for (int k = 0; k < 4; k++)
-        {
-            positions.push_back(edge0.x);
-            positions.push_back(edge0.y);
-            positions.push_back(edge0.z);
-        }
-    }
-
-
-    return initB(positions);
-}
-GLuint initbiTangentBuffer(std::vector<int> i) {
-
-    std::vector<float> positions;
-    for (int j = 0; j < i.size(); j++) {
-
-        glm::vec3 edge1 = glm::vec3(
-            positionsCube[i[j]][3] - positionsCube[i[j]][0],
-            positionsCube[i[j]][4] - positionsCube[i[j]][1],
-            positionsCube[i[j]][5] - positionsCube[i[j]][2]
-        );
-
-        glm::vec3 edge0 = glm::vec3(
-            positionsCube[i[j]][6] - positionsCube[i[j]][0],
-            positionsCube[i[j]][7] - positionsCube[i[j]][1],
-            positionsCube[i[j]][8] - positionsCube[i[j]][2]
-        );
-
-
-        glm::vec2 UV1 = glm::vec2(
-            textureCoordinatesCube[i[j]][2] - textureCoordinatesCube[i[j]][0],
-            textureCoordinatesCube[i[j]][3] - textureCoordinatesCube[i[j]][1]
-        );
-
-        glm::vec2 UV0 = glm::vec2(
-            textureCoordinatesCube[i[j]][4] - textureCoordinatesCube[i[j]][0],
-            textureCoordinatesCube[i[j]][5] - textureCoordinatesCube[i[j]][1]
-        );
-        float invDet = 1.0f / (UV0[0] * UV1[1] - UV0[1] * UV1[0]);
-
-        glm::vec3 bitan = glm::vec3(
-            invDet * (-UV1[0] * edge0[0] + UV0[0] * edge1[0]),
-            invDet * (-UV1[0] * edge0[1] + UV0[0] * edge1[1]),
-            invDet * (-UV1[0] * edge0[2] + UV0[0] * edge1[2])
-        );
-        ///
-        for (int k = 0; k < 4; k++)
-        {
-            positions.push_back(bitan.x);
-            positions.push_back(bitan.y);
-            positions.push_back(bitan.z);
-        }
-
-    }
-
-
-    return initB(positions);
-}
-GLuint initTangentBuffer(std::vector<int> i) {
-
-    std::vector<float> positions;
-    for (int j = 0; j < i.size(); j++) {
-
-        glm::vec3 edge1 = glm::vec3(
-            positionsCube[i[j]][3] - positionsCube[i[j]][0],
-            positionsCube[i[j]][4] - positionsCube[i[j]][1],
-            positionsCube[i[j]][5] - positionsCube[i[j]][2]
-        );
-
-        glm::vec3 edge0 = glm::vec3(
-            positionsCube[i[j]][6] - positionsCube[i[j]][0],
-            positionsCube[i[j]][7] - positionsCube[i[j]][1],
-            positionsCube[i[j]][8] - positionsCube[i[j]][2]
-        );
-
-
-        glm::vec2 UV1 = glm::vec2(
-            textureCoordinatesCube[i[j]][2] - textureCoordinatesCube[i[j]][0],
-            textureCoordinatesCube[i[j]][3] - textureCoordinatesCube[i[j]][1]
-        );
-
-        glm::vec2 UV0 = glm::vec2(
-            textureCoordinatesCube[i[j]][4] - textureCoordinatesCube[i[j]][0],
-            textureCoordinatesCube[i[j]][5] - textureCoordinatesCube[i[j]][1]
-        );
-        float invDet = 1.0 / (UV0[0] * UV1[1] - UV0[1] * UV1[0]);
-        glm::vec3 tan = glm::vec3(
-            -invDet * (UV1[1] * edge0[0] + UV0[1] * edge1[0]),
-            -invDet * (UV1[1] * edge0[1] + UV0[1] * edge1[1]),
-            -invDet * (UV1[1] * edge0[2] + UV0[1] * edge1[2])
-        );
-
-        for (int k = 0; k < 4; k++)
-        {
-            positions.push_back(tan.x);
-            positions.push_back(tan.y);
-            positions.push_back(tan.z);
-        }
-
-    }
-
-    return initB(positions);
 }
 GLuint initPositionBuffer2(std::vector<int> i) {
 

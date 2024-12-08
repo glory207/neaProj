@@ -19,13 +19,10 @@
       float getLight(vec3 posLight,vec3 posFrag,vec3 normal,vec3 normalF, samplerCube uSamplerSs){
         vec3 dir = (posLight)-posFrag;
         float difVal = max(dot(normal, normalize(dir)), 0.0);
-        float dist = length(dir)/1.0;
-        float a = 0.1;
-        float Falloff = a / (dist * dist + a);
+        float dist = (length(dir)/5.0)+1.0;
+        float a = 1.0;
+        float Falloff = (1.0 / ( dist *dist));
         difVal *= Falloff;
-        
-       // float angle = dot(normalize((rotcam * vec4(0,0,1,0)).xyz), normalize(dir));
-         
 
 
         float angle = dot(normalize(( vec4(1,0.5,0,0)).xyz), normalize(dir));
@@ -40,8 +37,7 @@
         difVal *= 1.0;    
         difVal2 *= 0.0;  
         difVal += difVal2;
-        if(difVal > 0.1)  difVal = floor(difVal*3.0 + 1.0)/3.0;
-        else difVal = 0.0;
+        if(difVal>0.2) difVal = floor(difVal*5.0 + 1.0)/5.0;
         float shadow = 0.0;
         
         float bias;
@@ -60,8 +56,7 @@
     }}}
       if(shadow < 0.5) shadow = 0.0;
       else shadow = 1.0;
-
-           return (difVal) * shadow;
+           return (difVal * shadow) ;
         }
 
 
@@ -78,15 +73,19 @@ void main() {
     else if(light == 0 ){
     if(texture(PosT, texPos).y == -1.0){
             fragColor = vec4(normalize(texture(ColT, texPos).xyz),1.0);
-        }else{
+    }
+        else{
          vec3 color ;
         for(int i = 0; i < lighC; i++)
         {
-      color+= texture(ColT, texPos).xyz * getLight(lightPos[i],texture(PosT, texPos).xyz+camPos,texture(NormT, texPos).xyz,texture(NormFT, texPos).xyz,uSamplerS[i]) * vec3(1.0);
-       // color += texture(ColT, texPos).xyz;
+       
+       color+= texture(ColT, texPos).xyz * getLight(lightPos[i],texture(PosT, texPos).xyz+camPos,texture(NormT, texPos).xyz,texture(NormFT, texPos).xyz,uSamplerS[i]) * vec3(1.0);
+       
+
         }
         
         fragColor += vec4(color,1.0);
+       
         }
     }
 

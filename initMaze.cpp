@@ -1,6 +1,6 @@
 #include "initMaze.h"
 Maze::Maze(){
-    size = 3.0f;
+    size = 1.0f;
     thk = 0.4f;
     count = 20;
     for (int i = 0; i < count * count; i++)

@@ -71,8 +71,8 @@ void GframeBuffer::bind(bool clear) {
 	glEnable(GL_BLEND); // Enable depth testing
 	glDepthFunc(GL_LEQUAL); // Near things obscure far things
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	//   GL_enable(GL_CULL_FACE);
-	glCullFace(GL_FRONT);
+	
+
 	// Clear the canvas before we start drawing on it.
 
 
@@ -223,8 +223,8 @@ void FrameBuffer::bind(bool clear) {
 	glEnable(GL_BLEND); // Enable depth testing
 	glDepthFunc(GL_LEQUAL); // Near things obscure far things
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	//   GL_enable(GL_CULL_FACE);
-	glCullFace(GL_FRONT);
+	
+
 	// Clear the canvas before we start drawing on it.
 
 

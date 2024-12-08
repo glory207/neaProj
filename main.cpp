@@ -22,7 +22,9 @@ void processInput(GLFWwindow* window);
  PlayerClass player;
 bool firstClick = false;
 bool firstClicke = false;
+bool erere = false;
 int adee = 1;
+float adeee = 0;
 
 int main()
 {
@@ -61,8 +63,8 @@ int main()
     // build and compile our shader program
     // ------------------------------------
     
-    unsigned int shaderProgram = initShader("shaders/def.vert", "shaders/def.frag");
-    unsigned int shaderLightProgram = initShader("shaders/def.vert", "shaders/light.frag");
+    unsigned int shaderProgram = initShader("shaders/def.vert", "shaders/def.geom", "shaders/def.frag");
+    unsigned int shaderLightProgram = initShader("shaders/def.vert", "shaders/def.geom", "shaders/light.frag");
     unsigned int shaderShadowProgram = initShader("shaders/shadow.vert", "shaders/shadow.geom", "shaders/shadow.frag");
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
@@ -81,14 +83,14 @@ int main()
      player = PlayerClass(vec3(0.0f, 0.0f, 0.5f), vec3(0.0f, -3.1415 / 2.0f, 0.0f));
 
      glDisable(GL_BLEND);
-     glDisable(GL_CULL_FACE);
+     
 
      glViewport(0, 0, 500, 500);
 
      // for (int t = 0; t < pow(mz.count, 2.0f); t++)
-      for (int t = 0; t < 2; t++)
+      for (int t = 0; t < 1; t++)
       {
-          ligh.push_back(Light(vec3((t%mz.count) * mz.size, 0.3f,(t/mz.count) * mz.size)));
+          ligh.push_back(Light(vec3((t%mz.count) * mz.size, 0.2f,(t/mz.count) * mz.size)));
 
           shBF.bind(true, 0, ligh[t].depthTex);
           glUseProgram(shaderShadowProgram);
@@ -126,6 +128,8 @@ int main()
     // -----------
     while (!glfwWindowShouldClose(window))
     {
+
+       if(erere) ligh[0].pos = player.inp->pos;
         curTime = glfwGetTime();
         timeDif = curTime - preTime;
         counter++;
@@ -168,7 +172,7 @@ int main()
         if(deltaTime < 1.0f){
         processInput(window);
         for (int t = 0; t < ligh.size(); t++) {
-            mz.collide(&ligh[t].pos, &ligh[t].acc, vec2(0.075f));
+          //  mz.collide(&ligh[t].pos, &ligh[t].acc, vec2(0.075f));
             ligh[t].update(deltaTime);
         }
         float ty = player.inp->acc.y;
@@ -179,7 +183,7 @@ int main()
         // render
         // ------
         glDisable(GL_BLEND);
-        glDisable(GL_CULL_FACE);
+        
 
         glViewport(0, 0, 500,500);
         int nb = 0;
@@ -248,8 +252,8 @@ int main()
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glBlendEquation(GL_FUNC_ADD);
         glBlendFunc(GL_ONE, GL_ONE);
-        glEnable(GL_CULL_FACE);
-        glCullFace(GL_FRONT);
+        
+
 
         glUseProgram(cam.shader);
         glUniform3f(glGetUniformLocation(cam.shader, "camPos"), cam.pos.x, cam.pos.y, cam.pos.z);
@@ -274,7 +278,8 @@ int main()
             if (length(ligh[t].pos - player.inp->pos) < 9.0f)
             {
                // glBindTexture(GL_TEXTURE_CUBE_MAP, ligh[t].depthTex);
-                std::string ii = "uSamplerS[" + std::to_string(e) + "]";
+                std::string ii = " ";
+                 ii = "uSamplerS[" + std::to_string(e) + "]";
                 glUniformHandleui64ARB(glGetUniformLocation(cam.shader, ii.c_str()), ligh[t].handle);
                  ii = "lightPos[" + std::to_string(e) + "]";
 
@@ -378,14 +383,19 @@ void processInput(GLFWwindow* window)
 
 
     }
+    erere = false;
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
     {
-        player.inp->acc.y += 0.2f;
+        erere = true;
+       //player.inp->pos.y = adeee;
+       //player.inp->acc.y = 0;
+       //player.inp->pos.y += 0.002f;
+       //adeee = player.inp->pos.y;
     }
     if (!firstClicke && glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
     {
         firstClicke = true;
-        ligh.push_back(Light(cam.pos));
+        ligh.push_back(Light(vec3(cam.pos.x,0.2, cam.pos.z)));
     }
     else if (glfwGetKey(window, GLFW_KEY_E) != GLFW_PRESS)
     {

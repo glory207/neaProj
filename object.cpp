@@ -13,18 +13,9 @@ SpObj::SpObj(glm::vec3 poss,glm::vec3 rott,glm::vec3 scaa, BufferGroup buffers, 
     
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, buffer.bitangent);
-    glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(4);
-    glBindBuffer(GL_ARRAY_BUFFER, buffer.normal);
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(2);
     glBindBuffer(GL_ARRAY_BUFFER, buffer.positions);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, buffer.tangent);
-    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(3);
     glBindBuffer(GL_ARRAY_BUFFER, buffer.texturePos);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(1);
