@@ -45,8 +45,6 @@ void SpObj::draw(int programInfo){
 
     glm::mat3 normalMatrix = glm::mat3(modelViewMatrix);
     normalMatrix = glm::inverse(normalMatrix);
-    normalMatrix = glm::transpose(normalMatrix);
-    glUniformMatrix3fv(glGetUniformLocation(programInfo,"normalMatrix"),1,GL_FALSE,glm::value_ptr(normalMatrix));
     glUniform4f(glGetUniformLocation(programInfo,"textureMatrix"),textOff.x,textOff.y,textOff.z,textOff.w);
     
     glActiveTexture(GL_TEXTURE0);

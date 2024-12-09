@@ -12,7 +12,8 @@ class camera
     
 public:
     glm::vec3 pos;
-    glm::vec3 rot;;
+    glm::vec3 rot;
+    glm::mat4 rotationMatrix;
     camera(glm::vec3 pos, glm::vec3 rot);
     camera();
     void draw();

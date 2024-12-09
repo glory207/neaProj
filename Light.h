@@ -9,6 +9,7 @@ public:
 	Light();
 	GLuint depthTex;
 	GLuint64 handle;
+	glm::mat4 rotationMatrix;
 	Light(glm::vec3 pos);
 	void update(float deltaTime);
 	glm::vec3 acc;
