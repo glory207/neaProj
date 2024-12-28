@@ -4,6 +4,7 @@
 #include <glm/vec2.hpp>
 #include <stdlib.h>
 #include "initBuffer.h"
+#include "Furniture.h"
 #include "object.h"
 #include <iostream>
 
@@ -21,9 +22,10 @@ public:
     std::vector<Cell*> Conectednodes;
     std::vector<int> sides;
     bool sidesi[4] = {false,false,false,false};
-    std::vector<glm::vec2> pnt;
-  public:  void conect(Cell* sender);
+    glm::vec2 pnt(int i,float thk);
+    void conect(Cell* sender);
     void set();
+    
 };
 
 class Maze
@@ -34,11 +36,19 @@ public:
     bool collide(glm::vec3* poss, glm::vec3* accc, glm::vec2 leway);
     void drawMap(int programInfo);
     std::vector<Cell> nodes;
+    std::vector<Furniture> fur;
+    InsObj furn;
     float size;
     int count;
     float thk;
     BufferGroup buffers;
+    BufferGroup MapBuffers;
     SpObj obj;
+    SpObj obj2;
+    void draw(int programInfo);
+    float project(float x, float y, int side, Furniture f);
+
+    GLuint VAO;
 };
 
 

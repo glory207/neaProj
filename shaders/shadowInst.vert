@@ -1,9 +1,8 @@
 #version 330 core
 layout(location = 0) in  vec4 aVertexPosition;
 layout(location = 1) in  vec2 aTexturePosition;
+layout(location = 2) in  mat4 uModelViewMatrix1;
 
-
-    uniform mat4 uModelViewMatrix;
     uniform vec4 textureMatrix;
       
 out DATA
@@ -15,5 +14,5 @@ out DATA
 
     void main() {
     data_out.pos = vec3((aTexturePosition + textureMatrix.xy) * textureMatrix.zw,0);
-      gl_Position = uModelViewMatrix * aVertexPosition;
+      gl_Position = uModelViewMatrix1 * aVertexPosition;
     }

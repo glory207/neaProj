@@ -10,14 +10,15 @@ layout (location = 3) out vec4 gNormF;
      // uniform int count;
       in mat3 tbn;
       in vec3 pos; 
+      in vec3 pos2; 
       in vec3 po;
       in vec3 norm;
       uniform vec3 camPos;
       
       void main() {
-      if(texture(uSampler2, pos.xy ).w < 0.5 ||texture(uSampler1, pos.xy ).w < 0.5 ) discard;
+      if(texture(uSampler2, pos2.xy ).w < 0.5 ||texture(uSampler1, pos.xy ).w < 0.5 ) discard;
       
-      vec3 normal = tbn * ((texture(uSampler2, pos.xy ).xyz * 2.0) - vec3(1));
+      vec3 normal = tbn * ((texture(uSampler2, pos2.xy ).xyz * 2.0) - vec3(1));
       fragColor = vec4(texture(uSampler1, pos.xy ).xyz,1.0);
       gPos = vec4(po-camPos,1.0);
       gNorm = vec4(normal,1.0);

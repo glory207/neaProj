@@ -59,3 +59,68 @@ void SpObj::draw(int programInfo){
     glDrawElements(GL_TRIANGLES,buffer.length,GL_UNSIGNED_INT, 0);
     
 }
+InsObj::InsObj(BufferGroup buffers, int img1, int img2, GLuint modelBuffer){
+   
+    buffer = buffers;
+    textOff = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+    textOff2 = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+    text1 = texture(img1);
+    text2 = texture(img2);
+
+    
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, buffer.positions);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, buffer.texturePos);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer.indices);
+    
+    glBindBuffer(GL_ARRAY_BUFFER, modelBuffer);
+    
+    glEnableVertexAttribArray(2);                                     
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 16 * sizeof(float), (void*)0);
+    glVertexAttribDivisor(2, 1);                                      
+                                                                                                                                  
+    glEnableVertexAttribArray(3);                                     
+    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 16 * sizeof(float), (void*)(1 * sizeof(glm::vec4)));
+    glVertexAttribDivisor(3, 1);                                      
+                                                                                                                                  
+    glEnableVertexAttribArray(4);                                     
+    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 16 * sizeof(float), (void*)(2 * sizeof(glm::vec4)));
+    glVertexAttribDivisor(4, 1);                                      
+                                                                                                                                  
+    glEnableVertexAttribArray(5); 
+    glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, 16 * sizeof(float), (void*)(3 * sizeof(glm::vec4)));
+    glVertexAttribDivisor(5, 1);  
+
+
+
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+}
+InsObj::InsObj() {
+    textOff = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+
+}
+
+void InsObj::draw(int programInfo,int count){
+
+    glUniform4f(glGetUniformLocation(programInfo,"textureMatrix"),textOff.x,textOff.y,textOff.z,textOff.w);
+    glUniform4f(glGetUniformLocation(programInfo,"textureMatrix2"),textOff2.x,textOff2.y,textOff2.z,textOff2.w);
+    
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, text1);
+    glUniform1i(glGetUniformLocation(programInfo, "uSampler1"), 0);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, text2);
+    glUniform1i(glGetUniformLocation(programInfo, "uSampler2"), 1);
+
+    glBindVertexArray(VAO);
+    glDrawElementsInstanced(GL_TRIANGLES,buffer.length,GL_UNSIGNED_INT, 0, count);
+    
+}

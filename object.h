@@ -12,6 +12,7 @@ public:
     glm::vec3 rot;
     glm::vec3 sca;
     glm::vec4 textOff;
+    glm::vec4 textOff2;
     BufferGroup buffer;
     SpObj();
     SpObj(glm::vec3 poss,glm::vec3 rott,glm::vec3 scaa, BufferGroup buffers, int img1, int img2);
@@ -19,6 +20,22 @@ public:
     GLuint text2;
     void draw(int programInfo);
     
+};
+
+class InsObj
+{
+public:
+    unsigned int VAO;
+    glm::vec4 textOff;
+    glm::vec4 textOff2;
+    glm::mat4 asddsa;
+    BufferGroup buffer;
+    InsObj();
+    InsObj(BufferGroup buffers, int img1, int img2, GLuint modelBuffer);
+    GLuint text1;
+    GLuint text2;
+    void draw(int programInfo, int count);
+
 };
 
 

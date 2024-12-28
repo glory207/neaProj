@@ -19,8 +19,10 @@ public:
 };
 
 int initB(std::vector<float> pointss);
+int initI(std::vector<glm::mat4> pointss);
 int initE(std::vector<int> pointss);
 BufferGroup initBuffers(std::vector<glm::vec2>  pointss);
+BufferGroup initBuffers2(std::vector<glm::vec2>  pointss);
 BufferGroup initCubeBuffer(std::vector<int> i);
 
 GLuint initIndexBuffer2(std::vector<int> i);

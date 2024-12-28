@@ -1,6 +1,33 @@
 #include "initBuffer.h"
 #include <iostream>
 
+
+BufferGroup initBuffers2(std::vector<glm::vec2> pointss) {
+
+    std::vector<float> positions;
+    std::vector<int> indices;
+    float size = 2;
+    for (int i = 0; i < pointss.size() -1; i += 1) {
+        
+        positions.push_back(pointss[i].y); 
+        positions.push_back(pointss[i].x); 
+        positions.push_back(0.0f); 
+
+
+        indices.push_back((i));
+    }
+
+    BufferGroup bg;
+
+
+    bg.positions = initB(positions);
+    bg.indices = initE(indices);
+    bg.length = indices.size();
+    return  bg;
+}
+
+
+
 BufferGroup initBuffers(std::vector<glm::vec2> pointss) {
     std::vector<float> positions;
     std::vector<float> texturePos;
@@ -208,6 +235,8 @@ BufferGroup initBuffers(std::vector<glm::vec2> pointss) {
     bg.length = indices.size();
     return  bg;
 }
+
+
 int initB(std::vector<float> pointss) {
 
     unsigned int B;
@@ -216,6 +245,16 @@ int initB(std::vector<float> pointss) {
     glBufferData(GL_ARRAY_BUFFER, pointss.size() * sizeof(float), pointss.data(), GL_STATIC_DRAW);
     return B;
 }
+
+int initI(std::vector<glm::mat4> pointss) {
+
+    unsigned int B;
+    glGenBuffers(1, &B);
+    glBindBuffer(GL_ARRAY_BUFFER, B);
+    glBufferData(GL_ARRAY_BUFFER, pointss.size() * sizeof(glm::mat4), pointss.data(), GL_STATIC_DRAW);
+    return B;
+}
+
 int initE(std::vector<int> pointss) {
     unsigned int B;
     glGenBuffers(1, &B);
@@ -234,7 +273,7 @@ BufferGroup::BufferGroup(GLuint positions, GLuint texturePos, GLuint indices, GL
 
 
 
-float positionsCube[9][12] = {
+float positionsCube[12][12] = {
     {// Front face 0
         -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0,
     } ,{// Back face 1
@@ -254,9 +293,16 @@ float positionsCube[9][12] = {
     },{// Y face T 7
         -1.0, 0.0, -1.0, -1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, -1.0,
 
+    },{// Z face L 8
+        -1.0, -1.0, 0.0, 1.0, -1.0, 0.0, 1.0, 1.0, 0.0, -1.0, 1.0, 0.0,
+    },{// X face F 6
+        0.0, -1.0, -1.0, 0.0, 1.0, -1.0, 0.0, 1.0, 1.0, 0.0, -1.0, 1.0,
+    },{// Y face T 7
+        -1.0, 0.0, -1.0, -1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, -1.0,
+
     } };
 
-float textureCoordinatesCube[9][8] = { 
+float textureCoordinatesCube[12][8] = { 
     { // Front
         0.375, 0.75, 0.375, 1, 0.625, 1, 0.625, 0.75,
     }, 
@@ -277,14 +323,30 @@ float textureCoordinatesCube[9][8] = {
         0.375, 0.5, 0.375, 0.75, 0.625, 0.75, 0.625, 0.5,
     }, 
     {// Front da
-        1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
+        0.0, 0.75, 0.0, 0.5, 0.25, 0.5,0.25, 0.75,
+    }, 
+    {// Front da
+        0.75, 0.75, 1.0, 0.75, 1.0, 1.0, 0.75, 1.0,
+    }, 
+    {// Front da
+         0.25, 1.0, 0.25, 0.75,  0.0, 0.75,0.0, 1.0,
     }, 
     {// Front da
         1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
+        // 0.0, 0.75, 0.0, 0.5, 0.25, 0.5,0.25, 0.75,
     }, 
     {// Front da
         1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
-    } 
+        //0.75, 0.75, 1.0, 0.75, 1.0, 1.0, 0.75, 1.0,
+    }, 
+    {// Front da
+         1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
+         // 0.25, 1.0, 0.25, 0.75,  0.0, 0.75,0.0, 1.0,
+    }
+    //, 
+    //{// Full
+    //    1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
+    //}  1.0, 1.0, 0.75, 1.0, 0.75, 0.75, 1.0, 0.75,
 };
 
 

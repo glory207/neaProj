@@ -1,12 +1,32 @@
-#include "initMaze.h"
+﻿#include "initMaze.h"
+#include <string>
+#include <random>
+
+glm::mat4 Matrix(vec3 pos,vec3 sca, vec3 rot) {
+
+
+    glm::mat4 modelViewMatrix;
+    modelViewMatrix = translate(modelViewMatrix, pos);
+   modelViewMatrix = rotate(modelViewMatrix, rot.z, glm::vec3(0, 0, 1));
+   modelViewMatrix = rotate(modelViewMatrix, rot.y, glm::vec3(0, 1, 0));
+   modelViewMatrix = rotate(modelViewMatrix, rot.x, glm::vec3(1, 0, 0));
+    modelViewMatrix = scale(modelViewMatrix, sca);
+    return modelViewMatrix;
+}
+
 Maze::Maze(){
-    size = 2.0f;
-    thk = 0.4f;
-    count = 20;
+    // Define the random number generator and distribution
+    std::random_device rd;  // Seed generator
+    std::mt19937 gen(rd()); // Mersenne Twister engine
+    std::uniform_real_distribution<float> Rand(0.0f, 1.0f); // Range [0, 1]
+
+    size = 1.5f;
+    thk = 0.45f;
+    count = 15;
     for (int i = 0; i < count * count; i++)
     {
         nodes.push_back(*new Cell(i, count,thk));
-        
+       
         
     }
     for (int i = 0; i < count * count; i++)
@@ -24,9 +44,107 @@ Maze::Maze(){
         }
     }
 
-    nodes[0].conect(nullptr);
-    for (int i = 0; i < nodes.size(); i++) nodes[i].set();
+    std::vector<Cell*> cellStack;
+    cellStack.push_back(&nodes[0]);
+    Cell* curC = cellStack.back();
+    
+    do{
+        
+        (*curC).conected = true;
+        
+        if ((*curC).Conectablednodes.size() > 0)
+        {
 
+            int rnd = floor(Rand(gen) * (*curC).Conectablednodes.size());
+
+
+            bool asd = false;
+            //    for (var i = 0; i < cmp.length; i += 2)
+            //    {
+            //        var xx = cmp[i] % Cell::count;
+            //        var yy = cmp[i] / Cell::count;
+            //        var Distance = (Cell::x - xx) * (Cell::x - xx) + (Cell::y - yy) * (Cell::y - yy);
+            //        if ( Distance< glm::pow(cmp[i + 1],2) ) 
+            //         { asd = true;
+            //  }
+            //    }
+
+            if (!(*(*curC).Conectablednodes[rnd]).conected || asd || Rand(gen) * 10 <= 1)
+            {
+                cellStack.push_back((*curC).Conectablednodes[rnd]);
+                (*curC).Conectednodes.push_back((*curC).Conectablednodes[rnd]);
+                (*(*curC).Conectablednodes[rnd]).Conectednodes.push_back(curC);
+
+
+
+                
+
+            }
+
+
+            std::vector<Cell*>::iterator it = std::find((*(*curC).Conectablednodes[rnd]).Conectablednodes.begin(), (*(*curC).Conectablednodes[rnd]).Conectablednodes.end(), curC);
+            if (it != (*(*curC).Conectablednodes[rnd]).Conectablednodes.end())
+            {
+                (*(*curC).Conectablednodes[rnd]).Conectablednodes.erase(it);
+            }
+
+            it = std::find((*curC).Conectablednodes.begin(), (*curC).Conectablednodes.end(), (*curC).Conectablednodes[rnd]);
+            if (it != (*curC).Conectablednodes.end())
+            {
+                (*curC).Conectablednodes.erase(it);
+            }
+
+        }
+        else
+        {
+            cellStack.pop_back();
+
+        }
+        if(!cellStack.empty())curC = cellStack.back();
+    } while (!cellStack.empty());
+    
+
+
+
+
+
+    std::vector<glm::mat4> mds;
+    for (int i = 0; i < nodes.size(); i++) {
+        nodes[i].set();
+        vec3 ps = vec3((i % count) * size, 0.05, (i / count) * size);
+
+       // for (int k = -1; k < 2; k++)
+       // {
+       //     for (int kk = -1; kk < 2; kk++)
+       //     {
+       //         if (Rand(gen) < 0.2) {
+       //             Furniture ref = Furniture(ps + vec3((size * thk - ps.y * 0.9) * k, 0.0, (size * thk - ps.y * 0.9) * kk), vec3(ps.y * 0.9, ps.y, ps.y * 0.9), 0.0);
+       //             mds.push_back(Matrix(ref.pos, ref.sca, ref.rot));
+       //             fur.push_back(ref);
+       //         }
+       //     }
+       // }
+
+        //if (Rand(gen) < 0.2) {
+        if (!nodes[i].sidesi[0] && !nodes[i].sidesi[2]) {
+            vec2 wdth = vec2(0.3,0.2);
+            Furniture ref = Furniture(ps + vec3((size * thk - wdth.x) * -1.0, 0.0, (size * thk - wdth.y) * 1.0), vec3(wdth.x, ps.y, wdth.y), 0.0);
+            mds.push_back(Matrix(ref.pos, ref.sca, ref.rot));
+            fur.push_back(ref);
+        }
+        if (!nodes[i].sidesi[0] && !nodes[i].sidesi[2]) {
+            vec2 wdth = vec2(0.2);
+            Furniture ref = Furniture(ps + vec3((size * thk - wdth.x) * 1.0, 0.0, (size * thk - wdth.y) * 1.0), vec3(wdth.x, ps.y, wdth.y), 0.0);
+            mds.push_back(Matrix(ref.pos, ref.sca, ref.rot));
+            fur.push_back(ref);
+        }
+
+    }
+    furn = InsObj(initCubeBuffer({0,1,2,3,4,5, 6,7,8 }), 23, 12, initI(mds));
+
+
+    furn.textOff2 = glm::vec4(0.0f, 0.0f, 5.0f, 5.0f);
+    thk = 0.452f;
     std::vector<glm::vec2> lst1;
     std::vector<glm::vec2> lst2 = makeLines(0, 3, 2, 3, -1, -1, false,0);
     lst1.insert(lst1.end(),lst2.begin(),lst2.end());
@@ -38,20 +156,50 @@ Maze::Maze(){
     lst1.insert(lst1.end(),lst2.begin(),lst2.end());
     lst2 = makeLines(2, 0, 0, 2, 1, 3, true,0);
     lst1.insert(lst1.end(),lst2.begin(),lst2.end());
+    lst1.push_back(nodes[0].pnt(0, thk));
+    lst1.push_back(nodes[nodes.size() - 1].pnt(3, thk));
 
-    lst1.push_back(nodes[0].pnt[0]);
-    lst1.push_back(nodes[nodes.size()-1].pnt[3]);
-    
     buffers = initBuffers(lst1);
     obj = SpObj(glm::vec3(0), glm::vec3(0), glm::vec3(size),buffers,0,5);
     obj.textOff = glm::vec4(0.0f,0.0f, size * 2.2f, size * 2.2f);
+    std::vector<glm::vec2> Mlst1;
+
+    thk = 0.5f;
+    lst1.clear();
+    lst1.push_back(nodes[0].pnt(0, thk));
+    lst1.push_back(nodes[count-1].pnt(1, thk));
+    lst1.push_back(nodes[0].pnt(0, thk));
+    lst1.push_back(nodes[count*count- count].pnt(2, thk));
+
+
+    lst2 = makeLines(0, 3, 2, 3, -1, -1, false, 0);
+    lst1.insert(lst1.end(), lst2.begin(), lst2.end());
+    lst2 = makeLines(3, 0, 1, 3, -1, -1, true, 0);
+    std::reverse(lst2.begin(), lst2.end());
+    lst1.insert(lst1.end(), lst2.begin(), lst2.end());
+
+
+    thk = 0.45f;
+
+    MapBuffers = initBuffers2(lst1);
+
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, MapBuffers.positions);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, MapBuffers.indices);
+
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 }
 std::vector<glm::vec2> Maze::makeLines(int tp,int  sd,int  p0,int  p1,int  p2,int  p3,bool  swch,float thin){
       std::vector<glm::vec2> lst;
       
         if (!nodes[0].sidesi[tp]){
           
-          lst.push_back(nodes[0].pnt[thin+p0]);
+          lst.push_back(nodes[0].pnt(thin+p0, thk));
         } 
         for (int k = 0; k < nodes.size(); k++)
         {
@@ -79,23 +227,23 @@ std::vector<glm::vec2> Maze::makeLines(int tp,int  sd,int  p0,int  p1,int  p2,in
             
             if (!nodes[i].sidesi[tp] && !nodes[i].sidesi[sd])
             {
-              lst.push_back(nodes[i].pnt[thin+p1]);
+              lst.push_back(nodes[i].pnt(thin+p1, thk));
   
                 if (i != nodes.size() - 1 && !nodes[ii].sidesi[tp]){
-                     lst.push_back(nodes[ii].pnt[thin+p0]);
+                     lst.push_back(nodes[ii].pnt(thin+p0, thk));
                      }
             }
             if (!nodes[i].sidesi[tp] && nodes[i].sidesi[sd])
             {
                 if (nodes[ii].sidesi[tp])
                 {
-                  lst.push_back(nodes[ii].pnt[thin+p0]);
+                  lst.push_back(nodes[ii].pnt(thin+p0, thk));
                     if (p2 != -1 && nodes[iii].sidesi[sd])
                     {
                      
-                      lst.push_back(nodes[ii].pnt[thin+p0]);
+                      lst.push_back(nodes[ii].pnt(thin+p0, thk));
                     
-                      lst.push_back(nodes[iiii].pnt[thin+p2]);
+                      lst.push_back(nodes[iiii].pnt(thin+p2, thk));
                       
                       
   
@@ -107,7 +255,7 @@ std::vector<glm::vec2> Maze::makeLines(int tp,int  sd,int  p0,int  p1,int  p2,in
             {
              
               if (i != nodes.size() - 1 && !nodes[ii].sidesi[tp]){
-                 lst.push_back(nodes[ii].pnt[thin+p0]);
+                 lst.push_back(nodes[ii].pnt(thin+p0, thk));
                  }
             }
             if (nodes[i].sidesi[tp] && nodes[i].sidesi[sd])
@@ -116,12 +264,12 @@ std::vector<glm::vec2> Maze::makeLines(int tp,int  sd,int  p0,int  p1,int  p2,in
                 {
                     if (p2 != -1 && nodes[iii].sidesi[sd])
                     {
-                      lst.push_back(nodes[iii].pnt[thin+p3]);
+                      lst.push_back(nodes[iii].pnt(thin+p3, thk));
   
-                      lst.push_back(nodes[i].pnt[thin+p1]);
+                      lst.push_back(nodes[i].pnt(thin+p1, thk));
                     }
   
-                    lst.push_back(nodes[i].pnt[thin+p1]);
+                    lst.push_back(nodes[i].pnt(thin+p1, thk));
   
   
                 }
@@ -133,6 +281,13 @@ std::vector<glm::vec2> Maze::makeLines(int tp,int  sd,int  p0,int  p1,int  p2,in
 void Maze::drawMap(int programInfo) {
 
 }
+
+
+float Maze::project(float x, float y, int side, Furniture f) {
+    if (side == 0) return x * cos(f.rot.y) - y * sin(f.rot.y);
+    else  return x * sin(f.rot.y) + y * cos(f.rot.y);
+}
+
 bool Maze::collide(glm::vec3* pos, glm::vec3* acc, glm::vec2 leway) {
     glm::vec3 temp;
     if (acc == nullptr) acc = new glm::vec3(0);
@@ -236,10 +391,110 @@ bool Maze::collide(glm::vec3* pos, glm::vec3* acc, glm::vec2 leway) {
         }
     }
 
-
-    (*pos) *= size;
     leway.x *= -size;
 
+    (*pos) *= size;
+
+
+    for (Furniture f : fur) {
+        
+        if (pow((*pos).x - f.pos.x, 2.0) + pow((*pos).z - f.pos.z, 2.0) < max(f.sca.x, f.sca.z) * 2.0)
+        {
+
+            vec2 Points[] = {
+                    vec2(-1, 1),
+                    vec2(-1, -1),
+                    vec2(1, -1),
+                    vec2(1, 1),
+            };
+
+            for (int i = 0; i < 4; i++) {
+                Points[i].x *= f.sca.x ;
+                Points[i].y *= f.sca.z ;
+
+                vec2 PP = vec2(Points[i].x * cos(f.rot.y) + Points[i].y * sin(f.rot.y), -Points[i].x * sin(f.rot.y) + Points[i].y * cos(f.rot.y));
+                Points[i] = PP;
+
+                Points[i].x += f.pos.x;
+                Points[i].y += f.pos.z;
+
+            }
+
+            float max = -90000.0;
+            float min = 90000.0;
+            for (int i = 0; i < 4; i++) {
+                float test = project(Points[i].x, Points[i].y, 0,f);
+                if (test > max)max = test;
+                if (test < min)min = test;
+            }
+            
+            float playProj = project((*pos).x, (*pos).z, 0,f);
+            bool assa = false;
+            bool assa2 = false;
+            float firstDist = 0.0;
+            float secondDist = 0.0;
+            if (playProj + leway.x > min && playProj - leway.x < max) {
+                assa = true;
+                if (playProj + leway.x - min > max - playProj - leway.x) firstDist = max - playProj + leway.x;
+                else firstDist = min - playProj - leway.x;
+            }
+
+            max = -90000.0;
+            min = 90000.0;
+            for (int i = 0; i < 4; i++) {
+                float test = project(Points[i].x, Points[i].y, 1,f);
+                if (test > max)max = test;
+                if (test < min)min = test;
+            }
+            playProj = project((*pos).x, (*pos).z, 1,f);
+            if (playProj + leway.x > min && playProj - leway.x < max) {
+                assa2 = true;
+                if (playProj + leway.x - min > max - playProj - leway.x) secondDist = max - playProj + leway.x;
+                else secondDist = min - playProj - leway.x;
+
+
+            }
+            
+            if (assa2 && assa && (*pos).y - leway.y < f.pos.y + f.sca.y) {
+                
+                if (abs(firstDist) > abs(f.sca.y + f.sca.y + leway.y - (*pos).y) && abs(secondDist) > abs(f.sca.y + f.sca.y + leway.y - (*pos).y)) {
+                    (*pos).y += f.pos.y + f.sca.y + leway.y - (*pos).y;
+                    grnd = true;
+                    if ((*acc).y < 0)  (*acc).y *= -1.0;
+                }
+                else {
+                    if (abs(firstDist) > abs(secondDist))
+                    {
+                        // w = v - 2 * (v ∙ n) * n
+                        vec3 acct = vec3((*acc).x - 2 * ((*acc).x * (sin(f.rot.y)) + (*acc).z * (cos(f.rot.y))) * (sin(f.rot.y)),
+                            (*acc).y,
+                            (*acc).z - 2 * ((*acc).x * (sin(f.rot.y)) + (*acc).z * (cos(f.rot.y))) * (cos(f.rot.y))
+                        );
+                       
+                        (*acc).x = acct.x;
+                        (*acc).y = acct.y;
+                        (*acc).z = acct.z;
+                        (*pos).x += sin(f.rot.y) * secondDist;
+                        (*pos).z += cos(f.rot.y) * secondDist;
+                    }
+                    else
+                    {
+                        vec3 acct = vec3((*acc).x - 2 * ((*acc).x * (cos(f.rot.y)) + (*acc).z * -(sin(f.rot.y))) * (cos(f.rot.y)),
+                            (*acc).y,
+                            (*acc).z - 2 * ((*acc).x * (cos(f.rot.y)) + (*acc).z * -(sin(f.rot.y))) * -(sin(f.rot.y))
+                        );
+                        (*acc).x = acct.x;
+                        (*acc).y = acct.y;
+                        (*acc).z = acct.z;
+                        (*pos).x += cos(f.rot.y) * firstDist;
+                        (*pos).z += -sin(f.rot.y) * firstDist;
+                    }
+                }
+            }
+           
+        }
+    }
+    
 
     if ((*pos).y <= leway.y) {
         (*pos).y = leway.y;
@@ -252,7 +507,11 @@ bool Maze::collide(glm::vec3* pos, glm::vec3* acc, glm::vec2 leway) {
     return grnd;
 }
 
+void Maze::draw(int programInfo) {
+    
+    obj.draw(programInfo);
 
+}
 
 Cell::Cell(int index, int count, float thk){
 
@@ -266,22 +525,28 @@ Cell::Cell(int index, int count, float thk){
   
       float posx = x;
       float posy = y;
-      pnt = {
-       glm::vec2(posx - thk, posy - thk),
-        glm::vec2(posx + thk, posy - thk),
-        glm::vec2(posx - thk, posy + thk),
-        glm::vec2(posx + thk, posy + thk),
-        glm::vec2(posx,posy),
-        glm::vec2(posx - 0.5, posy - 0.5),
-        glm::vec2(posx + 0.5, posy - 0.5),
-        glm::vec2(posx - 0.5, posy + 0.5),
-        glm::vec2(posx + 0.5, posy + 0.5),
-        glm::vec2(posx,posy)
-      };
 
      
 }
+glm::vec2 Cell::pnt(int i, float thk) {
+    
+       if(i == 0)return glm::vec2(x - thk, y - thk);
+       else if(i == 1)return glm::vec2(x + thk, y - thk);
+       else if(i == 2)return glm::vec2(x - thk, y + thk);
+       else if(i == 3)return glm::vec2(x + thk, y + thk);
+       else if(i == 4)return glm::vec2(x,y);
+       else if(i == 5)return glm::vec2(x - 0.5, y - 0.5);
+       else if(i == 6)return glm::vec2(x + 0.5, y - 0.5);
+       else if(i == 7)return glm::vec2(x - 0.5, y + 0.5);
+       else if(i == 8)return glm::vec2(x + 0.5, y + 0.5);
+       else if(i == 9)return glm::vec2(x,y);
+    
+}
+
 void Cell::conect(Cell* sender){
+    std::random_device rd;  // Seed generator
+    std::mt19937 gen(rd()); // Mersenne Twister engine
+    std::uniform_real_distribution<float> Rand(0.0f, 1.0f); // Range [0, 1]
 
 
    // if (sender != nullptr)
@@ -298,7 +563,7 @@ void Cell::conect(Cell* sender){
         while (Conectablednodes.size() != 0) 
         {
         
-           int rnd = std::rand() % Conectablednodes.size();
+           int rnd = floor(Rand(gen) * Conectablednodes.size());
 
 
            bool asd = false;
@@ -317,8 +582,7 @@ void Cell::conect(Cell* sender){
               Conectednodes.push_back(Conectablednodes[rnd]);
               (*Conectablednodes[rnd]).conect(this);
             }
-            //else if(asd)
-            else if(asd || rand() % 10 == 1)
+            else if(asd || Rand(gen) * 10 <= 1)
             {
               Conectednodes.push_back(Conectablednodes[rnd]);
 
@@ -330,6 +594,8 @@ void Cell::conect(Cell* sender){
         
         } 
 }
+
+
 void Cell::set(){
     for (int i = 0; i < Conectednodes.size(); i++) { 
         
