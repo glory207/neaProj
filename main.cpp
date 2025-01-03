@@ -1,3 +1,5 @@
+
+#include <cmath>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include "shader.h"
@@ -25,7 +27,10 @@ bool erere = false;
 int adee = 1;
 float adeee = 0;
 vec2 LightSetings = vec2(1.0,0.75);
-
+float ArmL = 0.27f;
+float ArmL2 = 0.0f;
+float ArmL3 = 1.25;
+float deltaTime = 1.0f;
 int main()
 {
     
@@ -136,7 +141,6 @@ int main()
 
 
     float sensitivity = 1.0f;
-    float deltaTime = 1.0f;
     double preTime = 0.0;
     double curTime = 0.0;
     double timeDif;
@@ -195,16 +199,16 @@ int main()
                     //  mz.collide(&ligh[t].pos, &ligh[t].acc, vec2(0.075f));
                     ligh[t].update(deltaTime);
                 }
-                if (glfwGetKey(window, GLFW_KEY_C) != GLFW_PRESS)
+                if (glfwGetKey(window, GLFW_KEY_C) != GLFW_PRESS && glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) != GLFW_PRESS)
                 {
                     vec3 ty = player.inp->acc;
                     player.inp->Grounded = mz.collide(&player.inp->pos, &player.inp->acc, vec2(0.075f, 0.0f));
                     player.inp->acc.y = ty.y;
                     if (player.inp->Grounded) player.inp->acc = ty;
                 }
-                else
+                else if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) != GLFW_PRESS)
                 {
-                    player.inp->acc.y = 1.5f;
+                     player.inp->acc.y = 1.5f;
                 }
                 
                 player.update(deltaTime);
@@ -489,9 +493,20 @@ void processInput(GLFWwindow* window)
     //LightSetings
     float armL = 0.27f;
     float armL2 = 0.0f;
-    cam.pos.x = player.inp->pos.x + sin(cam.rot.y) * armL * cos(cam.rot.x) +cos(cam.rot.y) * armL2;
-    cam.pos.y = player.inp->pos.y + player.obj.sca.y * 1.25 -sin(cam.rot.x) * armL;
-    cam.pos.z = player.inp->pos.z +cos(cam.rot.y) * armL *cos(cam.rot.x) -sin(cam.rot.y) * armL2;
+    float armL3 = 1.25;
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+        armL = 0.15f;
+        armL3 = 0.8;
+        armL2 = 0.02f;
+    }
+   // ArmL =  ArmL * (1.0 - deltaTime * 5.0) + (armL) * deltaTime * 5.0;
+    ArmL =  ArmL + (armL - ArmL) * deltaTime * 5.0;
+    ArmL2 = ArmL2 + (armL2 - ArmL2) * deltaTime * 5.0;
+    ArmL3 = ArmL3 + (armL3 - ArmL3) * deltaTime * 5.0;
+
+    cam.pos.x = player.inp->pos.x + sin(cam.rot.y) * ArmL * cos(cam.rot.x) +cos(cam.rot.y) * ArmL2;
+    cam.pos.y = player.inp->pos.y + player.obj.sca.y * ArmL3 - sin(cam.rot.x) * ArmL;
+    cam.pos.z = player.inp->pos.z +cos(cam.rot.y) * ArmL *cos(cam.rot.x) -sin(cam.rot.y) * ArmL2;
     player.inp->cam = cam.pos;
 }
 

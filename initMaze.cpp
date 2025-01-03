@@ -22,7 +22,58 @@ Maze::Maze(){
 
     size = 1.5f;
     thk = 0.45f;
-    count = 15;
+    count = 34;
+
+
+    Camps.clear();
+    bool isfixed = false;
+    int iisfixed = 0;
+    for (int i = 0; i < 6; i++)
+    {
+        Camps.push_back(new EnCamp(vec2(Rand(gen), Rand(gen)), i));
+
+    }
+    for (int i = 0; i < 100; i++)
+    {
+        Camps.push_back(new LootSpot(vec2(Rand(gen), Rand(gen))));
+
+    }
+    float tyu = 0.02f;
+
+    do
+    {
+        isfixed = true;
+        for (int i = 0; i < Camps.size(); i++)
+        {
+            for (int j = 0; j < Camps.size(); j++)
+            {
+                if ((*Camps[i]).Pos.x + (*Camps[i]).Size > 1) (*Camps[i]).Pos.x = 1 - (*Camps[i]).Size;
+                if ((*Camps[i]).Pos.x - (*Camps[i]).Size < 0) (*Camps[i]).Pos.x = 0 + (*Camps[i]).Size;
+                if ((*Camps[i]).Pos.y - (*Camps[i]).Size < 0) (*Camps[i]).Pos.y = 0 + (*Camps[i]).Size;
+                if ((*Camps[i]).Pos.y + (*Camps[i]).Size > 1) (*Camps[i]).Pos.y = 1 - (*Camps[i]).Size;
+                if (j != i)
+                {
+                    if (glm::distance((*Camps[i]).Pos , (*Camps[j]).Pos) < (*Camps[i]).Size + (*Camps[j]).Size + tyu)
+                    {
+                        vec2 mv = (*Camps[i]).Pos - (*Camps[j]).Pos;
+                        mv = glm::normalize(mv) * (glm::distance((*Camps[i]).Pos , (*Camps[j]).Pos) - ((*Camps[i]).Size + (*Camps[j]).Size + tyu * 1.1f));
+
+
+                        (*Camps[j]).Pos += mv * 0.5f;
+                        (*Camps[i]).Pos -= mv * 0.5f;
+                        isfixed = false;
+                    }
+                }
+
+            }
+
+        }
+        iisfixed++;
+    } while (!isfixed);
+
+
+
+
     for (int i = 0; i < count * count; i++)
     {
         nodes.push_back(*new Cell(i, count,thk));
@@ -31,7 +82,35 @@ Maze::Maze(){
     }
     for (int i = 0; i < count * count; i++)
     {
-        
+
+        nodes[i].prob = 2.0f;
+        for(Landmark* landm : Camps)
+        {
+            std::cout << typeid(landm).name() << std::endl;
+            if (dynamic_cast<EnCamp*>(landm) != nullptr)
+            {
+                EnCamp* Camp = dynamic_cast<EnCamp*>(landm);
+
+               float posX = (int)((*Camp).Pos.x * count);
+               float posY = (int)((*Camp).Pos.y * count);
+               float sze = (*Camp).Size * count;
+              
+               if (glm::distance(vec2(posX, posY), vec2(nodes[i].x, nodes[i].y)) < sze)
+               {
+                  
+                   nodes[i].prob = 0.01f;
+               }
+            }
+            if (dynamic_cast<LootSpot*>(landm) != nullptr)
+            {
+                LootSpot* Camp = dynamic_cast<LootSpot*>(landm);
+                int posX = (int)((*Camp).Pos.x * size);
+                int posY = (int)((*Camp).Pos.y * size);
+           
+           
+            }
+        }
+
         if (i != 0 && i % count != 0)
         {
             nodes[i].Conectablednodes.push_back(&nodes[i - 1]);
@@ -59,17 +138,7 @@ Maze::Maze(){
 
 
             bool asd = false;
-            //    for (var i = 0; i < cmp.length; i += 2)
-            //    {
-            //        var xx = cmp[i] % Cell::count;
-            //        var yy = cmp[i] / Cell::count;
-            //        var Distance = (Cell::x - xx) * (Cell::x - xx) + (Cell::y - yy) * (Cell::y - yy);
-            //        if ( Distance< glm::pow(cmp[i + 1],2) ) 
-            //         { asd = true;
-            //  }
-            //    }
-
-            if (!(*(*curC).Conectablednodes[rnd]).conected || asd || Rand(gen) * 10 <= 1)
+            if (!(*(*curC).Conectablednodes[rnd]).conected || asd || Rand(gen) <= (*curC).prob)
             {
                 cellStack.push_back((*curC).Conectablednodes[rnd]);
                 (*curC).Conectednodes.push_back((*curC).Conectablednodes[rnd]);
@@ -111,7 +180,7 @@ Maze::Maze(){
     std::vector<glm::mat4> mds;
     for (int i = 0; i < nodes.size(); i++) {
         nodes[i].set();
-        vec3 ps = vec3((i % count) * size, 0.05, (i / count) * size);
+        vec3 ps = vec3((i % count) * size, 0.1, (i / count) * size);
 
        // for (int k = -1; k < 2; k++)
        // {
@@ -613,4 +682,56 @@ void Cell::set(){
         }
         
       }
+}
+
+EnCamp::EnCamp(vec2 pos, float size) {
+
+    // Define the random number generator and distribution
+    std::random_device rd;  // Seed generator
+    std::mt19937 gen(rd()); // Mersenne Twister engine
+    std::uniform_real_distribution<float> Rand(0.0f, 1.0f); // Range [0, 1]
+
+    Pos = pos;
+    Size = size * 0.03f + 0.05f;
+
+    int numOfC = int(size)+1;
+    for (int i = 0; i < numOfC; i++)
+    {
+        cages.push_back((vec2(Rand(gen), Rand(gen)) - vec2(0.5f)) * 0.5f);
+    }
+    bool isfixed = true;
+    do
+    {
+        isfixed = true;
+        for (int i = 0; i < cages.size(); i++)
+        {
+            for (int j = 0; j < cages.size(); j++)
+            {
+                if (glm::distance(cages[j], vec2(0)) > 0.5f) cages[j] = glm::normalize(cages[j]) * 0.5f;
+
+                if (j != i)
+                {
+                    if (glm::distance(cages[i] , cages[j]) < 0.3f)
+                    {
+                        vec2 mv = cages[i] - cages[j];
+                        mv = glm::normalize(mv) * (glm::distance(cages[i], cages[j]) - (0.4f));
+
+
+                        cages[j] += mv * 0.5f;
+                        cages[i] -= mv * 0.5f;
+                        isfixed = false;
+                    }
+                }
+
+            }
+
+        }
+    } while (!isfixed);
+
+
+}
+
+LootSpot::LootSpot(vec2 pos) {
+    Pos = pos;
+    Size = 0.01f;
 }

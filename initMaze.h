@@ -9,12 +9,20 @@
 #include <iostream>
 
 
+class Landmark {
+public:
+    vec2 Pos;
+    float Size;
+
+    virtual ~Landmark() {}
+};
 class Cell
 {
 public:
     Cell(int index, int count, float thk);
     int index;
     int count;
+    float prob;
     int x;
     int y;
     bool conected = false;
@@ -37,6 +45,8 @@ public:
     void drawMap(int programInfo);
     std::vector<Cell> nodes;
     std::vector<Furniture> fur;
+    std::vector<Landmark*> Camps;
+
     InsObj furn;
     float size;
     int count;
@@ -51,4 +61,19 @@ public:
     GLuint VAO;
 };
 
+
+
+
+class LootSpot : public Landmark{
+public:
+    LootSpot(vec2 pos);
+};
+
+
+
+class EnCamp : public Landmark{
+public:
+    std::vector<vec2> cages;
+    EnCamp(vec2 pos, float size);
+};
 

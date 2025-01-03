@@ -213,7 +213,7 @@ int RunState::Enter() {
 	inp->animation[2] = 9;
 	inp->animation[3] = 10.0;
 	inp->speed = 10.0;
-	inp->jump = vec2(1.2,2.5);
+	inp->jump = vec2(1.6,2.5);
 	return 0;
 }
 int RunState::update(float deltaTime) {

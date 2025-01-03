@@ -100,7 +100,7 @@ void main() {
         for(int i = 0; i < lighC; i++)
         {
        
-       color+= texture(ColT, texPos).xyz * getLight(lightPos[i],texture(PosT, texPos).xyz+camPos,texture(NormT, texPos).xyz,texture(NormFT, texPos).xyz,uSamplerS[i],rotcam[i]) * vec3(1.0);
+       color+= texture(ColT, texPos).xyz * getLight(lightPos[i],texture(PosT, texPos).xyz+camPos,texture(NormT, texPos).xyz,texture(NormFT, texPos).xyz,uSamplerS[i],rotcam[i]) * vec3(1.0,0.5,0.5);
        
 
         }
