@@ -2,25 +2,44 @@
 #include <glad/glad.h>
 #include <random>
 
-Light::Light(glm::vec3 pos) {
+Light::Light(glm::vec3 pos,int sz) {
+	size = sz;
 	this->pos = pos;
 	obj = SpObj(pos, rot, glm::vec3(0.02f), initCubeBuffer({0,1,2,3,4,5}),0,0);
 	col = glm::vec3(0.1f);
 	
-	glGenTextures(1, &depthTex);
-
-	glBindTexture(GL_TEXTURE_CUBE_MAP, depthTex);
-	for (int i = 0; i < 6; i++)
+}
+void Light::activate(bool act) {
+	
+	if(!active && act)
 	{
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,0,GL_DEPTH_COMPONENT,500,500,0, GL_DEPTH_COMPONENT,GL_FLOAT,NULL);
+		
+		glGenTextures(1, &depthTex); 
+
+		glBindTexture(GL_TEXTURE_CUBE_MAP, depthTex);
+		for (int i = 0; i < 6; i++)
+		{
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT, size, size, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+		}
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+		handle = glGetTextureHandleARB(depthTex);
+		glMakeTextureHandleResidentARB(handle);
+		active = true;
 	}
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR); 
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); 
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-	handle = glGetTextureHandleARB(depthTex);
-	glMakeTextureHandleResidentARB(handle);
+	//else if (active && !act)
+	//{
+	//	glMakeTextureHandleNonResidentARB(handle);
+	//	glBindTexture(GL_TEXTURE_2D, 0);
+	//	glDeleteTextures(1, &depthTex);
+	//	active = false;
+	//}
+	
+	
+	
 }
 Light::Light() {
 

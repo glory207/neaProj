@@ -23,6 +23,7 @@ public:
     int index;
     int count;
     float prob;
+    int tresure;
     int x;
     int y;
     bool conected = false;

@@ -6,7 +6,6 @@ GframeBuffer::GframeBuffer(glm::vec2 sz) {
 	glGenTextures(1, &NomTex);
 	glGenTextures(1, &NomFTex);
 	glGenFramebuffers(1, &FB);
-	GLuint RB;
 	glGenRenderbuffers(1, &RB);
 
 	//Col
@@ -58,9 +57,7 @@ GframeBuffer::GframeBuffer(glm::vec2 sz) {
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
-GframeBuffer::GframeBuffer() {
-
-}
+GframeBuffer::GframeBuffer() {}
 void GframeBuffer::bind(bool clear) {
 	glViewport(0, 0, size.x, size.y);
 
@@ -79,17 +76,54 @@ void GframeBuffer::bind(bool clear) {
 	if (clear) glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 }
+void GframeBuffer::set(glm::vec2 sz) {
+	size = sz;
+	//Col
+	glBindTexture(GL_TEXTURE_2D, ColTex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glGenerateMipmap(GL_TEXTURE_2D);
+	//pos
+	glBindTexture(GL_TEXTURE_2D, PosTex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, size.x, size.y, 0, GL_RGBA, GL_FLOAT, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glGenerateMipmap(GL_TEXTURE_2D);
+	//nom
+	glBindTexture(GL_TEXTURE_2D, NomTex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, size.x, size.y, 0, GL_RGBA, GL_FLOAT, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glGenerateMipmap(GL_TEXTURE_2D);
+	//nomF
+	glBindTexture(GL_TEXTURE_2D, NomFTex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, size.x, size.y, 0, GL_RGBA, GL_FLOAT, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glGenerateMipmap(GL_TEXTURE_2D);
 
+	glBindRenderbuffer(GL_RENDERBUFFER, RB);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, size.x, size.y);
+}
 
 
 
 createShadowFramebufferCube::createShadowFramebufferCube() {}
-createShadowFramebufferCube::createShadowFramebufferCube(float sz) {
-
+createShadowFramebufferCube::createShadowFramebufferCube(int sz) {
+	size = sz;
 	GLuint ColTex;
 	glGenTextures(1, &ColTex);
 	glBindTexture(GL_TEXTURE_2D, ColTex);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 500, 500, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, sz, sz, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -188,7 +222,6 @@ FrameBuffer::FrameBuffer(glm::vec2 sz) {
 	size = sz;
 	glGenTextures(1, &ColTex);
 	glGenFramebuffers(1, &FB);
-	GLuint RB;
 	glGenRenderbuffers(1, &RB);
 
 	//Col
@@ -230,5 +263,18 @@ void FrameBuffer::bind(bool clear) {
 
 	if (clear) glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+}
+void FrameBuffer::set(glm::vec2 sz) {
+	size = sz;
+	//Col
+	glBindTexture(GL_TEXTURE_2D, ColTex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+	glBindRenderbuffer(GL_RENDERBUFFER, RB);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, size.x, size.y);
 }
 

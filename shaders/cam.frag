@@ -28,18 +28,14 @@
         float bias;
         float  closeD = 0.0;
         float currentD = length(posLight-posFrag);
-        float rad = 1.0;
-        for(float x = -rad; x < rad; x+= 1.0){
-        for(float y = -rad; y < rad; y+= 1.0){
-        for(float z = -rad; z < rad; z+= 1.0){
-        closeD = texture(uSamplerSs, -normalize(dir) + vec3(x,y,z) * (1.0/float(textureSize(uSamplerSs,0).r))).r *100.0;
-        bias = max(0.005* (1.0-dot(normalF,dir - vec3(x,y,z))), 0.005);
+
+     closeD = texture(uSamplerSs, -normalize(dir)).r *100.0;
+        bias = max(0.005* (1.0-dot(normalF,dir)), 0.005);
 
         if(currentD <= closeD + bias){ 
-           shadow += 1.0/pow(rad*2.0,3.0);  
+           shadow = 1.0;  
         }
-    }}}
-    shadow =  floor(shadow*4.0)/4.0;
+
         
         if(shadow < 0.5) return 0;
         

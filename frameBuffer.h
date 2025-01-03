@@ -10,11 +10,13 @@ public:
 	GLuint PosTex;
 	GLuint NomTex;
 	GLuint NomFTex;
+	GLuint RB;
 	GLuint FB;
 	glm::vec2 size;
 	void bind(bool clear);
 	GframeBuffer(glm::vec2 sz);
 	GframeBuffer();
+	void set(glm::vec2 sz);
 };
 
 class FrameBuffer
@@ -26,6 +28,8 @@ public:
 	void bind(bool clear);
 	FrameBuffer(glm::vec2 sz);
 	FrameBuffer();
+	void set(glm::vec2 sz);
+	GLuint RB;
 };
 
 class createShadowFramebufferCube {
@@ -36,8 +40,8 @@ public:
 	std::vector<GLenum> face;
 	std::vector<glm::vec3> target;
 	std::vector<glm::vec3> up;
-	float size;
+	int size;
 	void bind(bool clear, int i, GLuint depthTex);
-	createShadowFramebufferCube(float sz);
+	createShadowFramebufferCube(int sz);
 	createShadowFramebufferCube();
 };

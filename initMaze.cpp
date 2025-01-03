@@ -22,7 +22,7 @@ Maze::Maze(){
 
     size = 1.5f;
     thk = 0.45f;
-    count = 34;
+    count = 35;
 
 
     Camps.clear();
@@ -83,10 +83,9 @@ Maze::Maze(){
     for (int i = 0; i < count * count; i++)
     {
 
-        nodes[i].prob = 2.0f;
+        nodes[i].prob = 0.05f;
         for(Landmark* landm : Camps)
         {
-            std::cout << typeid(landm).name() << std::endl;
             if (dynamic_cast<EnCamp*>(landm) != nullptr)
             {
                 EnCamp* Camp = dynamic_cast<EnCamp*>(landm);
@@ -98,15 +97,16 @@ Maze::Maze(){
                if (glm::distance(vec2(posX, posY), vec2(nodes[i].x, nodes[i].y)) < sze)
                {
                   
-                   nodes[i].prob = 0.01f;
+                   nodes[i].prob = 0.9f;
+                  
                }
             }
-            if (dynamic_cast<LootSpot*>(landm) != nullptr)
+            else if (dynamic_cast<LootSpot*>(landm) != nullptr)
             {
                 LootSpot* Camp = dynamic_cast<LootSpot*>(landm);
-                int posX = (int)((*Camp).Pos.x * size);
-                int posY = (int)((*Camp).Pos.y * size);
-           
+                int posX = (int)((*Camp).Pos.x * count);
+                int posY = (int)((*Camp).Pos.y * count);
+                if(nodes[i].index == posX + posY * count)  nodes[i].tresure ++;
            
             }
         }

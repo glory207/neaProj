@@ -16,11 +16,12 @@
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 
-unsigned int SCR_WIDTH = 1000;
-unsigned int SCR_HEIGHT = 800;
+unsigned int SCR_WIDTH = 900;
+unsigned int SCR_HEIGHT = 900;
 camera cam;
 vector<Light> ligh;
 PlayerClass player;
+createShadowFramebufferCube shBF;
 bool firstClick = false;
 bool firstClicke = false;
 bool erere = false;
@@ -78,39 +79,19 @@ int main()
 
     Maze mz = Maze();  
     cam = camera(glm::vec3(0.0f, 0.2f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f)); 
-    createShadowFramebufferCube shBF = createShadowFramebufferCube(500);
+    shBF = createShadowFramebufferCube(200);
     player = PlayerClass(vec3(0.0f, 0.0f, 0.5f), vec3(0.0f, -3.1415 / 2.0f, 0.0f));
     
-    glDisable(GL_BLEND);
-    glViewport(0, 0, 500, 500);
+
+    //for (int t = 0; t < pow(mz.count, 2.0f); t++)
     for (int t = 0; t < pow(mz.count, 2.0f); t++)
     {
         
         if (Rand(gen) < 0.4) {
-            ligh.push_back(Light(vec3((t % mz.count) * mz.size, Rand(gen)* 0.4 + 0.3, (t / mz.count) * mz.size)));
+            ligh.push_back(Light(vec3((t % mz.count) * mz.size, Rand(gen)* 0.4 + 0.3, (t / mz.count) * mz.size), shBF.size));
 
-            shBF.bind(true, 0, ligh[ligh.size() - 1].depthTex);
-            glUseProgram(shaderShadowProgram);
-            for (int i = 0; i < 6; i++)
-            {
-                float fov = (0.5f * 3.14159265358979323846f);
-                float zNear = 0.01f;
-                float zFar = 100.0f;
-                glm::mat4 projectionMatrix;
-                glm::mat4 view;
-                glm::mat4 rotationMatrix;
-                projectionMatrix = glm::perspective(fov, 1.0f, zNear, zFar);
-                view = glm::lookAt(ligh[ligh.size() - 1].obj.pos, ligh[ligh.size() - 1].pos + shBF.target[i], shBF.up[i]);
-                rotationMatrix = view;
-                view = projectionMatrix * view;
-                std::string ii = "uProjectionMatrix[" + std::to_string(i) + "]";
-                glUniformMatrix4fv(glGetUniformLocation(shaderShadowProgram, ii.c_str()), 1, GL_FALSE, glm::value_ptr(view));
-            }
-            glUniform3f(glGetUniformLocation(shaderShadowProgram, "lpos"), ligh[ligh.size() - 1].pos.x, ligh[ligh.size() - 1].pos.y, ligh[ligh.size() - 1].pos.z);
-            mz.draw(shaderShadowProgram);
-            
-            player.draw(0, shaderShadowProgram);
         }
+
     }
     
     float vertices[] = {
@@ -146,7 +127,7 @@ int main()
     double timeDif;
     unsigned int counter = 0;
 
-
+    cam.updateSize(vec2(SCR_WIDTH, SCR_HEIGHT));
     #pragma endregion
     #pragma region Update
     while (!glfwWindowShouldClose(window))
@@ -218,13 +199,14 @@ int main()
             glDisable(GL_BLEND);
 
 
-            glViewport(0, 0, 500, 500);
-            int nb = 0;
+            glViewport(0, 0, shBF.size, shBF.size);
+            int nb1 = 0;
+            int nb2 = 0;
             for (int t = 0; t < ligh.size(); t++) {
 
                 if (length(ligh[t].pos - cam.pos) < 7.0f) {
-                    // glMakeTextureHandleResidentARB(ligh[t].handle);
-                    nb++;
+                    ligh[t].activate(true);
+                    nb1++;
                     shBF.bind(true, 0, ligh[t].depthTex);
                     glUseProgram(shaderShadowProgram);
                     std::string ii[6];
@@ -254,10 +236,14 @@ int main()
                     // cout << ligh[t].pos.x << endl;
                    // glMakeTextureHandleNonResidentARB(ligh[t].handle);
                 }
-
+                if (length(ligh[t].pos - cam.pos) > 10.0f)
+                {
+                    ligh[t].activate(false);
+                    nb2++;
+                }
 
             }
-
+            
 
             cam.GFB.bind(true);
             glUseProgram(shaderProgram);
@@ -281,7 +267,7 @@ int main()
             glUniformMatrix4fv(glGetUniformLocation(shaderLightProgram, "uProjectionMatrix"), 1, GL_FALSE, glm::value_ptr(ma[0]));
             for (int t = 0; t < ligh.size(); t++) {
                 glUniform3f(glGetUniformLocation(shaderLightProgram, "color"), ligh[t].col.x, ligh[t].col.y, ligh[t].col.z);
-                if (length(ligh[t].pos - cam.pos) < 9.5f)
+                if (length(ligh[t].pos - cam.pos) < 7.0f)
                     ligh[t].obj.draw(shaderLightProgram);
             }
 
@@ -447,7 +433,7 @@ void processInput(GLFWwindow* window)
     if (!firstClicke && glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
     {
         firstClicke = true;
-        ligh.push_back(Light(cam.pos));
+        ligh.push_back(Light(cam.pos, shBF.size));
     }
     else if (glfwGetKey(window, GLFW_KEY_E) != GLFW_PRESS)
     {
@@ -494,7 +480,7 @@ void processInput(GLFWwindow* window)
     float armL = 0.27f;
     float armL2 = 0.0f;
     float armL3 = 1.25;
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && player.inp->Grounded) {
         armL = 0.15f;
         armL3 = 0.8;
         armL2 = 0.02f;
@@ -514,4 +500,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     SCR_WIDTH = width;
     SCR_HEIGHT = height;
+    cam.updateSize(vec2(SCR_WIDTH, SCR_HEIGHT));
+    cout << SCR_WIDTH << " " << SCR_HEIGHT << endl;
 }
