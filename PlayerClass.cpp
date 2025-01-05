@@ -28,8 +28,8 @@ void PlayerClass::update(float deltaTime) {
 }
 void PlayerClass::draw(float time, int shader) {
 
-	obj.text1 = texture(inp->animation[0]);
-	obj.text2 = texture(inp->animation[1]);
+	obj.text1 = texture(inp->animation[0],false);
+	obj.text2 = texture(inp->animation[1],false);
 	obj.textOff = vec4(
 		(int)(inp->animation[4]) % ((int)(inp->animation[2]) - 1),
 		(int)(inp->dir.x + inp->dir.y) % 8,

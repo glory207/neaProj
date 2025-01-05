@@ -8,7 +8,6 @@
 #include "initMaze.h"
 #include "camera.h"
 #include "PlayerClass.h"
-#include "Light.h"
 #include<glm/gtc/matrix_transform.hpp>
 #include<gl/GL.h>
 #include <random>
@@ -21,13 +20,13 @@ unsigned int SCR_HEIGHT = 900;
 camera cam;
 vector<Light> ligh;
 PlayerClass player;
-createShadowFramebufferCube shBF;
+
 bool firstClick = false;
 bool firstClicke = false;
 bool erere = false;
 int adee = 1;
 float adeee = 0;
-vec2 LightSetings = vec2(1.0,0.75);
+vec2 LightSetings = vec2(1.5,1.2);
 float ArmL = 0.27f;
 float ArmL2 = 0.0f;
 float ArmL3 = 1.25;
@@ -64,22 +63,22 @@ int main()
     }
 
     unsigned int shaderProgram = initShader("shaders/def.vert", "shaders/def.geom", "shaders/def.frag");
-    unsigned int shaderInstaceProgram = initShader("shaders/defInst.vert", "shaders/def.geom", "shaders/def.frag");
+    unsigned int shaderInstaceProgram = initShader("shaders/defInst.vert", "shaders/defInst.geom", "shaders/defInst.frag");
     unsigned int shaderLightProgram = initShader("shaders/def.vert", "shaders/def.geom", "shaders/light.frag");
     unsigned int shaderShadowProgram = initShader("shaders/shadow.vert", "shaders/shadow.geom", "shaders/shadow.frag");
-    unsigned int shaderInstaceShadowProgram = initShader("shaders/shadowInst.vert", "shaders/shadow.geom", "shaders/shadow.frag");
+    unsigned int shaderInstaceShadowProgram = initShader("shaders/shadowInst.vert", "shaders/shadowInst.geom", "shaders/shadowInst.frag");
     unsigned int shaderMazeProgram = initShader("shaders/maze.vert", "shaders/maze.geom", "shaders/maze.frag"); 
     unsigned int ShaderPost = initShader("shaders/cam.vert", "shaders/camPost.frag"); 
-
+    createShadowFramebufferCube shBF = createShadowFramebufferCube(500);
 
     // Define the random number generator and distribution
     std::random_device rd;  // Seed generator
     std::mt19937 gen(rd()); // Mersenne Twister engine
     std::uniform_real_distribution<float> Rand(0.0f, 1.0f); // Range [0, 1]
 
-    Maze mz = Maze();  
+    Maze mz = Maze(&ligh);  
     cam = camera(glm::vec3(0.0f, 0.2f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f)); 
-    shBF = createShadowFramebufferCube(200);
+    
     player = PlayerClass(vec3(0.0f, 0.0f, 0.5f), vec3(0.0f, -3.1415 / 2.0f, 0.0f));
     
 
@@ -88,7 +87,7 @@ int main()
     {
         
         if (Rand(gen) < 0.4) {
-            ligh.push_back(Light(vec3((t % mz.count) * mz.size, Rand(gen)* 0.4 + 0.3, (t / mz.count) * mz.size), shBF.size));
+        //    ligh.push_back(Light(vec3((t % mz.count) * mz.size, Rand(gen)* 0.4 + 0.3, (t / mz.count) * mz.size), shBF.size));
 
         }
 
@@ -178,18 +177,15 @@ int main()
                 processInput(window);
                 for (int t = 0; t < ligh.size(); t++) {
                     //  mz.collide(&ligh[t].pos, &ligh[t].acc, vec2(0.075f));
-                    ligh[t].update(deltaTime);
+                  //  ligh[t].update(deltaTime);
                 }
-                if (glfwGetKey(window, GLFW_KEY_C) != GLFW_PRESS && glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) != GLFW_PRESS)
+                if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) != GLFW_PRESS)
                 {
                     vec3 ty = player.inp->acc;
                     player.inp->Grounded = mz.collide(&player.inp->pos, &player.inp->acc, vec2(0.075f, 0.0f));
-                    player.inp->acc.y = ty.y;
-                    if (player.inp->Grounded) player.inp->acc = ty;
-                }
-                else if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) != GLFW_PRESS)
-                {
-                     player.inp->acc.y = 1.5f;
+                    //player.inp->acc.y = ty.y;
+                    //if (player.inp->Grounded) player.inp->acc = ty;
+                    player.inp->acc = ty;
                 }
                 
                 player.update(deltaTime);
@@ -199,14 +195,16 @@ int main()
             glDisable(GL_BLEND);
 
 
-            glViewport(0, 0, shBF.size, shBF.size);
+            glViewport(0, 0, 500,500);
             int nb1 = 0;
             int nb2 = 0;
+            int nb3 = 0;
             for (int t = 0; t < ligh.size(); t++) {
-
-                if (length(ligh[t].pos - cam.pos) < 7.0f) {
-                    ligh[t].activate(true);
+                
+                if (length(ligh[t].pos - cam.pos) < 4.0f) {
+                    
                     nb1++;
+                    ligh[t].activate(true);
                     shBF.bind(true, 0, ligh[t].depthTex);
                     glUseProgram(shaderShadowProgram);
                     std::string ii[6];
@@ -219,7 +217,7 @@ int main()
                         glm::mat4 projectionMatrix;
                         glm::mat4 view;
                         projectionMatrix = glm::perspective(fov, 1.0f, zNear, zFar);
-                        view = glm::lookAt(ligh[t].obj.pos, ligh[t].pos + shBF.target[i], shBF.up[i]);
+                        view = glm::lookAt(ligh[t].obj.pos, ligh[t].pos +shBF.target[i], shBF.up[i]);
                         view = projectionMatrix * view;
                         matr4[i] = view;
                         ii[i] = "uProjectionMatrix[" + std::to_string(i) + "]";
@@ -232,19 +230,23 @@ int main()
                     
                     for (int i = 0; i < 6; i++)glUniformMatrix4fv(glGetUniformLocation(shaderInstaceShadowProgram, ii[i].c_str()), 1, GL_FALSE, glm::value_ptr(matr4[i]));
                     glUniform3f(glGetUniformLocation(shaderInstaceShadowProgram, "lpos"), ligh[t].pos.x, ligh[t].pos.y, ligh[t].pos.z);
-                    mz.furn.draw(shaderInstaceProgram, mz.fur.size());
+                    mz.furn.draw(shaderInstaceShadowProgram, mz.fur.size());
                     // cout << ligh[t].pos.x << endl;
                    // glMakeTextureHandleNonResidentARB(ligh[t].handle);
-                }
-                if (length(ligh[t].pos - cam.pos) > 10.0f)
-                {
+                }else {
                     ligh[t].activate(false);
                     nb2++;
                 }
-
+                if (ligh[t].active)
+                {
+                    nb3 += 1;
+                }
+              //  if (length(ligh[t].pos - cam.pos) > 3.0f)
+                
+               
             }
             
-
+            cout << std::to_string(nb1) << " " << std::to_string(nb2) << " " << std::to_string(nb3) << endl;
             cam.GFB.bind(true);
             glUseProgram(shaderProgram);
             std::vector<glm::mat4> ma = cam.matrix(float(SCR_WIDTH) / float(SCR_HEIGHT));
@@ -266,9 +268,11 @@ int main()
             glUseProgram(shaderLightProgram);
             glUniformMatrix4fv(glGetUniformLocation(shaderLightProgram, "uProjectionMatrix"), 1, GL_FALSE, glm::value_ptr(ma[0]));
             for (int t = 0; t < ligh.size(); t++) {
-                glUniform3f(glGetUniformLocation(shaderLightProgram, "color"), ligh[t].col.x, ligh[t].col.y, ligh[t].col.z);
-                if (length(ligh[t].pos - cam.pos) < 7.0f)
+                if (ligh[t].active)
+                {
+                    glUniform3f(glGetUniformLocation(shaderLightProgram, "color"), ligh[t].col.x, ligh[t].col.y, ligh[t].col.z);
                     ligh[t].obj.draw(shaderLightProgram);
+                }
             }
 
 
@@ -304,7 +308,7 @@ int main()
             std::string ii = " ";
             for (int t = 0; t < ligh.size(); t++) {
 
-                if (length(ligh[t].pos - player.inp->pos) < 9.0f)
+                if (ligh[t].active && length(ligh[t].pos - player.inp->pos) < 6.0f)
                 {
                     ii = "rotcam[" + std::to_string(e) + "]";
                     glUniformMatrix4fv(glGetUniformLocation(cam.shader, ii.c_str()), 1, GL_FALSE, value_ptr(ligh[t].rotationMatrix));
@@ -316,7 +320,7 @@ int main()
                     ii = "lightPos[" + std::to_string(e) + "]";
 
                     glUniform3f(glGetUniformLocation(cam.shader, ii.c_str()), ligh[t].pos.x, ligh[t].pos.y, ligh[t].pos.z);
-                    glUniform2f(glGetUniformLocation(cam.shader, "LightSetings"), LightSetings.x, LightSetings.y);
+                    glUniform2f(glGetUniformLocation(cam.shader, "LightSetings"), LightSetings.x + sin(curTime * 1.5f) * 0.1f, LightSetings.y);
 
                     if (e == 10) {
                         glUniform1i(glGetUniformLocation(cam.shader, "lighC"), 11);
@@ -433,7 +437,7 @@ void processInput(GLFWwindow* window)
     if (!firstClicke && glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
     {
         firstClicke = true;
-        ligh.push_back(Light(cam.pos, shBF.size));
+        ligh.push_back(Light(cam.pos));
     }
     else if (glfwGetKey(window, GLFW_KEY_E) != GLFW_PRESS)
     {

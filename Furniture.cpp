@@ -1,14 +1,177 @@
 #include "Furniture.h"
 #include <random>
-Furniture::Furniture(vec3 ps, vec3 sc, float rt) {
+vec2 rott(vec2 v, float r)
+{
+    return vec2(v.x * cos(r) + v.y * sin(r), -v.x * sin(r) + v.y * cos(r));
+}
+
+Furniture::Furniture(int i, int k, int (*grid)[3][3], float size, float thk, vec3 ps) {
 	std::random_device rd;  // Seed generator
 	std::mt19937 gen(rd()); // Mersenne Twister engine
 	std::uniform_real_distribution<float> Rand(0.0f, 1.0f); // Range [0, 1]
+    type1 = 2;
+    type2 = 0;
 
-	pos = ps;
-	sca = sc;
-	rot = vec3(0.0f, rt, 0.0f);
+    vec2 rectP;
+    std::vector<vec2> cnt;
+    switch (i) {
+    case 0:
+        rectP = vec2(-1, -1);
+        sca = vec3(0.4f, 0.4f, 0.05f);
+        rot = vec3(0.0f,-3.1415f*3 / 4.0f, 0.0f);
+        cnt.push_back(vec2(-1.0f, -1.0f));
+        cnt.push_back(vec2(-1, 0));
+        cnt.push_back(vec2(0, -1));
+        type1 = 5;
+        break;
+    case 1:
+        rectP = vec2(-1, -1);
+        sca = vec3(0.25f, 0.08f, 0.25f);
+        rot = vec3(0.0f);
+        cnt.push_back(vec2(-1, -1));
+        type1 = 1;
+        break;
+    case 2:
+        rectP = vec2(-1, 0);
+        sca = vec3(0.15f, 0.2f, 0.15f);
+        rot = vec3(0.0f, -3.1415f / 2.0f, 0.0f);
+        cnt.push_back(vec2(-1, 0));
+        type1 = 4;
+        break;
+    case 3:
+        rectP = vec2(-1, 0);
+        sca = vec3(0.7f, 0.5f, 0.075f);
+        rot = vec3(0.0f,-3.1415f/2.0f,0.0f);
+        cnt.push_back(vec2(-1, 0));
+        cnt.push_back(vec2(-1, -1));
+        cnt.push_back(vec2(-1, 1));
+        type1 = 5;
+        break;
+    case 4:
+        rectP = vec2(-0.8f, 0);
+        sca = vec3(0.05f, 0.25f, 0.05f);
+        rot = vec3(0.0f);
+        cnt.push_back(vec2(-1, 0));
+        type1 = 3;
+        break;
+    case 5:
+        rectP = vec2(0, 0);
+        sca = vec3(0.2f, 0.5f, 0.2f);
+        rot = vec3(0.0f, 3.1415f / 4.0f, 0.0f);
+        cnt.push_back(vec2(0, 0));
+        type1 = 6;
+        break;
+    case 6:
+        rectP = vec2(-1, 0);
+        sca = vec3(0.2f, 0.09f, 0.35f);
+        rot = vec3(0.0f, -3.1415f / 2.0f, 0.0f);
+        cnt.push_back(vec2(-1, 0));
+        cnt.push_back(vec2(0, 0));
+        type1 = 2;
+        break;
+    case 7:
+        rectP = vec2(-1, -1);
+        sca = vec3(0.21f, 0.09f, 0.4f);
+        rot = vec3(0.0f, 3.1415f, 0.0f);
+        cnt.push_back(vec2(-1, -1));
+        cnt.push_back(vec2(-1, 0));
+        type1 = 2;
+        break;
+    case -2:
+        rectP = vec2(0,0);
+        sca = vec3(0.07f, 0.07f, 0.13f);
+        rot = vec3(0.0f);
+        cnt.push_back(vec2(0, 0));
+        type1 = 7;
+        break;
+    default:
+        
 
+        break;
+    }
+
+    for (int j = 0; j < cnt.size(); j++)
+    {
+        cnt[j] = vec2(cnt[j].x * cos((3.1415f / 2.0f) * k) + cnt[j].y * sin((3.1415f / 2.0f) * k),
+            -cnt[j].x * sin((3.1415f / 2.0f) * k) + cnt[j].y * cos((3.1415f / 2.0f) * k));
+        if ((*grid)[(int)round(cnt[j].x + 1)][ (int)round(cnt[j].y + 1)] == 1) (*grid)[(int)round(cnt[j].x + 1)][ (int)round(cnt[j].y + 1)] = 3;
+        else (*grid)[(int)round(cnt[j].x + 1)][ (int)round(cnt[j].y + 1)] = 2;
+    }
+    
+    {
+        rectP = vec2(rectP.x * cos((3.1415f / 2.0f) * k) + rectP.y * sin((3.1415f / 2.0f) * k),
+            -rectP.x * sin((3.1415f / 2.0f) * k) + rectP.y * cos((3.1415f / 2.0f) * k));
+        rot.y += (3.1415f / 2.0f) * k;
+    }
+
+    sca *= size * thk;
+    vec2 width = vec2(
+        max(abs(rott(vec2(-1, 1) * vec2(sca.x, sca.z) ,rot.y).x), abs(rott(vec2(-1, -1) * vec2(sca.x, sca.z), rot.y).x)),
+        max(abs(rott(vec2(-1, -1) * vec2(sca.x, sca.z),rot.y).y), abs(rott(vec2(1, -1) * vec2(sca.x, sca.z), rot.y).y))) +  vec2(size * 0.02f, size * 0.02f);
+    vec2 rtP = (vec2(size * thk) - width) * rectP;
+    pos = vec3(rtP.x,sca.y, rtP.y) + ps;
+    
+
+}
+
+bool Furniture::canFit(int i, int k, int(*grid)[3][3]) {
+
+    std::vector<vec3> cnt;
+    switch (i)
+    {
+    case 0:
+        cnt.push_back(vec3(-1, -1, 0));
+        cnt.push_back(vec3(-1, 0, 0));
+        cnt.push_back(vec3(0, -1, 0));
+        break;
+    case 1:
+        cnt.push_back(vec3(-1, -1, 0));
+        break;
+    case 2:
+        cnt.push_back(vec3(-1, 0, 0));
+        break;
+    case 3:
+        cnt.push_back(vec3(-1, 0, 0));
+        cnt.push_back(vec3(-1, -1, 0));
+        cnt.push_back(vec3(-1, 1, 0));
+        break;
+    case 4:
+        cnt.push_back(vec3(-1, 0, 1));
+        break;
+    case 5:
+        cnt.push_back(vec3(0, 0, 0));
+        break;
+    case 6:
+        cnt.push_back(vec3(-1, 0, 0));
+        cnt.push_back(vec3(0, 0, 1));
+        return false;
+        break;
+    case 7:
+        cnt.push_back(vec3(-1, -1, 0));
+        cnt.push_back(vec3(-1, 0, 0));
+        break;
+    default:
+        return false;
+
+        break;
+    }
+    bool fit = true;
+    for (int j = 0; j < cnt.size(); j++)
+    {
+        cnt[j] = vec3(cnt[j].x * cos((3.1415f / 2.0f) * k) + cnt[j].y * sin((3.1415f / 2.0f) * k),
+            -cnt[j].x * sin((3.1415f / 2.0f) * k) + cnt[j].y * cos((3.1415f / 2.0f) * k), cnt[j].z);
+        if ((*grid)[(int)round(cnt[j].x + 1)][ (int)round(cnt[j].y + 1)] >= 2)
+        {
+            fit = false;
+            break;
+        }
+        if ((*grid)[(int)round(cnt[j].x + 1)][ (int)round(cnt[j].y + 1)] == 1 && cnt[j].z != 1)
+        {
+            fit = false;
+            break;
+        }
+    }
+    return fit;
 }
 Furniture::Furniture() {
 }

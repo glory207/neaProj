@@ -1,6 +1,7 @@
 #pragma once
 #include "initBuffer.h"
 #include "object.h"
+#include "frameBuffer.h"
 
 
 class Light
@@ -13,8 +14,8 @@ public:
 	GLuint depthTex;
 	GLuint64 handle;
 	glm::mat4 rotationMatrix;
-	float size;
-	Light(glm::vec3 pos, int sz);
+	int size;
+	Light(glm::vec3 pos);
 	void update(float deltaTime);
 	glm::vec3 acc;
 	glm::vec3 pos;

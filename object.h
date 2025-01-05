@@ -31,7 +31,7 @@ public:
     glm::mat4 asddsa;
     BufferGroup buffer;
     InsObj();
-    InsObj(BufferGroup buffers, int img1, int img2, GLuint modelBuffer);
+    InsObj(BufferGroup buffers, int img1, int img2, GLuint modelBuffer, GLuint textureBuffer);
     GLuint text1;
     GLuint text2;
     void draw(int programInfo, int count);

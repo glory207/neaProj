@@ -117,7 +117,33 @@ void GframeBuffer::set(glm::vec2 sz) {
 
 
 
-createShadowFramebufferCube::createShadowFramebufferCube() {}
+createShadowFramebufferCube::createShadowFramebufferCube() {
+
+	face = {
+		GL_TEXTURE_CUBE_MAP_POSITIVE_X,
+		GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
+		GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
+		GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
+		GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
+		GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
+	};
+	target = {
+		glm::vec3(1, 0, 0),
+		glm::vec3(-1, 0, 0),
+		glm::vec3(0, 1, 0),
+		glm::vec3(0, -1, 0),
+		glm::vec3(0, 0, 1),
+		glm::vec3(0, 0, -1)
+	};
+	up = {
+		glm::vec3(0, -1, 0),
+		glm::vec3(0, -1, 0),
+		glm::vec3(0, 0, 1) ,
+		glm::vec3(0, 0, -1),
+		glm::vec3(0, -1, 0),
+		glm::vec3(0, -1, 0)
+	};
+}
 createShadowFramebufferCube::createShadowFramebufferCube(int sz) {
 	size = sz;
 	GLuint ColTex;
@@ -167,14 +193,16 @@ createShadowFramebufferCube::createShadowFramebufferCube(int sz) {
 }
 void createShadowFramebufferCube::bind(bool clear,int i, GLuint depthTex) {
 
+
+
 	glBindTexture(GL_TEXTURE_CUBE_MAP, depthTex);
 	glBindFramebuffer(GL_FRAMEBUFFER, FB);
 	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthTex, 0);
-	glDrawBuffer(GL_NONE); 
-	glReadBuffer(GL_NONE); 
+	glDrawBuffer(GL_NONE);
+	glReadBuffer(GL_NONE);
 
 
-	
+
 	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 	if (status != GL_FRAMEBUFFER_COMPLETE) {
 		switch (status) {
@@ -208,6 +236,7 @@ void createShadowFramebufferCube::bind(bool clear,int i, GLuint depthTex) {
 		}
 	}
 
+	glBindFramebuffer(GL_FRAMEBUFFER, FB);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClearDepth(1.0f); // Clear everything
 	glEnable(GL_DEPTH_TEST); // Enable depth testing

@@ -40,6 +40,7 @@ public:
 	std::vector<GLenum> face;
 	std::vector<glm::vec3> target;
 	std::vector<glm::vec3> up;
+	
 	int size;
 	void bind(bool clear, int i, GLuint depthTex);
 	createShadowFramebufferCube(int sz);

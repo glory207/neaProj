@@ -1,4 +1,41 @@
-﻿#include "initMaze.h"
+﻿/*
+std::vector<const char*> texturesNames = {"img/brick.jpg","img/playerAni/walk0001-Sheet.png","img/playerAni/idle0001-Sheet.png",
+    "img/playerAni/crouchWalk0001-Sheet.png",
+    "img/playerAni/crouchWalkNormal0001-Sheet.png",
+    "img/brickN.png",
+    "img/playerAni/walkNormal0001-Sheet.png",
+    "img/playerAni/idleNormal0001-Sheet.png",
+    "img/playerAni/run0001-Sheet.png",
+    "img/playerAni/runNormal0001-Sheet.png",
+    "img/MapOverlay.png",
+    "img/scary.jpg",
+    "img/wood-normal.jpg",//0
+    "img/treasureCh.png"//7,
+    "img/SpriteNorm-0000.png",
+    "img/cubeTableTexture.png",//1
+    "img/cubeBedTexture.png",//2
+    "img/playerAni/crouch0001-Sheet.png",
+    "img/playerAni/crouchNormal0001-Sheet.png",
+    "img/playerAni/roll0001-Sheet.png",
+    "img/playerAni/rollNormal0001-Sheet.png",
+    "img/playerAni/dive0001-Sheet.png",
+    "img/playerAni/diveNormal0001-Sheet.png",
+    "img/torch.png",//3
+    "img/chair.png",//4
+    "img/bookshelf.png",//5
+    "img/Pillar.png"//6,
+};
+
+*/
+
+
+
+
+
+
+
+
+#include "initMaze.h"
 #include <string>
 #include <random>
 
@@ -14,15 +51,15 @@ glm::mat4 Matrix(vec3 pos,vec3 sca, vec3 rot) {
     return modelViewMatrix;
 }
 
-Maze::Maze(){
+Maze::Maze(std::vector<Light>* ligh){
     // Define the random number generator and distribution
     std::random_device rd;  // Seed generator
     std::mt19937 gen(rd()); // Mersenne Twister engine
     std::uniform_real_distribution<float> Rand(0.0f, 1.0f); // Range [0, 1]
 
-    size = 1.5f;
+    size = 2.0f;
     thk = 0.45f;
-    count = 35;
+    count = 30;
 
 
     Camps.clear();
@@ -97,7 +134,7 @@ Maze::Maze(){
                if (glm::distance(vec2(posX, posY), vec2(nodes[i].x, nodes[i].y)) < sze)
                {
                   
-                   nodes[i].prob = 0.9f;
+                   nodes[i].prob = 0.5f;
                   
                }
             }
@@ -106,7 +143,7 @@ Maze::Maze(){
                 LootSpot* Camp = dynamic_cast<LootSpot*>(landm);
                 int posX = (int)((*Camp).Pos.x * count);
                 int posY = (int)((*Camp).Pos.y * count);
-                if(nodes[i].index == posX + posY * count)  nodes[i].tresure ++;
+                if(nodes[i].index == posX + posY * count)  nodes[i].treasure = true;
            
             }
         }
@@ -178,38 +215,59 @@ Maze::Maze(){
 
 
     std::vector<glm::mat4> mds;
+    std::vector<float> txt;
     for (int i = 0; i < nodes.size(); i++) {
         nodes[i].set();
-        vec3 ps = vec3((i % count) * size, 0.1, (i / count) * size);
+        vec3 ps = vec3((i % count) * size, 0.001, (i / count) * size);
+        int grid[3][3] = {
+            {0,0,0},
+            {0,1,0},
+            {0,0,0}
+        };
+        if (nodes[i].sides.size() == 4)grid[1][1] = 0;
+        else
+        {
 
-       // for (int k = -1; k < 2; k++)
-       // {
-       //     for (int kk = -1; kk < 2; kk++)
-       //     {
-       //         if (Rand(gen) < 0.2) {
-       //             Furniture ref = Furniture(ps + vec3((size * thk - ps.y * 0.9) * k, 0.0, (size * thk - ps.y * 0.9) * kk), vec3(ps.y * 0.9, ps.y, ps.y * 0.9), 0.0);
-       //             mds.push_back(Matrix(ref.pos, ref.sca, ref.rot));
-       //             fur.push_back(ref);
-       //         }
-       //     }
-       // }
-
-        //if (Rand(gen) < 0.2) {
-        if (!nodes[i].sidesi[0] && !nodes[i].sidesi[2]) {
-            vec2 wdth = vec2(0.3,0.2);
-            Furniture ref = Furniture(ps + vec3((size * thk - wdth.x) * -1.0, 0.0, (size * thk - wdth.y) * 1.0), vec3(wdth.x, ps.y, wdth.y), 0.0);
+            if (nodes[i].sides.size() == 3)grid[1][1] = 0;
+            if (nodes[i].sidesi[0]) grid[1][2] = 1;
+            if (nodes[i].sidesi[1]) grid[1][0] = 1;
+            if (nodes[i].sidesi[2]) grid[0][1] = 1;
+            if (nodes[i].sidesi[3]) grid[2][1] = 1;
+        }
+        if (nodes[i].treasure)
+        {
+            int furrot = floor(Rand(gen) * 4);
+            Furniture ref = Furniture(-2, furrot, &grid, size, thk, ps);
             mds.push_back(Matrix(ref.pos, ref.sca, ref.rot));
             fur.push_back(ref);
+            txt.push_back(ref.type1); 
+            txt.push_back(ref.type2); 
         }
-        if (!nodes[i].sidesi[0] && !nodes[i].sidesi[2]) {
-            vec2 wdth = vec2(0.2);
-            Furniture ref = Furniture(ps + vec3((size * thk - wdth.x) * 1.0, 0.0, (size * thk - wdth.y) * 1.0), vec3(wdth.x, ps.y, wdth.y), 0.0);
-            mds.push_back(Matrix(ref.pos, ref.sca, ref.rot));
-            fur.push_back(ref);
+        for (int j = 0; j < 6; j++) 
+        {
+            int furt = floor(Rand(gen) * 8);
+            int furrot = floor(Rand(gen) * 4);
+            
+            if(Furniture::canFit(furt, furrot,&grid))
+            {
+                Furniture ref = Furniture(furt, furrot, &grid, size, thk, ps);
+                mds.push_back(Matrix(ref.pos, ref.sca, ref.rot));
+                if (furt == 2)
+                {
+                    ref.sca.y *= 0.5f;
+                    ref.pos.y = ref.sca.y;
+                }
+                fur.push_back(ref);
+                txt.push_back(ref.type1);
+                txt.push_back(ref.type2);
+               if(furt == 4) (*ligh).push_back(Light(vec3(ref.pos.x, ref.pos.y + ref.sca.y, ref.pos.z)));
+               
+            }
         }
+
 
     }
-    furn = InsObj(initCubeBuffer({0,1,2,3,4,5, 6,7,8 }), 23, 12, initI(mds));
+    furn = InsObj(initCubeBuffer({0,1,2,3,4,5, 6,7,8 }), 23, 12, initI(mds),initB(txt));
 
 
     furn.textOff2 = glm::vec4(0.0f, 0.0f, 5.0f, 5.0f);

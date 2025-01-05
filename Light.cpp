@@ -2,19 +2,25 @@
 #include <glad/glad.h>
 #include <random>
 
-Light::Light(glm::vec3 pos,int sz) {
-	size = sz;
+Light::Light(glm::vec3 pos) {
+	size = 500;
 	this->pos = pos;
 	obj = SpObj(pos, rot, glm::vec3(0.02f), initCubeBuffer({0,1,2,3,4,5}),0,0);
 	col = glm::vec3(0.1f);
-	
+	obj.pos = pos;
+	obj.rot = rot;
+	rotationMatrix = glm::mat4();
+	rotationMatrix = glm::rotate(rotationMatrix, -rot.x, glm::vec3(1, 0, 0));
+	rotationMatrix = glm::rotate(rotationMatrix, -rot.y, glm::vec3(0, 1, 0));
+	rotationMatrix = glm::rotate(rotationMatrix, -rot.z, glm::vec3(0, 0, 1));
+	active = false;
 }
 void Light::activate(bool act) {
 	
 	if(!active && act)
 	{
-		
-		glGenTextures(1, &depthTex); 
+
+		glGenTextures(1, &depthTex);
 
 		glBindTexture(GL_TEXTURE_CUBE_MAP, depthTex);
 		for (int i = 0; i < 6; i++)
@@ -27,16 +33,20 @@ void Light::activate(bool act) {
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 		handle = glGetTextureHandleARB(depthTex);
+
+
+
+		
 		glMakeTextureHandleResidentARB(handle);
 		active = true;
 	}
-	//else if (active && !act)
-	//{
-	//	glMakeTextureHandleNonResidentARB(handle);
-	//	glBindTexture(GL_TEXTURE_2D, 0);
-	//	glDeleteTextures(1, &depthTex);
-	//	active = false;
-	//}
+	else if (active && !act)
+	{
+		glMakeTextureHandleNonResidentARB(handle);
+		glDeleteTextures(1, &depthTex);
+		active = false;
+		
+	}
 	
 	
 	

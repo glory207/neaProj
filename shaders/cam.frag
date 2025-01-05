@@ -83,7 +83,7 @@ void main() {
         
             vec3 color;
           // color = texture(ColT, texPos).xyz * floor( max(dot(texture(NormT, texPos).xyz, normalize(vec3(1.0,1.0,1.0))), 0.0) * 3.0)/3.0 * 0.05;
-           color = texture(ColT, texPos).xyz * 0.03;
+           color = texture(ColT, texPos).xyz * 0.07;
           fragColor = vec4(color,1.0);
         
     }
@@ -96,7 +96,9 @@ void main() {
         for(int i = 0; i < lighC; i++)
         {
        
-       color+= texture(ColT, texPos).xyz * getLight(lightPos[i],texture(PosT, texPos).xyz+camPos,texture(NormT, texPos).xyz,texture(NormFT, texPos).xyz,uSamplerS[i],rotcam[i]) * vec3(1.0,0.5,0.5);
+       color+= texture(ColT, texPos).xyz * getLight(lightPos[i],texture(PosT, texPos).xyz+camPos,texture(NormT, texPos).xyz,texture(NormFT, texPos).xyz,uSamplerS[i],rotcam[i])
+       //* vec3(1.0,0.5,0.5);
+       * vec3(1.0,0.8,0.6);
        
 
         }
