@@ -3,5 +3,4 @@
 #include<stb/stb_image.h>
 #include <vector>
 
-GLuint texture(int imj, bool h);
-GLuint64 GetTexturesHandle(int imj);
+GLuint texture(int imj);

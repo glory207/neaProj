@@ -1,41 +1,4 @@
-﻿/*
-std::vector<const char*> texturesNames = {"img/brick.jpg","img/playerAni/walk0001-Sheet.png","img/playerAni/idle0001-Sheet.png",
-    "img/playerAni/crouchWalk0001-Sheet.png",
-    "img/playerAni/crouchWalkNormal0001-Sheet.png",
-    "img/brickN.png",
-    "img/playerAni/walkNormal0001-Sheet.png",
-    "img/playerAni/idleNormal0001-Sheet.png",
-    "img/playerAni/run0001-Sheet.png",
-    "img/playerAni/runNormal0001-Sheet.png",
-    "img/MapOverlay.png",
-    "img/scary.jpg",
-    "img/wood-normal.jpg",//0
-    "img/treasureCh.png"//7,
-    "img/SpriteNorm-0000.png",
-    "img/cubeTableTexture.png",//1
-    "img/cubeBedTexture.png",//2
-    "img/playerAni/crouch0001-Sheet.png",
-    "img/playerAni/crouchNormal0001-Sheet.png",
-    "img/playerAni/roll0001-Sheet.png",
-    "img/playerAni/rollNormal0001-Sheet.png",
-    "img/playerAni/dive0001-Sheet.png",
-    "img/playerAni/diveNormal0001-Sheet.png",
-    "img/torch.png",//3
-    "img/chair.png",//4
-    "img/bookshelf.png",//5
-    "img/Pillar.png"//6,
-};
-
-*/
-
-
-
-
-
-
-
-
-#include "initMaze.h"
+﻿#include "initMaze.h"
 #include <string>
 #include <random>
 
@@ -51,7 +14,7 @@ glm::mat4 Matrix(vec3 pos,vec3 sca, vec3 rot) {
     return modelViewMatrix;
 }
 
-Maze::Maze(std::vector<Light>* ligh){
+Maze::Maze(std::vector<Light>* ligh, int c){
     // Define the random number generator and distribution
     std::random_device rd;  // Seed generator
     std::mt19937 gen(rd()); // Mersenne Twister engine
@@ -59,7 +22,7 @@ Maze::Maze(std::vector<Light>* ligh){
 
     size = 2.0f;
     thk = 0.45f;
-    count = 30;
+    count = c;
 
 
     Camps.clear();

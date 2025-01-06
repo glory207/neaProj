@@ -1,5 +1,4 @@
 #pragma once
-#pragma warning
 #include "object.h"
 #include "initBuffer.h"
 #include "texture.h"

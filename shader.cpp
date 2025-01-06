@@ -17,6 +17,7 @@ std::string get_file_contents(const char* filename)
 		in.close();
 		return(contents);
 	}
+	std::cout << filename << " not found" << std::endl;
 	throw(errno);
 }
 
@@ -73,6 +74,7 @@ unsigned int initShader(const char* vert, const char* frag){
 
 unsigned int initShader(const char* vert, const char* geom, const char* frag) {
 
+	
 	std::string vertexCode = get_file_contents(vert);
 	std::string fragmentCode = get_file_contents(frag);
 	std::string geometryCode = get_file_contents(geom);

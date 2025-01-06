@@ -20,7 +20,7 @@ unsigned int SCR_HEIGHT = 900;
 camera cam;
 vector<Light> ligh;
 PlayerClass player;
-
+float resolution = 1.0f;
 bool firstClick = false;
 bool firstClicke = false;
 bool erere = false;
@@ -63,6 +63,7 @@ int main()
     }
 
     unsigned int shaderProgram = initShader("shaders/def.vert", "shaders/def.geom", "shaders/def.frag");
+
     unsigned int shaderInstaceProgram = initShader("shaders/defInst.vert", "shaders/defInst.geom", "shaders/defInst.frag");
     unsigned int shaderLightProgram = initShader("shaders/def.vert", "shaders/def.geom", "shaders/light.frag");
     unsigned int shaderShadowProgram = initShader("shaders/shadow.vert", "shaders/shadow.geom", "shaders/shadow.frag");
@@ -75,8 +76,23 @@ int main()
     std::random_device rd;  // Seed generator
     std::mt19937 gen(rd()); // Mersenne Twister engine
     std::uniform_real_distribution<float> Rand(0.0f, 1.0f); // Range [0, 1]
+    
+    int c = 0;
+    do
+    {
+        if(c>50)
+        {
+            cout << "too large" << endl;
+        }
 
-    Maze mz = Maze(&ligh);  
+        cout << "size" << endl;
+        float cc;
+        cin >> cc;
+        c = int(cc);
+    } while (c<=1 || c > 50); 
+    
+    
+    Maze mz = Maze(&ligh,c);  
     cam = camera(glm::vec3(0.0f, 0.2f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f)); 
     
     player = PlayerClass(vec3(0.0f, 0.0f, 0.5f), vec3(0.0f, -3.1415 / 2.0f, 0.0f));
@@ -125,8 +141,7 @@ int main()
     double curTime = 0.0;
     double timeDif;
     unsigned int counter = 0;
-
-    cam.updateSize(vec2(SCR_WIDTH, SCR_HEIGHT));
+    cam.updateSize(vec2(SCR_WIDTH, SCR_HEIGHT) * resolution);
     #pragma endregion
     #pragma region Update
     while (!glfwWindowShouldClose(window))
@@ -201,7 +216,7 @@ int main()
             int nb3 = 0;
             for (int t = 0; t < ligh.size(); t++) {
                 
-                if (length(ligh[t].pos - cam.pos) < 4.0f) {
+                if (length(ligh[t].pos - cam.pos) < 7.0f) {
                     
                     nb1++;
                     ligh[t].activate(true);
@@ -246,7 +261,7 @@ int main()
                
             }
             
-            cout << std::to_string(nb1) << " " << std::to_string(nb2) << " " << std::to_string(nb3) << endl;
+           // cout << std::to_string(nb1) << " " << std::to_string(nb2) << " " << std::to_string(nb3) << endl;
             cam.GFB.bind(true);
             glUseProgram(shaderProgram);
             std::vector<glm::mat4> ma = cam.matrix(float(SCR_WIDTH) / float(SCR_HEIGHT));
@@ -299,48 +314,38 @@ int main()
             glActiveTexture(GL_TEXTURE3);
             glBindTexture(GL_TEXTURE_2D, cam.GFB.NomFTex);
             int e = 0;
-            for (int i = 0; i < 11; i++)
-            {
-                std::string ii = "uSamplerS[" + std::to_string(i) + "]";
-                glUniformHandleui64ARB(glGetUniformLocation(cam.shader, ii.c_str()), 0);
-            }
+          for (int i = 0; i < 11; i++)
+          {
+             std::string ii = "uSamplerS[" + std::to_string(i) + "]"; 
+             glActiveTexture(GL_TEXTURE4 + i); 
+             glUniform1i(glGetUniformLocation(cam.shader, ii.c_str()),0); 
+          }
             cam.draw(cam.shader);
             std::string ii = " ";
             for (int t = 0; t < ligh.size(); t++) {
 
-                if (ligh[t].active && length(ligh[t].pos - player.inp->pos) < 6.0f)
+                if (ligh[t].active)
                 {
-                    ii = "rotcam[" + std::to_string(e) + "]";
+                    ii = "rotcam";
                     glUniformMatrix4fv(glGetUniformLocation(cam.shader, ii.c_str()), 1, GL_FALSE, value_ptr(ligh[t].rotationMatrix));
 
                     
-                    ii = "uSamplerS[" + std::to_string(e) + "]";
+                    ii = "uSamplerS";
+                    glActiveTexture(GL_TEXTURE4);
+                    glBindTexture(GL_TEXTURE_CUBE_MAP, ligh[t].depthTex);
+                    glUniform1i(glGetUniformLocation(cam.shader, ii.c_str()), 4);
 
-                    glUniformHandleui64ARB(glGetUniformLocation(cam.shader, ii.c_str()), ligh[t].handle);
-                    ii = "lightPos[" + std::to_string(e) + "]";
+                    ii = "lightPos";
 
                     glUniform3f(glGetUniformLocation(cam.shader, ii.c_str()), ligh[t].pos.x, ligh[t].pos.y, ligh[t].pos.z);
-                    glUniform2f(glGetUniformLocation(cam.shader, "LightSetings"), LightSetings.x + sin(curTime * 1.5f) * 0.1f, LightSetings.y);
+                    glUniform2f(glGetUniformLocation(cam.shader, "LightSetings"), LightSetings.x + sin(curTime + t * 4.215f) * 0.1f, LightSetings.y);
+                    
 
-                    if (e == 10) {
-                        glUniform1i(glGetUniformLocation(cam.shader, "lighC"), 11);
-
-                        cam.draw(cam.shader);
-                        e = 0;
-                    }
-                    else
-                    {
-                        e++;
-                    }
+                    cam.draw(cam.shader); 
 
                 }
 
 
-            }
-            if (e > 0) {
-                glUniform1i(glGetUniformLocation(cam.shader, "lighC"), e);
-
-                cam.draw(cam.shader);
             }
 
 
@@ -417,6 +422,8 @@ int main()
     return 0;
 
 #pragma endregion
+
+
 }
 
 void processInput(GLFWwindow* window)
@@ -480,6 +487,18 @@ void processInput(GLFWwindow* window)
     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)    LightSetings.x += -0.05;
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)    LightSetings.y += 0.05;
     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)   LightSetings.y += -0.05;
+    
+    if (glfwGetKey(window, GLFW_KEY_KP_ENTER) == GLFW_PRESS) cam.updateSize(vec2(SCR_WIDTH, SCR_HEIGHT) * resolution);
+    if (glfwGetKey(window, GLFW_KEY_KP_0) == GLFW_PRESS)  resolution = 1.0f;
+    if (glfwGetKey(window, GLFW_KEY_KP_1) == GLFW_PRESS)  resolution = 1.0f/pow(1.0f,2.0f);
+    if (glfwGetKey(window, GLFW_KEY_KP_2) == GLFW_PRESS)  resolution = 1.0f/pow(2.0f,2.0f);
+    if (glfwGetKey(window, GLFW_KEY_KP_3) == GLFW_PRESS)  resolution = 1.0f/pow(3.0f,2.0f);
+    if (glfwGetKey(window, GLFW_KEY_KP_4) == GLFW_PRESS)  resolution = 1.0f/pow(4.0f,2.0f);
+    if (glfwGetKey(window, GLFW_KEY_KP_5) == GLFW_PRESS)  resolution = 1.0f/pow(5.0f,2.0f);
+    if (glfwGetKey(window, GLFW_KEY_KP_6) == GLFW_PRESS)  resolution = 1.0f/pow(6.0f,2.0f);
+    if (glfwGetKey(window, GLFW_KEY_KP_7) == GLFW_PRESS)  resolution = 1.0f/pow(7.0f,2.0f);
+    if (glfwGetKey(window, GLFW_KEY_KP_8) == GLFW_PRESS)  resolution = 1.0f/pow(8.0f,2.0f);
+    if (glfwGetKey(window, GLFW_KEY_KP_9) == GLFW_PRESS)  resolution = 1.0f/pow(9.0f,2.0f);
     //LightSetings
     float armL = 0.27f;
     float armL2 = 0.0f;
@@ -504,6 +523,5 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     SCR_WIDTH = width;
     SCR_HEIGHT = height;
-    cam.updateSize(vec2(SCR_WIDTH, SCR_HEIGHT));
-    cout << SCR_WIDTH << " " << SCR_HEIGHT << endl;
+    cam.updateSize(vec2(SCR_WIDTH, SCR_HEIGHT) * resolution);
 }

@@ -5,13 +5,13 @@
       uniform sampler2D PosT;
       uniform sampler2D NormT;
       uniform sampler2D NormFT;
-      uniform samplerCube uSamplerS[11];
+      uniform samplerCube uSamplerS;
 
       uniform vec2 LightSetings;
       uniform vec3 camPos;
       in vec2 texPos;
-      uniform mat4 rotcam[11];
-      uniform vec3 lightPos[11];
+      uniform mat4 rotcam;
+      uniform vec3 lightPos;
       uniform vec3 lightCol;
       uniform int light;
       uniform int lighC;
@@ -31,11 +31,10 @@
 
      closeD = texture(uSamplerSs, -normalize(dir)).r *100.0;
         bias = max(0.005* (1.0-dot(normalF,dir)), 0.005);
-
         if(currentD <= closeD + bias){ 
            shadow = 1.0;  
         }
-
+        
         
         if(shadow < 0.5) return 0;
         
@@ -93,15 +92,11 @@ void main() {
     }
         else{
          vec3 color ;
-        for(int i = 0; i < lighC; i++)
-        {
+        
+      color+= texture(ColT, texPos).xyz * getLight(lightPos,texture(PosT, texPos).xyz+camPos,texture(NormT, texPos).xyz,texture(NormFT, texPos).xyz,uSamplerS,rotcam)
+      //* vec3(1.0,0.5,0.5);
+      * vec3(1.0,0.8,0.6);
        
-       color+= texture(ColT, texPos).xyz * getLight(lightPos[i],texture(PosT, texPos).xyz+camPos,texture(NormT, texPos).xyz,texture(NormFT, texPos).xyz,uSamplerS[i],rotcam[i])
-       //* vec3(1.0,0.5,0.5);
-       * vec3(1.0,0.8,0.6);
-       
-
-        }
         
         fragColor += vec4(color,1.0);
        

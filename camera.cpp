@@ -38,7 +38,6 @@ void camera::draw(GLuint shadr) {
     glUniform1i(glGetUniformLocation(shadr, "PosT"), 1);
     glUniform1i(glGetUniformLocation(shadr, "NormT"), 2);
     glUniform1i(glGetUniformLocation(shadr, "NormFT"), 3);
-    glUniform1i(glGetUniformLocation(shadr, "uSamplerS"), 4);
 
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);

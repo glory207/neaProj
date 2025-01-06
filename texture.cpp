@@ -58,39 +58,7 @@ std::vector<int> texturesID = { -5,
     -5,
 };
 
-std::vector<GLuint64> texturesHandle = { 0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-};
-GLuint texture(int imj, bool h) {
+GLuint texture(int imj) {
     if (texturesID[imj] == -5) {
 
         GLuint ID;
@@ -132,71 +100,14 @@ GLuint texture(int imj, bool h) {
 
         glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, widthImg, heightImg, 0, format, GL_UNSIGNED_BYTE, bytes);
         glGenerateMipmap(GL_TEXTURE_2D);
-        handle = glGetTextureHandleARB(ID);
-        glMakeTextureHandleResidentARB(handle);
         stbi_image_free(bytes);
 
         glBindTexture(GL_TEXTURE_2D, 0);
         texturesID[imj] = ID;
-        texturesHandle[imj] = handle;
-        if (h) return handle;
-        else return ID;
+        return ID;
     }
     else
     {
-        if (h) return texturesHandle[imj];
-        else return texturesID[imj];
+       return texturesID[imj];
     }
-}
-GLuint64 GetTexturesHandle(int imj) {
-    if (texturesID[imj] == -5) {
-
-      GLuint ID;
-      GLuint64 handle;
-      int widthImg, heightImg, numColCh;
-      //stbi_set_flip_vertically_on_load(true);
-      unsigned char* bytes = stbi_load(texturesNames[imj], &widthImg, &heightImg, &numColCh, 0);
-      GLint internalFormat;
-      GLenum format;
-
-      switch (numColCh) {
-      case 1: // Grayscale
-          internalFormat = GL_RED;
-          format = GL_RED;
-          break;
-      case 3: // RGB
-          internalFormat = GL_RGB;
-          format = GL_RGB;
-          break;
-      case 4: // RGBA
-          internalFormat = GL_RGBA;
-          format = GL_RGBA;
-          break;
-      default:
-
-          stbi_image_free(bytes);
-          return -1;
-      }
-      glGenTextures(1, &ID);
-      glActiveTexture(GL_TEXTURE0);
-      glBindTexture(GL_TEXTURE_2D, ID);
-
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-
-      glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, widthImg, heightImg, 0, format, GL_UNSIGNED_BYTE, bytes);
-      glGenerateMipmap(GL_TEXTURE_2D);
-      handle = glGetTextureHandleARB(ID);
-      glMakeTextureHandleResidentARB(handle);
-      stbi_image_free(bytes);
-
-      glBindTexture(GL_TEXTURE_2D, 0);
-      texturesID[imj] = ID;
-      texturesHandle[imj] = handle;
-  }
-    return texturesHandle[imj];
 }

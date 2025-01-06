@@ -32,17 +32,12 @@ void Light::activate(bool act) {
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-		handle = glGetTextureHandleARB(depthTex);
-
-
-
 		
-		glMakeTextureHandleResidentARB(handle);
 		active = true;
 	}
 	else if (active && !act)
 	{
-		glMakeTextureHandleNonResidentARB(handle);
+		
 		glDeleteTextures(1, &depthTex);
 		active = false;
 		
