@@ -23,7 +23,8 @@ std::vector<const char*> texturesNames = {"img/brick.jpg","img/playerAni/walk000
     "img/torch.png",//3
     "img/chair.png",//4
     "img/bookshelf.png",//5
-    "img/Pillar.png"//6,
+    "img/Pillar.png",//6,
+    "img/flame.png"
 };
 
 std::vector<int> texturesID = { -5,

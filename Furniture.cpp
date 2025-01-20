@@ -49,7 +49,7 @@ Furniture::Furniture(int i, int k, int (*grid)[3][3], float size, float thk, vec
         break;
     case 4:
         rectP = vec2(-0.8f, 0);
-        sca = vec3(0.05f, 0.25f, 0.05f);
+        sca = vec3(0.07f, 0.22f, 0.07f);
         rot = vec3(0.0f);
         cnt.push_back(vec2(-1, 0));
         type1 = 3;

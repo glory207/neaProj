@@ -33,7 +33,6 @@ float ArmL3 = 1.25;
 float deltaTime = 1.0f;
 int main()
 {
-    
     #pragma region Start
 
 
@@ -76,21 +75,22 @@ int main()
     std::random_device rd;  // Seed generator
     std::mt19937 gen(rd()); // Mersenne Twister engine
     std::uniform_real_distribution<float> Rand(0.0f, 1.0f); // Range [0, 1]
-    
-    int c = 0;
+    cout << "size" << endl;
+    int c = 20;
+    /*
     do
     {
         if(c>50)
         {
             cout << "too large" << endl;
         }
-
         cout << "size" << endl;
+        
         float cc;
         cin >> cc;
         c = int(cc);
     } while (c<=1 || c > 50); 
-    
+    */
     
     Maze mz = Maze(&ligh,c);  
     cam = camera(glm::vec3(0.0f, 0.2f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f)); 
@@ -186,7 +186,6 @@ int main()
             }
 
             // input
-            // -----
 
            {
                 processInput(window);
@@ -194,19 +193,15 @@ int main()
                     //  mz.collide(&ligh[t].pos, &ligh[t].acc, vec2(0.075f));
                   //  ligh[t].update(deltaTime);
                 }
-                if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) != GLFW_PRESS)
-                {
-                    vec3 ty = player.inp->acc;
-                    player.inp->Grounded = mz.collide(&player.inp->pos, &player.inp->acc, vec2(0.075f, 0.0f));
-                    //player.inp->acc.y = ty.y;
-                    //if (player.inp->Grounded) player.inp->acc = ty;
-                    player.inp->acc = ty;
-                }
-                
                 player.update(deltaTime);
+                vec3 ty = player.inp->acc;
+                vec3 tp = player.inp->pos;
+                player.inp->Grounded = mz.collide(&player.inp->pos, nullptr, vec2(0.075f, 0.0f));
+                cout << player.inp->Grounded << " " << player.inp->pos.y << endl;
+                
+               
             }
             // render
-            // ------
             glDisable(GL_BLEND);
 
 
@@ -232,7 +227,7 @@ int main()
                         glm::mat4 projectionMatrix;
                         glm::mat4 view;
                         projectionMatrix = glm::perspective(fov, 1.0f, zNear, zFar);
-                        view = glm::lookAt(ligh[t].obj.pos, ligh[t].pos +shBF.target[i], shBF.up[i]);
+                        view = glm::lookAt(ligh[t].pos, ligh[t].pos +shBF.target[i], shBF.up[i]);
                         view = projectionMatrix * view;
                         matr4[i] = view;
                         ii[i] = "uProjectionMatrix[" + std::to_string(i) + "]";
@@ -248,7 +243,8 @@ int main()
                     mz.furn.draw(shaderInstaceShadowProgram, mz.fur.size());
                     // cout << ligh[t].pos.x << endl;
                    // glMakeTextureHandleNonResidentARB(ligh[t].handle);
-                }else {
+                }
+                else {
                     ligh[t].activate(false);
                     nb2++;
                 }
@@ -286,6 +282,8 @@ int main()
                 if (ligh[t].active)
                 {
                     glUniform3f(glGetUniformLocation(shaderLightProgram, "color"), ligh[t].col.x, ligh[t].col.y, ligh[t].col.z);
+                    glUniform1f(glGetUniformLocation(shaderLightProgram, "tim"), (int)(curTime * 20));
+                    ligh[t].obj.rot.y = atan2(ligh[t].obj.pos.x - cam.pos.x, ligh[t].obj.pos.z - cam.pos.z);
                     ligh[t].obj.draw(shaderLightProgram);
                 }
             }
@@ -338,7 +336,7 @@ int main()
                     ii = "lightPos";
 
                     glUniform3f(glGetUniformLocation(cam.shader, ii.c_str()), ligh[t].pos.x, ligh[t].pos.y, ligh[t].pos.z);
-                    glUniform2f(glGetUniformLocation(cam.shader, "LightSetings"), LightSetings.x + sin(curTime + t * 4.215f) * 0.1f, LightSetings.y);
+                    glUniform2f(glGetUniformLocation(cam.shader, "LightSetings"), LightSetings.x + sin(curTime) * 0.1f, LightSetings.y);
                     
 
                     cam.draw(cam.shader); 

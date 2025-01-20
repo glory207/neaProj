@@ -548,7 +548,7 @@ bool Maze::collide(glm::vec3* pos, glm::vec3* acc, glm::vec2 leway) {
             if (assa2 && assa && (*pos).y - leway.y < f.pos.y + f.sca.y) {
                 
                 if (abs(firstDist) > abs(f.sca.y + f.sca.y + leway.y - (*pos).y) && abs(secondDist) > abs(f.sca.y + f.sca.y + leway.y - (*pos).y)) {
-                    (*pos).y += f.pos.y + f.sca.y + leway.y - (*pos).y;
+                    (*pos).y = f.pos.y + f.sca.y + leway.y-0.001f;
                     grnd = true;
                     if ((*acc).y < 0)  (*acc).y *= -1.0;
                 }
@@ -586,13 +586,13 @@ bool Maze::collide(glm::vec3* pos, glm::vec3* acc, glm::vec2 leway) {
     }
     
 
-    if ((*pos).y <= leway.y) {
-        (*pos).y = leway.y;
+    if ((*pos).y < leway.y) {
+        (*pos).y = leway.y - 0.001f;;
         if ( (*acc).y < 0.0f)  (*acc).y *= -1.0f;
 
         grnd = true;
     }
-    if ((*pos).y >= 0.5f - leway.y && (*acc).y > 0.0f) (*acc).y *= -1.0f;
+   // if ((*pos).y >= 0.5f - leway.y && (*acc).y > 0.0f) (*acc).y *= -1.0f;
 
     return grnd;
 }

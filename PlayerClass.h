@@ -21,6 +21,7 @@ public:
     bool SP;
     bool SH;
     bool Grounded;
+    bool crouched;
     std::vector<float> animation;
     vec3 resistance;
     vec2 jump;
