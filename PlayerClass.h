@@ -39,7 +39,7 @@ public:
         SP = false;
         SH = false;
         Grounded = true;
-        // colour normal framecount current fram;
+        // colour normal framecount current frame;
         animation = { 0.0f, 0.0f, 0.0f, 20.0f, 0.0f };
 
         resistance = vec3(7.0, 7.0, 7.0);

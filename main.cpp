@@ -31,6 +31,7 @@ float ArmL = 0.27f;
 float ArmL2 = 0.0f;
 float ArmL3 = 1.25;
 float deltaTime = 1.0f;
+float UTime = 0.0f;
 int main()
 {
     #pragma region Start
@@ -76,9 +77,9 @@ int main()
     std::mt19937 gen(rd()); // Mersenne Twister engine
     std::uniform_real_distribution<float> Rand(0.0f, 1.0f); // Range [0, 1]
     cout << "size" << endl;
-    int c = 20;
-    /*
-    do
+    int c = 30;
+    
+    while (c <= 1 || c > 50)
     {
         if(c>50)
         {
@@ -89,8 +90,8 @@ int main()
         float cc;
         cin >> cc;
         c = int(cc);
-    } while (c<=1 || c > 50); 
-    */
+    } 
+    
     
     Maze mz = Maze(&ligh,c);  
     cam = camera(glm::vec3(0.0f, 0.2f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f)); 
@@ -144,6 +145,7 @@ int main()
     cam.updateSize(vec2(SCR_WIDTH, SCR_HEIGHT) * resolution);
     #pragma endregion
     #pragma region Update
+    glfwSwapInterval(1);
     while (!glfwWindowShouldClose(window))
     {
         curTime = glfwGetTime();
@@ -205,58 +207,67 @@ int main()
             glDisable(GL_BLEND);
 
 
-            glViewport(0, 0, 500,500);
-            int nb1 = 0;
-            int nb2 = 0;
-            int nb3 = 0;
+            glViewport(0, 0, 500, 500);
+
+            if (UTime > 10) UTime = 0;
+            float cpt = 0.1f;
             for (int t = 0; t < ligh.size(); t++) {
                 
                 if (length(ligh[t].pos - cam.pos) < 7.0f) {
                     
-                    nb1++;
                     ligh[t].activate(true);
-                    shBF.bind(true, 0, ligh[t].depthTex);
-                    glUseProgram(shaderShadowProgram);
-                    std::string ii[6];
-                    glm::mat4 matr4[6];
-                    for (int i = 0; i < 6; i++)
+                   
+                    if (ligh[t].active2||UTime == t%10) shBF.bind(true, 0, ligh[t].depthTexPre);
+                    else
                     {
-                        float fov = (0.5f * 3.14159265358979323846f);
-                        float zNear = 0.01f;
-                        float zFar = 100.0f;
-                        glm::mat4 projectionMatrix;
-                        glm::mat4 view;
-                        projectionMatrix = glm::perspective(fov, 1.0f, zNear, zFar);
-                        view = glm::lookAt(ligh[t].pos, ligh[t].pos +shBF.target[i], shBF.up[i]);
-                        view = projectionMatrix * view;
-                        matr4[i] = view;
-                        ii[i] = "uProjectionMatrix[" + std::to_string(i) + "]";
-                        glUniformMatrix4fv(glGetUniformLocation(shaderShadowProgram, ii[i].c_str()), 1, GL_FALSE, glm::value_ptr(matr4[i]));
+                        glBindTexture(GL_TEXTURE_CUBE_MAP, ligh[t].depthTexPre);
+                        for (GLuint face = 0; face < 6; ++face) {
+                            glCopyImageSubData(ligh[t].depthTexPre, GL_TEXTURE_CUBE_MAP, 0, 0, 0, face,
+                                ligh[t].depthTex, GL_TEXTURE_CUBE_MAP, 0, 0, 0, face,
+                                ligh[t].size, ligh[t].size, 1);
+                        }
+                        shBF.bind(false, 0, ligh[t].depthTex);
+                        
                     }
-                    glUniform3f(glGetUniformLocation(shaderShadowProgram, "lpos"), ligh[t].pos.x, ligh[t].pos.y, ligh[t].pos.z);
-                    mz.draw(shaderShadowProgram);
-                    player.draw(curTime, shaderShadowProgram);
-                    glUseProgram(shaderInstaceShadowProgram);
-                    
-                    for (int i = 0; i < 6; i++)glUniformMatrix4fv(glGetUniformLocation(shaderInstaceShadowProgram, ii[i].c_str()), 1, GL_FALSE, glm::value_ptr(matr4[i]));
-                    glUniform3f(glGetUniformLocation(shaderInstaceShadowProgram, "lpos"), ligh[t].pos.x, ligh[t].pos.y, ligh[t].pos.z);
-                    mz.furn.draw(shaderInstaceShadowProgram, mz.fur.size());
-                    // cout << ligh[t].pos.x << endl;
-                   // glMakeTextureHandleNonResidentARB(ligh[t].handle);
+                       glUseProgram(shaderShadowProgram);
+                       std::string ii[6];
+                       glm::mat4 matr4[6];
+                       for (int i = 0; i < 6; i++)
+                       {
+                           float fov = (0.5f * 3.14159265358979323846f);
+                           float zNear = 0.01f;
+                           float zFar = 100.0f;
+                           glm::mat4 projectionMatrix;
+                           glm::mat4 view;
+                           projectionMatrix = glm::perspective(fov, 1.0f, zNear, zFar);
+                           view = glm::lookAt(ligh[t].pos, ligh[t].pos + shBF.target[i], shBF.up[i]);
+                           view = projectionMatrix * view;
+                           matr4[i] = view;
+                           ii[i] = "uProjectionMatrix[" + std::to_string(i) + "]";
+                           glUniformMatrix4fv(glGetUniformLocation(shaderShadowProgram, ii[i].c_str()), 1, GL_FALSE, glm::value_ptr(matr4[i]));
+                       }
+                       glUniform3f(glGetUniformLocation(shaderShadowProgram, "lpos"), ligh[t].pos.x, ligh[t].pos.y, ligh[t].pos.z);
+                       if (ligh[t].active2 || UTime == t % 10) {
+                           mz.draw(shaderShadowProgram);
+                           glUseProgram(shaderInstaceShadowProgram);
+
+                           for (int i = 0; i < 6; i++)glUniformMatrix4fv(glGetUniformLocation(shaderInstaceShadowProgram, ii[i].c_str()), 1, GL_FALSE, glm::value_ptr(matr4[i]));
+                           glUniform3f(glGetUniformLocation(shaderInstaceShadowProgram, "lpos"), ligh[t].pos.x, ligh[t].pos.y, ligh[t].pos.z);
+                           mz.furn.draw(shaderInstaceShadowProgram, mz.fur.size());
+                       }
+                       else
+                       {
+                           player.draw(curTime, shaderShadowProgram);
+                       }
                 }
                 else {
                     ligh[t].activate(false);
-                    nb2++;
                 }
-                if (ligh[t].active)
-                {
-                    nb3 += 1;
-                }
-              //  if (length(ligh[t].pos - cam.pos) > 3.0f)
                 
                
             }
-            
+
+            UTime += deltaTime;
            // cout << std::to_string(nb1) << " " << std::to_string(nb2) << " " << std::to_string(nb3) << endl;
             cam.GFB.bind(true);
             glUseProgram(shaderProgram);
@@ -303,6 +314,7 @@ int main()
 
             glUniform3f(glGetUniformLocation(cam.shader, "camPos"), cam.pos.x, cam.pos.y, cam.pos.z);
             glUniform1i(glGetUniformLocation(cam.shader, "light"), 0);
+            glUniform1i(glGetUniformLocation(cam.shader, "uSamplerS"), 4);
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, cam.GFB.ColTex);
             glActiveTexture(GL_TEXTURE1);
@@ -311,14 +323,7 @@ int main()
             glBindTexture(GL_TEXTURE_2D, cam.GFB.NomTex);
             glActiveTexture(GL_TEXTURE3);
             glBindTexture(GL_TEXTURE_2D, cam.GFB.NomFTex);
-            int e = 0;
-          for (int i = 0; i < 11; i++)
-          {
-             std::string ii = "uSamplerS[" + std::to_string(i) + "]"; 
-             glActiveTexture(GL_TEXTURE4 + i); 
-             glUniform1i(glGetUniformLocation(cam.shader, ii.c_str()),0); 
-          }
-            cam.draw(cam.shader);
+
             std::string ii = " ";
             for (int t = 0; t < ligh.size(); t++) {
 
@@ -331,7 +336,6 @@ int main()
                     ii = "uSamplerS";
                     glActiveTexture(GL_TEXTURE4);
                     glBindTexture(GL_TEXTURE_CUBE_MAP, ligh[t].depthTex);
-                    glUniform1i(glGetUniformLocation(cam.shader, ii.c_str()), 4);
 
                     ii = "lightPos";
 
@@ -404,6 +408,7 @@ int main()
         {
             cout << SCR_WIDTH << " " << SCR_HEIGHT << endl;
         }
+
         glfwPollEvents();
         glfwSwapBuffers(window);
     }
@@ -487,8 +492,8 @@ void processInput(GLFWwindow* window)
     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)   LightSetings.y += -0.05;
     
     if (glfwGetKey(window, GLFW_KEY_KP_ENTER) == GLFW_PRESS) cam.updateSize(vec2(SCR_WIDTH, SCR_HEIGHT) * resolution);
-    if (glfwGetKey(window, GLFW_KEY_KP_0) == GLFW_PRESS)  resolution = 1.0f;
-    if (glfwGetKey(window, GLFW_KEY_KP_1) == GLFW_PRESS)  resolution = 1.0f/pow(1.0f,2.0f);
+    if (glfwGetKey(window, GLFW_KEY_KP_0) == GLFW_PRESS)  resolution = 1.0f / pow(2.5f, 2.0f);
+    if (glfwGetKey(window, GLFW_KEY_KP_1) == GLFW_PRESS)  resolution = 1.0f;
     if (glfwGetKey(window, GLFW_KEY_KP_2) == GLFW_PRESS)  resolution = 1.0f/pow(2.0f,2.0f);
     if (glfwGetKey(window, GLFW_KEY_KP_3) == GLFW_PRESS)  resolution = 1.0f/pow(3.0f,2.0f);
     if (glfwGetKey(window, GLFW_KEY_KP_4) == GLFW_PRESS)  resolution = 1.0f/pow(4.0f,2.0f);

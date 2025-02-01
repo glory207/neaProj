@@ -81,8 +81,8 @@ void main() {
     if(light == 1){
         
             vec3 color;
-          // color = texture(ColT, texPos).xyz * floor( max(dot(texture(NormT, texPos).xyz, normalize(vec3(1.0,1.0,1.0))), 0.0) * 3.0)/3.0 * 0.05;
-           color = texture(ColT, texPos).xyz * 0.07;
+         
+         color = texture(ColT, texPos).xyz * 0.07;
           fragColor = vec4(color,1.0);
         if(texture(PosT, texPos).y == -1.0){
             fragColor = vec4(normalize(texture(ColT, texPos).xyz)*1.5,1.0);

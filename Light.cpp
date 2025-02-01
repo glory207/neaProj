@@ -16,13 +16,13 @@ Light::Light(glm::vec3 pos) {
 	active = false;
 }
 void Light::activate(bool act) {
-	
+	active2 = false;
 	if(!active && act)
 	{
 
-		glGenTextures(1, &depthTex);
+		glGenTextures(1, &depthTexPre);
 
-		glBindTexture(GL_TEXTURE_CUBE_MAP, depthTex);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, depthTexPre);
 		for (int i = 0; i < 6; i++)
 		{
 			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT, size, size, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
@@ -33,12 +33,30 @@ void Light::activate(bool act) {
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 		
+                                                                                                   
+		glGenTextures(1, &depthTex);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, depthTex);
+																															   
+		for (int i = 0; i < 6; i++) {
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT, size, size, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL); 
+		}
+		
+
+		glBindTexture(GL_TEXTURE_CUBE_MAP, depthTex);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+																															   
+		active2 = true;
 		active = true;
 	}
 	else if (active && !act)
 	{
 		
 		glDeleteTextures(1, &depthTex);
+		glDeleteTextures(1, &depthTexPre);
 		active = false;
 		
 	}

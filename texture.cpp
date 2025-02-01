@@ -24,49 +24,22 @@ std::vector<const char*> texturesNames = {"img/brick.jpg","img/playerAni/walk000
     "img/chair.png",//4
     "img/bookshelf.png",//5
     "img/Pillar.png",//6,
-    "img/flame.png"
+    "img/flame.png",
+    "img/M_Walk-Sheet.png",
+    "img/M_WalkNormal-Sheet.png",
 };
-
-std::vector<int> texturesID = { -5,
-    -5,
-    -5,
-    -5,
-    -5,
-    -5,
-    -5,
-    -5,
-    -5,
-    -5,
-    -5,
-    -5,
-    -5,
-    -5,
-    -5,
-    -5,
-    -5,
-    -5,
-    -5,
-    -5,
-    -5,
-    -5,
-    -5,
-    -5,
-    -5,
-    -5,
-    -5,
-    -5,
-    -5,
-    -5,
+bool frst = true;
+std::vector<int> texturesID = {
 };
 
 GLuint texture(int imj) {
-    if (texturesID[imj] == -5) {
+    if (frst) { for (int i = 0; i < texturesNames.size(); i++) {
 
         GLuint ID;
         GLuint64 handle;
         int widthImg, heightImg, numColCh;
         //stbi_set_flip_vertically_on_load(true);
-        unsigned char* bytes = stbi_load(texturesNames[imj], &widthImg, &heightImg, &numColCh, 0);
+        unsigned char* bytes = stbi_load(texturesNames[i], &widthImg, &heightImg, &numColCh, 0);
         GLint internalFormat;
         GLenum format;
 
@@ -104,11 +77,8 @@ GLuint texture(int imj) {
         stbi_image_free(bytes);
 
         glBindTexture(GL_TEXTURE_2D, 0);
-        texturesID[imj] = ID;
-        return ID;
-    }
-    else
-    {
-       return texturesID[imj];
-    }
+        texturesID.push_back(ID);
+    } }
+    frst = false;
+    return texturesID[imj];
 }

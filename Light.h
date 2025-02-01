@@ -12,6 +12,7 @@ public:
 	bool active2 = true;
 	void activate(bool act);
 	GLuint depthTex;
+	GLuint depthTexPre;
 	GLuint64 handle;
 	glm::mat4 rotationMatrix;
 	int size;

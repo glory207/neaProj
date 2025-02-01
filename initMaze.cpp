@@ -97,7 +97,7 @@ Maze::Maze(std::vector<Light>* ligh, int c){
                if (glm::distance(vec2(posX, posY), vec2(nodes[i].x, nodes[i].y)) < sze)
                {
                   
-                   nodes[i].prob = 0.5f;
+                   nodes[i].prob = 0.8f;
                   
                }
             }
