@@ -649,6 +649,15 @@
     <Image Include="img\bookshelf.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="img\flame.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="img\M_WalkNormal-Sheet.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="img\M_Walk-Sheet.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\cam.vert" />

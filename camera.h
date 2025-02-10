@@ -19,10 +19,10 @@ public:
     void draw(GLuint shadr);
     void drawScreen();
     void updateSize(glm::vec2 sz);
-    std::vector<glm::mat4> matrix(float aspect);
+    glm::mat4 matrix(float aspect);
     GframeBuffer GFB;
     FrameBuffer FB;
-    FrameBuffer PFB;
+    FrameBuffer PFB1;
     FrameBuffer MFB;
     GLuint shader;
     GLuint ScreenShader;

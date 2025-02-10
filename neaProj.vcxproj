@@ -206,8 +206,11 @@
     <Image Include="img\chair.png" />
     <Image Include="img\cubeBedTexture.png" />
     <Image Include="img\cubeTableTexture.png" />
+    <Image Include="img\flame.png" />
     <Image Include="img\MapOverlay.png" />
     <Image Include="img\marble star.jpg" />
+    <Image Include="img\M_Walk-Sheet.png" />
+    <Image Include="img\M_WalkNormal-Sheet.png" />
     <Image Include="img\Pillar.png" />
     <Image Include="img\playerAni\crouch0001-Sheet.png" />
     <Image Include="img\playerAni\crouchNormal0001-Sheet.png" />

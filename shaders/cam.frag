@@ -15,6 +15,7 @@
       uniform vec3 lightCol;
       uniform int light;
       uniform int lighC;
+      uniform float ConeAngle;
       
 
       float getLight(vec3 posLight,vec3 posFrag,vec3 normal,vec3 normalF, samplerCube uSamplerSs,mat4 rot){
@@ -51,17 +52,17 @@
         difVal *= Falloff;
 
 
-        float angle = dot(normalize((rot * vec4(0,0,1,0)).xyz), normalize(dir));
-        float outerCone = 0.7;
-        float innerCone = outerCone ;
-        float difVal2 = clamp((angle + outerCone -1.57)/(outerCone*innerCone), 0.0, 1.0) * difVal * 5.0;
+        float angle = dot(normalize((inverse(rot) * vec4(0,0,1,0)).xyz), normalize(dir));
+        float outerCone = ConeAngle;
+        float innerCone = ConeAngle * 0.3;
+        float difVal2 = clamp((angle + outerCone -1.57)/(outerCone*innerCone), 0.0, 1.0) * difVal;
         
 
 
 
   
-        difVal2 *= 0.0;  
-        difVal += difVal2;
+      if(ConeAngle == 0) difVal2 *= 0.0;  
+      else  difVal = difVal2;
         float asd = 6.0;
         if(difVal < 0.05) return 0;
         difVal = floor((difVal * asd))/asd;
@@ -82,10 +83,10 @@ void main() {
         
             vec3 color;
          
-         color = texture(ColT, texPos).xyz * 0.07;
+         color = texture(ColT, texPos).xyz * 0.03;
           fragColor = vec4(color,1.0);
         if(texture(PosT, texPos).y == -1.0){
-            fragColor = vec4(normalize(texture(ColT, texPos).xyz)*1.5,1.0);
+            fragColor = vec4((texture(ColT, texPos).xyz)*4,1.0);
         }
     }
     else if(light == 0 ){
@@ -95,8 +96,8 @@ void main() {
         else{
           
      vec3 color = texture(ColT, texPos).xyz * getLight(lightPos,texture(PosT, texPos).xyz+camPos,texture(NormT, texPos).xyz,texture(NormFT, texPos).xyz,uSamplerS,rotcam)
-      //* vec3(1.0,0.5,0.5);
-      * vec3(1.0,0.8,0.6);
+      * normalize(lightCol);
+     // * vec3(1.0,0.8,0.6);
        
         
         fragColor = vec4(color,1.0);

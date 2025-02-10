@@ -6,7 +6,7 @@ camera::camera(glm::vec3 pos, glm::vec3 rot){
     GFB = GframeBuffer(glm::vec2(512));
     MFB = FrameBuffer(glm::vec2(512));
     FB = FrameBuffer(glm::vec2(512));
-    PFB = FrameBuffer(glm::vec2(512));
+    PFB1 = FrameBuffer(glm::vec2(512));
 
     std::vector<float> vertPos = { 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0 };
     std::vector<int> indices = { 2, 1, 0, 3, 2, 0 };
@@ -50,9 +50,9 @@ void camera::updateSize(glm::vec2 sz) {
     GFB.set(sz);
     MFB.set(sz);
     FB.set(sz);
-    PFB.set(sz);
+    PFB1.set(sz);
 }
-std::vector<glm::mat4> camera::matrix(float aspect){
+glm::mat4 camera::matrix(float aspect){
     float fov = (60.0f * 3.14159265358979323846f) / 180.0f;
     float zNear = 0.01f;
     float zFar = 100.0f;
@@ -66,5 +66,5 @@ std::vector<glm::mat4> camera::matrix(float aspect){
     rotationMatrix = view;
     view = glm::translate(view,-pos);
     view = projectionMatrix * view;
-    return {view,rotationMatrix};
+    return view;
 }

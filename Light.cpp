@@ -3,10 +3,15 @@
 #include <random>
 
 Light::Light(glm::vec3 pos) {
+	std::random_device rd;  // Seed generator
+	std::mt19937 gen(rd()); // Mersenne Twister engine
+	std::uniform_real_distribution<float> Rand(0.0f, 1.0f); // Range [0, 1]
+
+
 	size = 500;
 	this->pos = pos;
 	obj = SpObj(pos, rot, glm::vec3(0.09f), initCubeBuffer({9}),27,0);
-	col = glm::vec3(0.1f);
+	col = glm::vec3(1,0.5,0.2);
 	obj.pos = pos;
 	obj.rot = rot;
 	rotationMatrix = glm::mat4();
