@@ -16,6 +16,7 @@
       uniform int light;
       uniform int lighC;
       uniform float ConeAngle;
+      uniform float brightness;
       
 
       float getLight(vec3 posLight,vec3 posFrag,vec3 normal,vec3 normalF, samplerCube uSamplerSs,mat4 rot){
@@ -83,7 +84,7 @@ void main() {
         
             vec3 color;
          
-         color = texture(ColT, texPos).xyz * 0.03;
+         color = texture(ColT, texPos).xyz * brightness;
           fragColor = vec4(color,1.0);
         if(texture(PosT, texPos).y == -1.0){
             fragColor = vec4((texture(ColT, texPos).xyz)*4,1.0);

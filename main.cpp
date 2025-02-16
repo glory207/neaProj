@@ -10,6 +10,7 @@
 #include "PlayerClass.h"
 #include<glm/gtc/matrix_transform.hpp>
 #include<gl/GL.h>
+#include "UIelement.h"
 #include <random>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -37,6 +38,7 @@ float deltaTime = 1.0f;
 float UTime = 0.0f;
 int main()
 {
+    cout << "a " << int(' ') << " A " << tolower(int(' ')) << endl;
     #pragma region Start
 
 
@@ -67,13 +69,13 @@ int main()
 
     GLuint lyrs[6] = { 0,0,0,0,0,0 };
     unsigned int shaderProgram = initShader("shaders/def.vert", "shaders/def.geom", "shaders/def.frag");
-
     unsigned int shaderInstaceProgram = initShader("shaders/defInst.vert", "shaders/defInst.geom", "shaders/defInst.frag");
     unsigned int shaderLightProgram = initShader("shaders/def.vert", "shaders/def.geom", "shaders/light.frag");
     unsigned int shaderShadowProgram = initShader("shaders/shadow.vert", "shaders/shadow.geom", "shaders/shadow.frag");
     unsigned int shaderInstaceShadowProgram = initShader("shaders/shadowInst.vert", "shaders/shadowInst.geom", "shaders/shadowInst.frag");
     unsigned int shaderMazeProgram = initShader("shaders/maze.vert", "shaders/maze.geom", "shaders/maze.frag"); 
     unsigned int ShaderPost = initShader("shaders/cam.vert", "shaders/camPost.frag"); 
+    unsigned int ShaderUI = initShader("shaders/cam.vert", "shaders/UI.frag"); 
     createShadowFramebufferCube shBF = createShadowFramebufferCube(500);
 
     // Define the random number generator and distribution
@@ -141,7 +143,7 @@ int main()
     glBindVertexArray(0);
 
 
-    float sensitivity = 1.0f;
+    float sensitivity = 0.001f;
     double preTime = 0.0;
     double curTime = 0.0;
     double timeDif;
@@ -150,10 +152,36 @@ int main()
     #pragma endregion
     #pragma region Update
     tourch = Light(vec3(0));
+    glDepthFunc(GL_LEQUAL);
     glfwSwapInterval(1);
+    
+    UIDIV ddd1 = UIDIV(vec2(0),vec2(0.95),vec4(vec3(0.6),1.0f), vec4(1.0f));
+    UIDIV* topBar = new UIDIV(vec2(0,0.85), vec2(0.85f,0.1), vec4(vec3(0.2), 1.0f), vec4(1.0f));
+    ddd1.children.push_back(topBar);
+    UIButton* menueButton = new UIButton(vec2(-0.67, 0), vec2(0.2f, 0.7), vec4(vec3(0.6), 1.0f), vec4(1.0f),"menue");
+    UIButton* settingsButton = new UIButton(vec2(-0.2, 0), vec2(0.2f, 0.7), vec4(vec3(0.6), 1.0f), vec4(1.0f),"settings");
+    topBar->children.push_back(menueButton);
+    topBar->children.push_back(settingsButton);
+    UIDIV* settingsBox = new UIDIV(vec2(0, -0.1), vec2(0.95f, 0.8), vec4(vec3(0.2), 1.0f), vec4(1.0f));
+    settingsButton->child = settingsBox;
+    UIDIV* settingsBar = new UIDIV(vec2(-0.6,0), vec2(0.35f, 0.9f), vec4(vec3(0.6), 1.0f), vec4(1.0f));
+    UIButton* graphicsButton = new UIButton(vec2(0,0.85), vec2(0.9f, 0.09f), vec4(vec3(0.85), 1.0f), vec4(1.0f),"graphics");
+    UIButton* dificultyButton = new UIButton(vec2(0,0.65), vec2(0.9f, 0.09f), vec4(vec3(0.85), 1.0f), vec4(1.0f),"dificulty");
+    UIDIV* graphicsBox = new UIDIV(vec2(0.375,0), vec2(0.575f, 0.9), vec4(vec3(0.6), 1.0f), vec4(1.0f));
+    UIDIV* dificultyBox = new UIDIV(vec2(0.375,0), vec2(0.575f, 0.9), vec4(vec3(0.6), 1.0f), vec4(1.0f));
+    UIslider* brightnessSlider = new UIslider(vec2(0,0.75),vec2(0.9,0.2), vec4(vec3(0.9), 1.0f), vec4(1.0f), "brightness",0.1);
+    UIslider* resSlider = new UIslider(vec2(0,0.3),vec2(0.9,0.2), vec4(vec3(0.9), 1.0f), vec4(1.0f), "resolution",1.0);
+    UItoggler* framelockToggl = new UItoggler(vec2(0,-0.05),vec2(0.9,0.1), vec4(vec3(0.9), 1.0f), vec4(1.0f), "unlimited frames  ");
+    settingsBox->children.push_back(settingsBar);
+    settingsBar->children.push_back(graphicsButton);
+    settingsBar->children.push_back(dificultyButton);
+    graphicsButton->child = graphicsBox;
+    graphicsBox->children.push_back(brightnessSlider);
+    graphicsBox->children.push_back(resSlider);
+    dificultyButton->child = dificultyBox;
+    graphicsBox->children.push_back(framelockToggl);
     while (!glfwWindowShouldClose(window))
     {
-
         curTime = glfwGetTime();
         timeDif = curTime - preTime;
         counter++;
@@ -168,9 +196,10 @@ int main()
             counter = 0;
         }
         if (SCR_WIDTH > 0 && SCR_HEIGHT > 0 && timeDif < 1.0) {
-           
 
-            if (MouseLocked) {
+
+            if (MouseLocked)
+            {
 
                 // Stores the coordinates of the cursor
                 double mouseX;
@@ -180,296 +209,344 @@ int main()
 
                 // Normalizes and shifts the coordinates of the cursor such that they begin in the middle of the screen
                 // and then "transforms" them into degrees 
-                cam.rot.x += sensitivity * (float)((SCR_HEIGHT / 2) - mouseY) / SCR_HEIGHT;
-                cam.rot.y += sensitivity * (float)((SCR_WIDTH / 2) - mouseX) / SCR_WIDTH;
-               // cout << sensitivity * (float)((SCR_HEIGHT / 2) - mouseY) / SCR_HEIGHT << " " << sensitivity * (float)((SCR_WIDTH / 2) - mouseX) / SCR_WIDTH << endl;
+                cam.rot.x += sensitivity * (float)((SCR_HEIGHT / 2) + OFF_HEIGHT - mouseY);
+                cam.rot.y += sensitivity * (float)((SCR_WIDTH / 2) + OFF_WIDTH - mouseX);
+                // cout << sensitivity * (float)((SCR_HEIGHT / 2) - mouseY) / SCR_HEIGHT << " " << sensitivity * (float)((SCR_WIDTH / 2) - mouseX) / SCR_WIDTH << endl;
                 player.inp->rot.y = cam.rot.y;
 
                 // Sets mouse cursor to the middle of the screen so that it doesn't end up roaming around
-                glfwSetCursorPos(window, (SCR_WIDTH / 2), (SCR_HEIGHT / 2));
-            }
+                glfwSetCursorPos(window, (SCR_WIDTH / 2) + OFF_WIDTH, (SCR_HEIGHT / 2) + OFF_HEIGHT);
 
-            // input
 
-           {
                 processInput(window);
-              //  for (int t = 0; t < ligh.size(); t++) {
-              //      //  mz.collide(&ligh[t].pos, &ligh[t].acc, vec2(0.075f));
-              //    //  ligh[t].update(deltaTime);
-              //  }
                 player.update(deltaTime);
                 vec3 ty = player.inp->acc;
                 vec3 tp = player.inp->pos;
                 player.inp->Grounded = mz.collide(&player.inp->pos, nullptr, vec2(0.075f, 0.0f));
-               // cout << player.inp->Grounded << " " << player.inp->pos.y << endl;
-                
-               
-            }
-            // render
-            glDisable(GL_BLEND);
+
+                glDisable(GL_BLEND);
 
 
-            glViewport(0, 0, 500, 500);
+                glViewport(0, 0, 500, 500);
 
-            if (UTime > 10) UTime = 0;
-            float cpt = 0.1f;
-            if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
-            {
-                tourch.pos = cam.pos + vec3(0, 0.1, 0);
-                if (length(tourch.pos - cam.pos) < 7.0f) {
+                if (UTime > 10) UTime = 0;
+                float cpt = 0.1f;
+                if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+                {
+                    tourch.pos = cam.pos + vec3(0, 0.1, 0);
+                    if (length(tourch.pos - cam.pos) < 7.0f) {
 
-                    tourch.activate(true);
-                    shBF.bind(true, 0, tourch.depthTex);
-                    glUseProgram(shaderShadowProgram);
-                    std::string ii[6];
-                    glm::mat4 matr4[6];
-                    for (int i = 0; i < 6; i++)
-                    {
-                        float fov = (0.5f * 3.14159265358979323846f);
-                        float zNear = 0.01f;
-                        float zFar = 100.0f;
-                        glm::mat4 projectionMatrix;
-                        glm::mat4 view;
-                        projectionMatrix = glm::perspective(fov, 1.0f, zNear, zFar);
-                        view = glm::lookAt(tourch.pos, tourch.pos + shBF.target[i], shBF.up[i]);
-                        view = projectionMatrix * view;
-                        matr4[i] = view;
-                        ii[i] = "uProjectionMatrix[" + std::to_string(i) + "]";
-                        glUniformMatrix4fv(glGetUniformLocation(shaderShadowProgram, ii[i].c_str()), 1, GL_FALSE, glm::value_ptr(matr4[i]));
-                    }
-                    glUniform3f(glGetUniformLocation(shaderShadowProgram, "lpos"), tourch.pos.x, tourch.pos.y, tourch.pos.z);
-                    player.draw(curTime, shaderShadowProgram);
-                    mz.draw(shaderShadowProgram);
-                    glUseProgram(shaderInstaceShadowProgram);
-
-                    for (int i = 0; i < 6; i++)glUniformMatrix4fv(glGetUniformLocation(shaderInstaceShadowProgram, ii[i].c_str()), 1, GL_FALSE, glm::value_ptr(matr4[i]));
-                    glUniform3f(glGetUniformLocation(shaderInstaceShadowProgram, "lpos"), tourch.pos.x, tourch.pos.y, tourch.pos.z);
-                    mz.furn.draw(shaderInstaceShadowProgram, mz.fur.size());
-                }
-                else {
-                    tourch.activate(false);
-                }
-
-
-            }
-
-
-
-            for (int t = 0; t < ligh.size(); t++) {
-                
-                if (length(ligh[t].pos - cam.pos) < 7.0f) {
-                    
-                    ligh[t].activate(true);
-                   
-                    if (ligh[t].active2||UTime == t%10) shBF.bind(true, 0, ligh[t].depthTexPre);
-                    else
-                    {
-                        glBindTexture(GL_TEXTURE_CUBE_MAP, ligh[t].depthTexPre);
-                        for (GLuint face = 0; face < 6; ++face) {
-                            glCopyImageSubData(ligh[t].depthTexPre, GL_TEXTURE_CUBE_MAP, 0, 0, 0, face,
-                                ligh[t].depthTex, GL_TEXTURE_CUBE_MAP, 0, 0, 0, face,
-                                ligh[t].size, ligh[t].size, 1);
+                        tourch.activate(true);
+                        shBF.bind(true, 0, tourch.depthTex);
+                        glUseProgram(shaderShadowProgram);
+                        std::string ii[6];
+                        glm::mat4 matr4[6];
+                        for (int i = 0; i < 6; i++)
+                        {
+                            float fov = (0.5f * 3.14159265358979323846f);
+                            float zNear = 0.01f;
+                            float zFar = 100.0f;
+                            glm::mat4 projectionMatrix;
+                            glm::mat4 view;
+                            projectionMatrix = glm::perspective(fov, 1.0f, zNear, zFar);
+                            view = glm::lookAt(tourch.pos, tourch.pos + shBF.target[i], shBF.up[i]);
+                            view = projectionMatrix * view;
+                            matr4[i] = view;
+                            ii[i] = "uProjectionMatrix[" + std::to_string(i) + "]";
+                            glUniformMatrix4fv(glGetUniformLocation(shaderShadowProgram, ii[i].c_str()), 1, GL_FALSE, glm::value_ptr(matr4[i]));
                         }
-                        shBF.bind(false, 0, ligh[t].depthTex);
-                        
+                        glUniform3f(glGetUniformLocation(shaderShadowProgram, "lpos"), tourch.pos.x, tourch.pos.y, tourch.pos.z);
+                        player.draw(curTime, shaderShadowProgram);
+                        mz.draw(shaderShadowProgram);
+                        glUseProgram(shaderInstaceShadowProgram);
+
+                        for (int i = 0; i < 6; i++)glUniformMatrix4fv(glGetUniformLocation(shaderInstaceShadowProgram, ii[i].c_str()), 1, GL_FALSE, glm::value_ptr(matr4[i]));
+                        glUniform3f(glGetUniformLocation(shaderInstaceShadowProgram, "lpos"), tourch.pos.x, tourch.pos.y, tourch.pos.z);
+                        mz.furn.draw(shaderInstaceShadowProgram, mz.fur.size());
                     }
-                       glUseProgram(shaderShadowProgram);
-                       std::string ii[6];
-                       glm::mat4 matr4[6];
-                       for (int i = 0; i < 6; i++)
-                       {
-                           float fov = (0.5f * 3.14159265358979323846f);
-                           float zNear = 0.01f;
-                           float zFar = 100.0f;
-                           glm::mat4 projectionMatrix;
-                           glm::mat4 view;
-                           projectionMatrix = glm::perspective(fov, 1.0f, zNear, zFar);
-                           view = glm::lookAt(ligh[t].pos, ligh[t].pos + shBF.target[i], shBF.up[i]);
-                           view = projectionMatrix * view;
-                           matr4[i] = view;
-                           ii[i] = "uProjectionMatrix[" + std::to_string(i) + "]";
-                           glUniformMatrix4fv(glGetUniformLocation(shaderShadowProgram, ii[i].c_str()), 1, GL_FALSE, glm::value_ptr(matr4[i]));
-                       }
-                       glUniform3f(glGetUniformLocation(shaderShadowProgram, "lpos"), ligh[t].pos.x, ligh[t].pos.y, ligh[t].pos.z);
-                       if (ligh[t].active2 || UTime == t % 10) {
-                           mz.draw(shaderShadowProgram);
-                           glUseProgram(shaderInstaceShadowProgram);
+                    else {
+                        tourch.activate(false);
+                    }
 
-                           for (int i = 0; i < 6; i++)glUniformMatrix4fv(glGetUniformLocation(shaderInstaceShadowProgram, ii[i].c_str()), 1, GL_FALSE, glm::value_ptr(matr4[i]));
-                           glUniform3f(glGetUniformLocation(shaderInstaceShadowProgram, "lpos"), ligh[t].pos.x, ligh[t].pos.y, ligh[t].pos.z);
-                           mz.furn.draw(shaderInstaceShadowProgram, mz.fur.size());
-                       }
-                       else
-                       {
-                           player.draw(curTime, shaderShadowProgram);
-                       }
+
                 }
-                else {
-                    ligh[t].activate(false);
+
+
+
+                for (int t = 0; t < ligh.size(); t++) {
+
+                    if (length(ligh[t].pos - cam.pos) < 7.0f) {
+
+                        ligh[t].activate(true);
+
+                        if (ligh[t].active2 || UTime == t % 10) shBF.bind(true, 0, ligh[t].depthTexPre);
+                        else
+                        {
+                            glBindTexture(GL_TEXTURE_CUBE_MAP, ligh[t].depthTexPre);
+                            for (GLuint face = 0; face < 6; ++face) {
+                                glCopyImageSubData(ligh[t].depthTexPre, GL_TEXTURE_CUBE_MAP, 0, 0, 0, face,
+                                    ligh[t].depthTex, GL_TEXTURE_CUBE_MAP, 0, 0, 0, face,
+                                    ligh[t].size, ligh[t].size, 1);
+                            }
+                            shBF.bind(false, 0, ligh[t].depthTex);
+
+                        }
+                        glUseProgram(shaderShadowProgram);
+                        std::string ii[6];
+                        glm::mat4 matr4[6];
+                        for (int i = 0; i < 6; i++)
+                        {
+                            float fov = (0.5f * 3.14159265358979323846f);
+                            float zNear = 0.01f;
+                            float zFar = 100.0f;
+                            glm::mat4 projectionMatrix;
+                            glm::mat4 view;
+                            projectionMatrix = glm::perspective(fov, 1.0f, zNear, zFar);
+                            view = glm::lookAt(ligh[t].pos, ligh[t].pos + shBF.target[i], shBF.up[i]);
+                            view = projectionMatrix * view;
+                            matr4[i] = view;
+                            ii[i] = "uProjectionMatrix[" + std::to_string(i) + "]";
+                            glUniformMatrix4fv(glGetUniformLocation(shaderShadowProgram, ii[i].c_str()), 1, GL_FALSE, glm::value_ptr(matr4[i]));
+                        }
+                        glUniform3f(glGetUniformLocation(shaderShadowProgram, "lpos"), ligh[t].pos.x, ligh[t].pos.y, ligh[t].pos.z);
+                        if (ligh[t].active2 || UTime == t % 10) {
+                            mz.draw(shaderShadowProgram);
+                            glUseProgram(shaderInstaceShadowProgram);
+
+                            for (int i = 0; i < 6; i++)glUniformMatrix4fv(glGetUniformLocation(shaderInstaceShadowProgram, ii[i].c_str()), 1, GL_FALSE, glm::value_ptr(matr4[i]));
+                            glUniform3f(glGetUniformLocation(shaderInstaceShadowProgram, "lpos"), ligh[t].pos.x, ligh[t].pos.y, ligh[t].pos.z);
+                            mz.furn.draw(shaderInstaceShadowProgram, mz.fur.size());
+                        }
+                        else
+                        {
+                            player.draw(curTime, shaderShadowProgram);
+                        }
+                    }
+                    else {
+                        ligh[t].activate(false);
+                    }
+
+
                 }
-                
-               
-            }
 
-            UTime += deltaTime;
-           // cout << std::to_string(nb1) << " " << std::to_string(nb2) << " " << std::to_string(nb3) << endl;
-            cam.GFB.bind(true);
-            glUseProgram(shaderProgram);
-            mat4 ma = cam.matrix(float(SCR_WIDTH) / float(SCR_HEIGHT));
-            glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "uProjectionMatrix"), 1, GL_FALSE, glm::value_ptr(ma));
-            glUniform3f(glGetUniformLocation(shaderProgram, "camPos"), cam.pos.x, cam.pos.y, cam.pos.z);
-            glEnable(GL_CULL_FACE);
-            glCullFace(GL_FRONT);
-            mz.draw(shaderProgram);
-            glDisable(GL_CULL_FACE);
+                UTime += deltaTime;
+                // cout << std::to_string(nb1) << " " << std::to_string(nb2) << " " << std::to_string(nb3) << endl;
+                cam.GFB.bind(true);
+                glUseProgram(shaderProgram);
+                mat4 ma = cam.matrix(float(SCR_WIDTH) / float(SCR_HEIGHT));
+                glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "uProjectionMatrix"), 1, GL_FALSE, glm::value_ptr(ma));
+                glUniform3f(glGetUniformLocation(shaderProgram, "camPos"), cam.pos.x, cam.pos.y, cam.pos.z);
+                glEnable(GL_CULL_FACE);
+                glCullFace(GL_FRONT);
+                mz.draw(shaderProgram);
+                glDisable(GL_CULL_FACE);
 
-            player.draw(curTime, shaderProgram);
+                player.draw(curTime, shaderProgram);
 
 
-            glUseProgram(shaderInstaceProgram);
-            glUniformMatrix4fv(glGetUniformLocation(shaderInstaceProgram, "uProjectionMatrix"), 1, GL_FALSE, glm::value_ptr(ma));
-            glUniform3f(glGetUniformLocation(shaderInstaceProgram, "camPos"), cam.pos.x, cam.pos.y, cam.pos.z);
-            mz.furn.draw(shaderInstaceProgram, mz.fur.size());
+                glUseProgram(shaderInstaceProgram);
+                glUniformMatrix4fv(glGetUniformLocation(shaderInstaceProgram, "uProjectionMatrix"), 1, GL_FALSE, glm::value_ptr(ma));
+                glUniform3f(glGetUniformLocation(shaderInstaceProgram, "camPos"), cam.pos.x, cam.pos.y, cam.pos.z);
+                mz.furn.draw(shaderInstaceProgram, mz.fur.size());
 
-            glUseProgram(shaderLightProgram);
-            glUniformMatrix4fv(glGetUniformLocation(shaderLightProgram, "uProjectionMatrix"), 1, GL_FALSE, glm::value_ptr(ma));
-            for (int t = 0; t < ligh.size(); t++) {
-                if (ligh[t].active)
+                glUseProgram(shaderLightProgram);
+                glUniformMatrix4fv(glGetUniformLocation(shaderLightProgram, "uProjectionMatrix"), 1, GL_FALSE, glm::value_ptr(ma));
+                for (int t = 0; t < ligh.size(); t++) {
+                    if (ligh[t].active)
+                    {
+                        glUniform3f(glGetUniformLocation(shaderLightProgram, "color"), ligh[t].col.x, ligh[t].col.y, ligh[t].col.z);
+                        glUniform1f(glGetUniformLocation(shaderLightProgram, "tim"), (int)(curTime * 10));
+                        ligh[t].obj.rot.y = atan2(ligh[t].obj.pos.x - cam.pos.x, ligh[t].obj.pos.z - cam.pos.z);
+                        ligh[t].obj.draw(shaderLightProgram);
+                    }
+                }
+
+
+                cam.FB.bind(true);
+
+                glEnable(GL_BLEND); // Enable depth testing
+                glDepthFunc(GL_LEQUAL); // Near things obscure far things
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                glBlendEquation(GL_FUNC_ADD);
+                glBlendFunc(GL_ONE, GL_ONE);
+
+
+
+                glUseProgram(cam.shader);
+                glUniform4f(glGetUniformLocation(cam.shader, "textureMatrix"), 0, 0, 1, 1);
+                glUniform3f(glGetUniformLocation(cam.shader, "camPos"), cam.pos.x, cam.pos.y, cam.pos.z);
+                glUniform1i(glGetUniformLocation(cam.shader, "light"), 0);
+                glUniform1i(glGetUniformLocation(cam.shader, "uSamplerS"), 4);
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, cam.GFB.ColTex);
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, cam.GFB.PosTex);
+                glActiveTexture(GL_TEXTURE2);
+                glBindTexture(GL_TEXTURE_2D, cam.GFB.NomTex);
+                glActiveTexture(GL_TEXTURE3);
+                glBindTexture(GL_TEXTURE_2D, cam.GFB.NomFTex);
+
+                std::string ii = " ";
+                if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
                 {
-                    glUniform3f(glGetUniformLocation(shaderLightProgram, "color"), ligh[t].col.x, ligh[t].col.y, ligh[t].col.z);
-                    glUniform1f(glGetUniformLocation(shaderLightProgram, "tim"), (int)(curTime * 10));
-                    ligh[t].obj.rot.y = atan2(ligh[t].obj.pos.x - cam.pos.x, ligh[t].obj.pos.z - cam.pos.z);
-                    ligh[t].obj.draw(shaderLightProgram);
+                    int t = 0;
+                    //  if (tourch.active)
+                    {
+                        glUniformMatrix4fv(glGetUniformLocation(cam.shader, "rotcam"), 1, GL_FALSE, value_ptr(cam.rotationMatrix));
+
+                        glActiveTexture(GL_TEXTURE4);
+                        glBindTexture(GL_TEXTURE_CUBE_MAP, tourch.depthTex);
+
+                        glUniform1f(glGetUniformLocation(cam.shader, "ConeAngle"), 0.68);
+                        glUniform3f(glGetUniformLocation(cam.shader, "lightPos"), tourch.pos.x, tourch.pos.y, tourch.pos.z);
+                        glUniform3f(glGetUniformLocation(cam.shader, "lightCol"), 1.0, 1.0, 1.0);
+                        glUniform2f(glGetUniformLocation(cam.shader, "LightSetings"), 20.0, 1.1 + sin(curTime * 2) * 0.3f);
+
+
+                        cam.draw(cam.shader);
+
+                    }
+
+
                 }
+                for (int t = 1; t < ligh.size(); t++) {
+
+                    if (ligh[t].active)
+                    {
+                        glUniformMatrix4fv(glGetUniformLocation(cam.shader, "rotcam"), 1, GL_FALSE, value_ptr(cam.rotationMatrix));
+
+                        glActiveTexture(GL_TEXTURE4);
+                        glBindTexture(GL_TEXTURE_CUBE_MAP, ligh[t].depthTex);
+
+                        glUniform1f(glGetUniformLocation(cam.shader, "ConeAngle"), 0);
+                        glUniform3f(glGetUniformLocation(cam.shader, "lightPos"), ligh[t].pos.x, ligh[t].pos.y, ligh[t].pos.z);
+                        glUniform3f(glGetUniformLocation(cam.shader, "lightCol"), ligh[t].col.x, ligh[t].col.y, ligh[t].col.z);
+                        glUniform2f(glGetUniformLocation(cam.shader, "LightSetings"), LightSetings.x + sin(curTime) * 0.1f, LightSetings.y);
+
+
+                        cam.draw(cam.shader);
+
+                    }
+
+
+                }
+
+
+                glUniform1i(glGetUniformLocation(cam.shader, "light"), 1);
+                glUniform1f(glGetUniformLocation(cam.shader, "brightness"), brightnessSlider->fraction * 0.5);
+                cam.draw(cam.shader);
+                glDisable(GL_BLEND);
+
+
+                cam.PFB1.bind(true);
+                glUseProgram(ShaderPost);
+                glUniform4f(glGetUniformLocation(ShaderPost, "textureMatrix"), 0, 0, 1, 1);
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, cam.FB.ColTex);
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, cam.GFB.PosTex);
+                cam.draw(ShaderPost);
+
+                cam.MFB.bind(true);
+                glUseProgram(shaderMazeProgram);
+                glUniform2f(glGetUniformLocation(shaderMazeProgram, "campos"), cam.pos.x / mz.size, cam.pos.z / mz.size);
+                glUniform1f(glGetUniformLocation(shaderMazeProgram, "rt"), cam.rot.y);
+                glBindVertexArray(mz.VAO);
+                glDrawElements(GL_LINES, mz.MapBuffers.length, GL_UNSIGNED_INT, 0);
+                glBindVertexArray(VAO);
+                glUniform1f(glGetUniformLocation(shaderMazeProgram, "rt"), 0.0);
+                glUniform2f(glGetUniformLocation(shaderMazeProgram, "campos"), 0, 0);
+                glDrawArrays(GL_LINES, 0, 4);
+
+
+
+                glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+                glViewport(OFF_WIDTH, OFF_HEIGHT, SCR_WIDTH, SCR_HEIGHT);
+
+
+                glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+                glEnable(GL_DEPTH_TEST);
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+
+                glUseProgram(cam.ScreenShader);
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, cam.PFB1.ColTex);
+                glUniform4f(glGetUniformLocation(cam.ScreenShader, "textureMatrix"), 0, 0, 1, 1);
+                cam.drawScreen();
+                glUseProgram(cam.MapShader);
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, cam.MFB.ColTex);
+                glUniform1i(glGetUniformLocation(cam.MapShader, "ColT2"), 0);
+                glUniform4f(glGetUniformLocation(cam.MapShader, "textureMatrix"), 0, 0, 1, 1);
+                glUniform2f(glGetUniformLocation(cam.MapShader, "screen"), SCR_WIDTH, SCR_HEIGHT);
+                cam.drawScreen();
+
             }
+            else {
 
+                // Stores the coordinates of the cursor
+                double mouseX;
+                double mouseY;
+                // Fetches the coordinates of the cursor
+                glfwGetCursorPos(window, &mouseX, &mouseY);
+                vec2 mousep = vec2((mouseX-OFF_WIDTH - (SCR_WIDTH- SCR_HEIGHT)/2)/ SCR_HEIGHT - 0.5,0.5- (mouseY-OFF_HEIGHT) / SCR_HEIGHT)*2.0f;
 
-            cam.FB.bind(true);
-
-            glEnable(GL_BLEND); // Enable depth testing
-            glDepthFunc(GL_LEQUAL); // Near things obscure far things
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glBlendEquation(GL_FUNC_ADD);
-            glBlendFunc(GL_ONE, GL_ONE);
-
-
-
-            glUseProgram(cam.shader);
-
-            glUniform3f(glGetUniformLocation(cam.shader, "camPos"), cam.pos.x, cam.pos.y, cam.pos.z);
-            glUniform1i(glGetUniformLocation(cam.shader, "light"), 0);
-            glUniform1i(glGetUniformLocation(cam.shader, "uSamplerS"), 4);
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, cam.GFB.ColTex);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, cam.GFB.PosTex);
-            glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D, cam.GFB.NomTex);
-            glActiveTexture(GL_TEXTURE3);
-            glBindTexture(GL_TEXTURE_2D, cam.GFB.NomFTex);
-
-            std::string ii = " ";
-            if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
-            {
-                int t = 0;
-              //  if (tourch.active)
+                if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS && (abs(mousep.x) > 1 || abs(mousep.y) > 1))
                 {
-                    glUniformMatrix4fv(glGetUniformLocation(cam.shader, "rotcam"), 1, GL_FALSE, value_ptr(cam.rotationMatrix));
-
-                    glActiveTexture(GL_TEXTURE4);
-                    glBindTexture(GL_TEXTURE_CUBE_MAP, tourch.depthTex);
-
-                    glUniform1f(glGetUniformLocation(cam.shader, "ConeAngle"), 0.68);
-                    glUniform3f(glGetUniformLocation(cam.shader, "lightPos"), tourch.pos.x, tourch.pos.y, tourch.pos.z);
-                    glUniform3f(glGetUniformLocation(cam.shader, "lightCol"), 1.0,1.0,1.0);
-                    glUniform2f(glGetUniformLocation(cam.shader, "LightSetings"),20.0, 1.1 + sin(curTime * 2) * 0.3f);
-                    
-
-                    cam.draw(cam.shader); 
-
+                    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+                    glfwSetCursorPos(window, (SCR_WIDTH / 2) + OFF_WIDTH, (SCR_HEIGHT / 2) + OFF_HEIGHT);
+                    MouseLocked = true;
                 }
 
+                glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-            }
-            for (int t = 1; t < ligh.size(); t++) {
+                glViewport(OFF_WIDTH, OFF_HEIGHT, SCR_WIDTH, SCR_HEIGHT);
 
-                if (ligh[t].active)
+
+                glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+                glEnable(GL_DEPTH_TEST);
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+
+                glUseProgram(cam.ScreenShader);
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, cam.PFB1.ColTex);
+                glUniform4f(glGetUniformLocation(cam.ScreenShader, "textureMatrix"), 0, 0, 1, 1);
+                cam.drawScreen();
+                glUseProgram(cam.MapShader);
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, cam.MFB.ColTex);
+                glUniform1i(glGetUniformLocation(cam.MapShader, "ColT2"), 0);
+                glUniform4f(glGetUniformLocation(cam.MapShader, "textureMatrix"), 0, 0, 1, 1);
+                glUniform2f(glGetUniformLocation(cam.MapShader, "screen"), SCR_WIDTH, SCR_HEIGHT);
+                cam.drawScreen();
+
+                glViewport(OFF_WIDTH + (SCR_WIDTH - SCR_HEIGHT) / 2, OFF_HEIGHT, SCR_HEIGHT, SCR_HEIGHT);
+                glUseProgram(ShaderUI);
+                glActiveTexture(GL_TEXTURE0);
+                GLuint qweewq = texture(30);
+                glBindTexture(GL_TEXTURE_2D,qweewq);
+
+                ddd1.draw(cam.VAO, ShaderUI,vec2(0),vec2(1), mousep, glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS);
+                if (framelockToggl->isTrue) {
+
+                    glfwSwapInterval(0);
+                }
+                else
                 {
-                    glUniformMatrix4fv(glGetUniformLocation(cam.shader, "rotcam"), 1, GL_FALSE, value_ptr(cam.rotationMatrix));
 
-                    glActiveTexture(GL_TEXTURE4);
-                    glBindTexture(GL_TEXTURE_CUBE_MAP, ligh[t].depthTex);
-
-                    glUniform1f(glGetUniformLocation(cam.shader, "ConeAngle"), 0);
-                    glUniform3f(glGetUniformLocation(cam.shader, "lightPos"), ligh[t].pos.x, ligh[t].pos.y, ligh[t].pos.z);
-                    glUniform3f(glGetUniformLocation(cam.shader, "lightCol"), ligh[t].col.x, ligh[t].col.y, ligh[t].col.z);
-                    glUniform2f(glGetUniformLocation(cam.shader, "LightSetings"), LightSetings.x + sin(curTime) * 0.1f, LightSetings.y);
-                    
-
-                    cam.draw(cam.shader); 
-
+                    glfwSwapInterval(1);
                 }
-
-
+                resolution = pow(int((1.0-resSlider->fraction) * 10)+1, -2.0f);
+                cam.updateSize(vec2(SCR_WIDTH, SCR_HEIGHT)* resolution);
             }
-
-
-            glUniform1i(glGetUniformLocation(cam.shader, "light"), 1);
-            cam.draw(cam.shader);
-            glDisable(GL_BLEND);
-
-
-            cam.PFB1.bind(true);
-            glUseProgram(ShaderPost);
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, cam.FB.ColTex); 
-            glActiveTexture(GL_TEXTURE1); 
-            glBindTexture(GL_TEXTURE_2D, cam.GFB.PosTex);
-            cam.draw(ShaderPost);
-
-            cam.MFB.bind(true);
-            glUseProgram(shaderMazeProgram);
-            glUniform2f(glGetUniformLocation(shaderMazeProgram, "campos"), cam.pos.x/mz.size, cam.pos.z / mz.size);
-            glUniform1f(glGetUniformLocation(shaderMazeProgram, "rt"), cam.rot.y);
-            glBindVertexArray(mz.VAO);
-            glDrawElements(GL_LINES, mz.MapBuffers.length, GL_UNSIGNED_INT, 0);
-            glBindVertexArray(VAO);
-            glUniform1f(glGetUniformLocation(shaderMazeProgram, "rt"), 0.0);
-            glUniform2f(glGetUniformLocation(shaderMazeProgram, "campos"), 0,0);
-            glDrawArrays(GL_LINES, 0,4);
-
-            
-
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-            glViewport(OFF_WIDTH, OFF_HEIGHT, SCR_WIDTH, SCR_HEIGHT);
-
-
-            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-            glEnable(GL_DEPTH_TEST);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
-
-            glUseProgram(cam.ScreenShader);
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, cam.PFB1.ColTex);
-            //glUniform1i(glGetUniformLocation(cam.ScreenShader, "ColT2"), 0);
-            cam.drawScreen();
-            glUseProgram(cam.MapShader);
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, cam.MFB.ColTex);
-            glUniform1i(glGetUniformLocation(cam.MapShader, "ColT2"), 0);
-
-            glUniform2f(glGetUniformLocation(cam.MapShader, "screen"), SCR_WIDTH, SCR_HEIGHT);
-            cam.drawScreen();
-
-          
         }
-        else
-        {
-           // cout << SCR_WIDTH << " " << SCR_HEIGHT << endl;
-        }
+        
+
 
         glfwPollEvents();
         glfwSwapBuffers(window);
@@ -493,14 +570,6 @@ int main()
 
 void processInput(GLFWwindow* window)
 {
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
-    {
-        // Hides mouse cursor
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-
-        glfwSetCursorPos(window, (SCR_WIDTH / 2), (SCR_HEIGHT / 2));
-        MouseLocked = true;
-    }
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
     {
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
@@ -600,5 +669,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
         OFF_HEIGHT = (height - SCR_HEIGHT)/2;
         SCR_HEIGHT = width * (9.0/16.0);
     }
+     
     cam.updateSize(vec2(SCR_WIDTH, SCR_HEIGHT) * resolution);
 }

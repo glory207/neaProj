@@ -38,4 +38,15 @@ public:
 
 };
 
+class UIObj
+{
+public:
+    SpObj obj;
+    std::vector<UIObj*> children;
+    glm::vec3 col;
+    UIObj();
+    UIObj(glm::vec3 poss, glm::vec3 rott, glm::vec3 scaa);
+    void draw(int programInfo);
+
+};
 

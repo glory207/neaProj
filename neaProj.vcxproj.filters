@@ -66,6 +66,9 @@
     <ClCompile Include="include\glm\detail\glm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="UIelement.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h">
@@ -548,6 +551,9 @@
     <ClInclude Include="include\stb\stb_image.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="UIelement.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="img\214-normal.jpg">
@@ -656,6 +662,9 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="img\M_Walk-Sheet.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="img\txttt-Sheet.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
@@ -1014,5 +1023,7 @@
     <None Include="shaders\defInst.geom" />
     <None Include="shaders\shadowInst.frag" />
     <None Include="shaders\shadowInst.geom" />
+    <None Include="shaders\UI.frag" />
+    <None Include="img\textM.aseprite" />
   </ItemGroup>
 </Project>

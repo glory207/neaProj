@@ -27,6 +27,7 @@ std::vector<const char*> texturesNames = {"img/brick.jpg","img/playerAni/walk000
     "img/flame.png",
     "img/M_Walk-Sheet.png",
     "img/M_WalkNormal-Sheet.png",
+    "img/txttt-Sheet.png",
 };
 bool frst = true;
 std::vector<int> texturesID = {

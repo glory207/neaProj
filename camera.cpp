@@ -9,11 +9,16 @@ camera::camera(glm::vec3 pos, glm::vec3 rot){
     PFB1 = FrameBuffer(glm::vec2(512));
 
     std::vector<float> vertPos = { 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0 };
+    std::vector<float> vertPos2 = { -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0 };
     std::vector<int> indices = { 2, 1, 0, 3, 2, 0 };
-    GLuint BP,BI;
+    GLuint BP,BP2,BI;
     glGenBuffers(1,&BP);
     glBindBuffer(GL_ARRAY_BUFFER, BP);
     glBufferData(GL_ARRAY_BUFFER, vertPos.size() * sizeof(float), vertPos.data(), GL_STATIC_DRAW);
+    
+    glGenBuffers(1,&BP2);
+    glBindBuffer(GL_ARRAY_BUFFER, BP2);
+    glBufferData(GL_ARRAY_BUFFER, vertPos2.size() * sizeof(float), vertPos2.data(), GL_STATIC_DRAW);
 
     glGenBuffers(1, &BI);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, BI);
@@ -25,6 +30,10 @@ camera::camera(glm::vec3 pos, glm::vec3 rot){
     glBindBuffer(GL_ARRAY_BUFFER, BP);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, BP2);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, BI);
     glBindBuffer(GL_ARRAY_BUFFER, 0); 
     glBindVertexArray(0); 

@@ -110,7 +110,6 @@ InsObj::InsObj() {
     textOff = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
 
 }
-
 void InsObj::draw(int programInfo,int count){
 
     glUniform4f(glGetUniformLocation(programInfo,"textureMatrix"),textOff.x,textOff.y,textOff.z,textOff.w);
@@ -168,4 +167,8 @@ void InsObj::draw(int programInfo,int count){
     glBindVertexArray(VAO);
     glDrawElementsInstanced(GL_TRIANGLES,buffer.length,GL_UNSIGNED_INT, 0, count);
     
+}
+
+UIObj::UIObj(glm::vec3 poss, glm::vec3 rott, glm::vec3 scaa) {
+    obj = SpObj(poss, rott, scaa, initCubeBuffer({9}),30,30);
 }

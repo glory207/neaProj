@@ -374,7 +374,14 @@ int RollState::Enter() {
 }
 int RollState::update(float deltaTime) {
 	inp->acc.y = -1.1f;
-	if (length(inp->inp) < 0.5f)
+	vec2 mov = vec2((inp->inp.y * sin(inp->rot.y) - inp->inp.x * cos(inp->rot.y)), (inp->inp.y * cos(inp->rot.y) + inp->inp.x * sin(inp->rot.y)));
+
+	if (dot(mov, vec2(inp->acc.x, inp->acc.z)) > 0.5f)
+	{
+		inp->resistance.x = 1.0f;
+		inp->resistance.z = 1.0f;
+	}
+	else
 	{
 		inp->resistance.x = 7.0f;
 		inp->resistance.z = 7.0f;
