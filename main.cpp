@@ -36,6 +36,7 @@ float ArmL2 = 0.0f;
 float ArmL3 = 1.25;
 float deltaTime = 1.0f;
 float UTime = 0.0f;
+float sceeee = 1.0f;
 Maze mz;
 bool onPath = false;
 float pathP = 0.0;
@@ -113,23 +114,12 @@ int main()
     
     player = PlayerClass(vec3(0.0f, 0.0f, 0.5f), vec3(0.0f, -3.1415 / 2.0f, 0.0f));
     
-
-    //for (int t = 0; t < pow(mz.count, 2.0f); t++)
-    for (int t = 0; t < pow(mz.count, 2.0f); t++)
-    {
-        
-        if (Rand(gen) < 0.4) {
-        //    ligh.push_back(Light(vec3((t % mz.count) * mz.size, Rand(gen)* 0.4 + 0.3, (t / mz.count) * mz.size), shBF.size));
-
-        }
-
-    }
     
     float vertices[] = {
-        0.0f, -0.1f, 0.0f,
-        0.0f, 0.1f, 0.0f,
-         -0.1f,0.0f, 0.0f,
-         0.1f, 0.0f,0.0f
+        0.0f, -0.01f, 0.0f,
+        0.0f, 0.01f, 0.0f,
+         -0.01f,0.0f, 0.0f,
+         0.01f, 0.0f,0.0f
     };
 
     unsigned int VBO, VAO;
@@ -163,8 +153,9 @@ int main()
     tourch = Light(vec3(0));
     glDepthFunc(GL_LEQUAL);
     glfwSwapInterval(1);
-    
+    SpObj testObj = SpObj(vec3(0), vec3(0), glm::vec3(0.09f), initCubeBuffer({9}), 27, 0);
     UImenue menue = UImenue();
+
     while (!glfwWindowShouldClose(window))
     {
         curTime = glfwGetTime();
@@ -208,18 +199,21 @@ int main()
                 vec3 ty = player.inp->acc;
                 vec3 tp = player.inp->pos;
                 player.inp->Grounded = mz.collide(&player.inp->pos, nullptr, vec2(0.075f, 0.0f));
+                
                 if (pathP+1 >= path.size()) {
                     onPath = false; 
                     pathP = 0;
                 }
                 if (onPath) {
                     vec2 psss1 = path[int(pathP)]->pos * mz.size;
-                    vec2 psss2 = path[int(pathP+1)]->pos * mz.size;
-                    player.inp->acc += 0.2f*((player.inp->pos-vec3(psss1.x, player.inp->pos.y, psss1.y)) / distance(psss1, vec2(player.inp->pos.x, player.inp->pos.z)));
-                    if(distance(psss1,vec2(player.inp->pos.x, player.inp->pos.z)) < 0.05)pathP ++;
+                   vec2 psss2 = path[int(pathP+1)]->pos * mz.size;
+                  // player.inp->pos = vec3(psss1.x, player.inp->pos.y, psss1.y) + ((vec3(psss2.x, player.inp->pos.y, psss2.y)) - vec3(psss1.x, player.inp->pos.y, psss1.y)) * (pathP-int(pathP));
+                  // pathP += deltaTime * 3.0f;
+                    player.inp->acc += 0.2f*((player.inp->pos-vec3(psss2.x, player.inp->pos.y, psss2.y)) / distance(psss2, vec2(player.inp->pos.x, player.inp->pos.z)));
+                    if(distance(psss1,vec2(player.inp->pos.x, player.inp->pos.z)) > distance(psss2, vec2(player.inp->pos.x, player.inp->pos.z)))pathP ++;
 
                 }
-
+                
                 glDisable(GL_BLEND);
 
 
@@ -320,6 +314,9 @@ int main()
                     }
                     else {
                         ligh[t].activate(false);
+
+
+                       
                     }
 
 
@@ -356,7 +353,8 @@ int main()
                         ligh[t].obj.draw(shaderLightProgram);
                     }
                 }
-
+                    
+                
 
                 cam.FB.bind(true);
 
@@ -405,7 +403,7 @@ int main()
 
 
                 }
-                for (int t = 1; t < ligh.size(); t++) {
+                for (int t = 0; t < ligh.size(); t++) {
 
                     if (ligh[t].active)
                     {
@@ -445,16 +443,60 @@ int main()
 
                 cam.MFB.bind(true);
                 glUseProgram(shaderMazeProgram);
-                glUniform2f(glGetUniformLocation(shaderMazeProgram, "campos"), cam.pos.x / mz.size, cam.pos.z / mz.size);
+
+                if (glfwGetKey(window, GLFW_KEY_KP_7) == GLFW_PRESS)   sceeee *= 1.1f;
+                if (glfwGetKey(window, GLFW_KEY_KP_8) == GLFW_PRESS)   sceeee /= 1.1f;
+                glUniform1f(glGetUniformLocation(shaderMazeProgram, "sc"), sceeee);
+                glUniform3f(glGetUniformLocation(shaderMazeProgram, "col"), 0.0f, 0.7f, 0.7f);
+                glUniform2f(glGetUniformLocation(shaderMazeProgram, "campos"), player.inp->pos.x / mz.size, player.inp->pos.z / mz.size);
                 glUniform1f(glGetUniformLocation(shaderMazeProgram, "rt"), cam.rot.y);
                 glBindVertexArray(mz.VAO);
                 glDrawElements(GL_LINES, mz.MapBuffers.length, GL_UNSIGNED_INT, 0);
                 glBindVertexArray(VAO);
+
+                glUniform1f(glGetUniformLocation(shaderMazeProgram, "sc"), 2);
+                glUniform3f(glGetUniformLocation(shaderMazeProgram, "col"), 1.0f, 0.0f, 0.0f);
                 glUniform1f(glGetUniformLocation(shaderMazeProgram, "rt"), 0.0);
                 glUniform2f(glGetUniformLocation(shaderMazeProgram, "campos"), 0, 0);
                 glDrawArrays(GL_LINES, 0, 4);
 
+                glUniform3f(glGetUniformLocation(shaderMazeProgram, "col"), 1.0f, 1.0f, 1.0f);
+                glUniform1f(glGetUniformLocation(shaderMazeProgram, "rt"), cam.rot.y);
+                glUniform3f(glGetUniformLocation(shaderMazeProgram, "col"), 1.0f, 0.0f, 0.0f);
 
+                glUniform1f(glGetUniformLocation(shaderMazeProgram, "sc"), sceeee);
+
+                    for (int j = 0; j < 9; j++)
+                    {
+                        float reerre = 1.0;
+                        if (int((player.inp->pos.x + reerre) / mz.size) + int((player.inp->pos.z + reerre) / mz.size) * mz.count + (j % 3) - 1 + (j / 3 - 1) * mz.count >= 0 &&
+                            int((player.inp->pos.x + reerre) / mz.size) + int((player.inp->pos.z + reerre) / mz.size) * mz.count + (j % 3) - 1 + (j / 3 - 1) * mz.count < mz.nodes.size()) {
+                            for (int k = 0; k < 9 * 9; k++)
+                            {
+                                CellGrid* cgr = &mz.nodes[int((player.inp->pos.x + reerre) / mz.size) + int((player.inp->pos.z + reerre) / mz.size) * mz.count + (j % 3) - 1 + (j / 3 - 1) * mz.count].grid[k % 9][k / 9];
+                                if (cgr->obstruction)
+                                    glUniform3f(glGetUniformLocation(shaderMazeProgram, "col"), 0.0f, 1.0f, 0.0f);
+                                else
+                                    glUniform3f(glGetUniformLocation(shaderMazeProgram, "col"), 0.0f, 0.0f, 1.0f);
+                   
+                                glUniform2f(glGetUniformLocation(shaderMazeProgram, "campos"), -cgr->pos.x + player.inp->pos.x / mz.size, -cgr->pos.y + player.inp->pos.z / mz.size);
+                                glDrawArrays(GL_LINES, 0, 4);
+                            }
+                        }
+                   
+                    }
+
+                    for (int j = 0; j < path.size(); j++)
+                    {
+
+                        glUniform3f(glGetUniformLocation(shaderMazeProgram, "col"), 1.0f, 0.0f, 1.0f);
+
+                        glUniform2f(glGetUniformLocation(shaderMazeProgram, "campos"), -path[j]->pos.x + player.inp->pos.x / mz.size, -path[j]->pos.y + player.inp->pos.z / mz.size);
+                        glDrawArrays(GL_LINES, 0, 4);
+
+
+                    }
+                
 
                 glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -528,13 +570,12 @@ int main()
                 glBindTexture(GL_TEXTURE_2D,qweewq);
 
                 menue.draw(cam.VAO, ShaderUI,vec2(0),vec2(1), mousep, glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS);
-                if (!menue.settings.frameLock) {
-               
+
+                if (*menue.settings.frameLock) {
                     glfwSwapInterval(0);
                 }
                 else
                 {
-               
                     glfwSwapInterval(1);
                 }
                 resolution = pow(int((1.0-*menue.settings.resolution) * 10)+1, -2.0f);
@@ -618,6 +659,11 @@ void processInput(GLFWwindow* window)
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)    LightSetings.y += 0.05;
     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)   LightSetings.y += -0.05;
     if (glfwGetKey(window, GLFW_KEY_KP_5) == GLFW_PRESS)   pathend = int((player.inp->pos.x + 0.5) / mz.size) + int((player.inp->pos.z + 0.5) / mz.size) * mz.count;
+    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)   cout<< int((player.inp->pos.x + 0.5) / mz.size) + int((player.inp->pos.z + 0.5) / mz.size) * mz.count<<endl;
+    if (glfwGetKey(window, GLFW_KEY_KP_6) == GLFW_PRESS) {
+        onPath = false;
+        pathP = 0;
+    }
     
 
     if (!onPath && glfwGetKey(window, GLFW_KEY_KP_4) == GLFW_PRESS)
@@ -626,8 +672,8 @@ void processInput(GLFWwindow* window)
         path = mz.getpath(
             int((player.inp->pos.x + 0.5) / mz.size) + int((player.inp->pos.z + 0.5) / mz.size) * mz.count,
 
-            //int(Rand(gen) * 900)
-            pathend
+            int(Rand(gen) * mz.count * mz.count)
+          //  pathend
         );
     }
     //LightSetings

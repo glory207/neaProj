@@ -28,7 +28,7 @@ Maze::Maze(std::vector<Light>* ligh, int c){
     Camps.clear();
     bool isfixed = false;
     int iisfixed = 0;
-    for (int i = 0; i < 6; i++)
+    for (int i = 0; i < 5; i++)
     {
         Camps.push_back(new EnCamp(vec2(Rand(gen), Rand(gen)), i));
 
@@ -38,7 +38,7 @@ Maze::Maze(std::vector<Light>* ligh, int c){
         Camps.push_back(new LootSpot(vec2(Rand(gen), Rand(gen))));
 
     }
-    float tyu = 0.02f;
+    float tyu = 0.05f;
 
     do
     {
@@ -83,7 +83,7 @@ Maze::Maze(std::vector<Light>* ligh, int c){
     for (int i = 0; i < count * count; i++)
     {
 
-        nodes[i].prob = 0.05f;
+        nodes[i].prob = 0.1f;
         for(Landmark* landm : Camps)
         {
             if (dynamic_cast<EnCamp*>(landm) != nullptr)
@@ -97,7 +97,7 @@ Maze::Maze(std::vector<Light>* ligh, int c){
                if (glm::distance(vec2(posX, posY), vec2(nodes[i].x, nodes[i].y)) < sze)
                {
                   
-                   nodes[i].prob = 0.55f;
+                   nodes[i].prob = 0.7f;
                   
                }
             }
@@ -179,20 +179,26 @@ Maze::Maze(std::vector<Light>* ligh, int c){
 
     std::vector<glm::mat4> mds;
     std::vector<float> txt;
+    vec3 ps;
     for (int i = 0; i < nodes.size(); i++) {
         nodes[i].set();
-        vec3 ps = vec3((i % count) * size, 0.001, (i / count) * size);
-        int grid[3][3] = {
-            {0,0,0},
-            {0,1,0},
-            {0,0,0}
+        ps = vec3((i % count) * size, 0.001, (i / count) * size);
+        int grid[9][9] = {
+            {0,0,0,0,0,0,0,0,0},
+            {0,0,0,0,0,0,0,0,0},
+            {0,0,0,0,0,0,0,0,0},
+            {0,0,0,0,0,0,0,0,0},
+            {0,0,0,0,0,0,0,0,0},
+            {0,0,0,0,0,0,0,0,0},
+            {0,0,0,0,0,0,0,0,0},
+            {0,0,0,0,0,0,0,0,0},
+            {0,0,0,0,0,0,0,0,0}
         };
         
-
-            if (nodes[i].sidesi[0]) grid[1][2] = 1;
-            if (nodes[i].sidesi[1]) grid[1][0] = 1;
-            if (nodes[i].sidesi[2]) grid[0][1] = 1;
-            if (nodes[i].sidesi[3]) grid[2][1] = 1;
+        if (nodes[i].sidesi[0]) grid[4][8] = 1;
+        if (nodes[i].sidesi[1]) grid[4][0] = 1;
+        if (nodes[i].sidesi[2]) grid[0][4] = 1;
+        if (nodes[i].sidesi[3]) grid[8][4] = 1;
 
         if (nodes[i].treasure)
         {
@@ -204,7 +210,7 @@ Maze::Maze(std::vector<Light>* ligh, int c){
             txt.push_back(ref.type1); 
             txt.push_back(ref.type2); 
         }
-        for (int j = 0; j < 6; j++) 
+        for (int j = 0; j < 4; j++) 
         {
             int furt = floor(Rand(gen) * 8);
             int furrot = floor(Rand(gen) * 4);
@@ -213,7 +219,7 @@ Maze::Maze(std::vector<Light>* ligh, int c){
             {
                 Furniture ref = Furniture(furt, furrot, &grid, size, thk, ps);
                 mds.push_back(Matrix(ref.pos, ref.sca, ref.rot));
-                if (furt == 2)
+                if (furt == 5)
                 {
                     ref.sca.y *= 0.5f;
                     ref.pos.y = ref.sca.y;
@@ -225,10 +231,10 @@ Maze::Maze(std::vector<Light>* ligh, int c){
                
             }
         }
-        for (int j = 0; j < 9; j++)
+        for (int j = 0; j < 9*9; j++)
         {
-            nodes[i].grid[j % 3][j / 3] = CellGrid(nodes[i].pnt(0, 0) + vec2((j % 3) - 1,(j / 3) - 1) * vec2(0.25), j % 3, j / 3, i);
-            if (grid[j % 3][j / 3] >= 2)nodes[i].grid[j % 3][j / 3].obstruction = true;
+            nodes[i].grid[j % 9][j / 9] = CellGrid(nodes[i].pnt(0, 0) + vec2((j % 9) - 4,(j / 9) - 4) * vec2(thk * 0.222f), j % 9, j / 9, i);
+            if (grid[j % 9][j / 9] >= 2)nodes[i].grid[j % 9][j / 9].obstruction = true;
         }
 
     }
@@ -387,9 +393,9 @@ bool Maze::collide(glm::vec3* pos, glm::vec3* acc, glm::vec2 leway) {
     leway.x /= -size;
     (*pos) /= size;
 
-    if ((int)((*pos).x +0.5f) + (int)((*pos).z +0.5f) * count >= 0)
+    int nd = (int)((*pos).x + 0.5f) + (int)((*pos).z + 0.5f) * count;
+    if (nd >= 0 && nd< count* count)
     {
-        int nd = (int)((*pos).x +0.5f) + (int)((*pos).z +0.5f) * count;
         //std::cout << nd << std::endl;
         if (!nodes[nd].sidesi[0] && (int)((*pos).z + 0.5f) - (*pos).z < -(thk + leway.x)) {
             // console.log((int)((*pos).x+0.5) -(*pos).x , (int)((*pos).x+0.5) - (*pos).x);
@@ -482,7 +488,11 @@ bool Maze::collide(glm::vec3* pos, glm::vec3* acc, glm::vec2 leway) {
 
         }
     }
-
+    else
+    {
+        (*pos).x = 0;
+        (*pos).z = 0;
+    }
     leway.x *= -size;
 
     (*pos) *= size;
@@ -613,17 +623,17 @@ std::vector<CellGrid*> Maze::getpath(int start, int end) {
     std::vector<CellGrid*> path;
     for (int i = 0; i < nodes.size(); i++)
     {
-        nodes[i].setSearch(&nodes[start].grid[1][1]);
+        nodes[i].setSearch(&nodes[start].grid[5][5]);
     }
     bool found = false;
-    int CurentN[3] = { 1,1,end };
+    int CurentN[3] = { 5,5,end };
     int re = 0;
     std::vector<CellGrid*> nodesToSearch;
     while (!found)
     {
         re++;
         //std::cout << "x " << CurentN[0] << " y " << CurentN[1] << " p " << CurentN[2] << std::endl;
-        if (CurentN[2] == start) {
+        if (CurentN[0] == 5 && CurentN[1] == 5 && CurentN[2] == start) {
             CellGrid* cur = &nodes[CurentN[2]].grid[CurentN[0]][CurentN[1]];
             while (cur != nullptr)
             {
@@ -644,19 +654,45 @@ std::vector<CellGrid*> Maze::getpath(int start, int end) {
             {
                 nodesToSearch.erase(it);
             }
-            
-            doThing(CurentN,-1,0,&nodesToSearch);
-            doThing(CurentN,1,0,&nodesToSearch);
-            doThing(CurentN,0,1,&nodesToSearch);
-            doThing(CurentN,0,-1,&nodesToSearch);
+            CellGrid* thng;
+            thng = doThing(CurentN,-1,0,&nodesToSearch);
+            if (thng != nullptr) {
+                if (!thng->obstruction || thng == &nodes[start].grid[4][4] || thng == &nodes[end].grid[4][4]) {
+                    nodesToSearch.push_back(thng);
+                }
+
+            }
+            thng = doThing(CurentN,1,0,&nodesToSearch);
+            if (thng != nullptr) {
+                if (!thng->obstruction || thng == &nodes[start].grid[4][4] || thng == &nodes[end].grid[4][4]) {
+                    nodesToSearch.push_back(thng);
+                }
+
+            }
+            thng = doThing(CurentN,0,1,&nodesToSearch);
+            if (thng != nullptr) {
+                if (!thng->obstruction || thng == &nodes[start].grid[4][4] || thng == &nodes[end].grid[4][4]) {
+                    nodesToSearch.push_back(thng);
+                }
+
+            }
+            thng = doThing(CurentN,0,-1,&nodesToSearch);
+            if (thng != nullptr) {
+                if (!thng->obstruction || thng == &nodes[start].grid[4][4] || thng == &nodes[end].grid[4][4]) {
+                    nodesToSearch.push_back(thng);
+                }
+
+            }
+
 
             std::sort(nodesToSearch.begin(), nodesToSearch.end(), comp);
             if (nodesToSearch.size() == 0) {
                 found = true;
-                std::cout << end << " no path "<<re << std::endl;
+                std::cout << "start " << start << " end " << end << " no path, count: " << re << std::endl;
             }
             else
             {
+
                 CurentN[0] = nodesToSearch[0]->x;
                 CurentN[1] = nodesToSearch[0]->y;
                 CurentN[2] = nodesToSearch[0]->p;
@@ -667,30 +703,29 @@ std::vector<CellGrid*> Maze::getpath(int start, int end) {
     return path;
 }
 
-void Maze::doThing(int CurentN[3],int px,int py, std::vector<CellGrid*>* nodesToSearch) {
+CellGrid* Maze::doThing(int CurentN[3],int px,int py, std::vector<CellGrid*>* nodesToSearch) {
     bool canAdd = true;
     int addingN[3] = { CurentN[0] + px,CurentN[1] + py,CurentN[2] };
     if (addingN[1] == -1) {
-        addingN[1] = 2;
+        addingN[1] = 8;
         addingN[2] -= count;
         if (!nodes[CurentN[2]].sidesi[1]) canAdd = false;
     }
-    if (addingN[1] == 3) {
+    if (addingN[1] == 9) {
         addingN[1] = 0;
         addingN[2] += count;
         if (!nodes[CurentN[2]].sidesi[0]) canAdd = false;
     }
     if (addingN[0] == -1) {
-        addingN[0] = 2;
+        addingN[0] = 8;
         addingN[2] -= 1;
         if (!nodes[CurentN[2]].sidesi[2]) canAdd = false;
     }
-    if (addingN[0] == 3) {
+    if (addingN[0] == 9) {
         addingN[0] = 0;
         addingN[2] += 1;
         if (!nodes[CurentN[2]].sidesi[3]) canAdd = false;
     }
-    if(addingN[2] >= 0 && addingN[2] < nodes.size() && nodes[addingN[2]].grid[addingN[0]][addingN[1]].obstruction) canAdd = false;
 
     if (canAdd && addingN[2] >= 0 && addingN[2] < nodes.size() && !nodes[addingN[2]].grid[addingN[0]][addingN[1]].visited) {
         nodes[addingN[2]].grid[addingN[0]][addingN[1]].parent = &nodes[CurentN[2]].grid[CurentN[0]][CurentN[1]];
@@ -699,9 +734,10 @@ void Maze::doThing(int CurentN[3],int px,int py, std::vector<CellGrid*>* nodesTo
         std::vector<CellGrid*>::iterator it2 = std::find((*nodesToSearch).begin(), (*nodesToSearch).end(), &nodes[addingN[2]].grid[addingN[0]][addingN[1]]);
         if (it2 == (*nodesToSearch).end())
         {
-            (*nodesToSearch).push_back(&nodes[addingN[2]].grid[addingN[0]][addingN[1]]);
+            return &nodes[addingN[2]].grid[addingN[0]][addingN[1]];
         }
     }
+    return nullptr;
 }
 
 bool comp(CellGrid* a, CellGrid* b) {
@@ -814,14 +850,14 @@ void Cell::set(){
 
 void Cell::setSearch(CellGrid* start) {
 
-    for (int i = 0; i < 9; i++)
+    for (int i = 0; i < 9*9; i++)
     {
-        grid[i % 3][i / 3].visited = false;
-        grid[i % 3][i / 3].parent = nullptr;
-        grid[i % 3][i / 3].isPath = false;
-        grid[i % 3][i / 3].Holistic = distance(start->pos, grid[i % 3][i / 3].pos);
-        grid[i % 3][i / 3].Distance = INFINITY;
-        grid[i % 3][i / 3].DH = INFINITY;
+        grid[i % 9][i / 9].visited = false;
+        grid[i % 9][i / 9].parent = nullptr;
+        grid[i % 9][i / 9].isPath = false;
+        grid[i % 9][i / 9].Holistic = abs(start->pos.x - grid[i % 9][i / 9].pos.x) + abs(start->pos.y - grid[i % 9][i / 9].pos.y);
+        grid[i % 9][i / 9].Distance = INFINITY;
+        grid[i % 9][i / 9].DH = INFINITY;
     }
 }
 /*

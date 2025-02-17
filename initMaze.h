@@ -57,7 +57,7 @@ public:
     void conect(Cell* sender);
     void set();
 
-    CellGrid grid[3][3];
+    CellGrid grid[9][9];
     void setSearch(CellGrid* pos);
 
     void visit(std::vector<Cell*>* nodesToSearch);
@@ -84,7 +84,7 @@ public:
     SpObj obj2;
     void draw(int programInfo);
     float project(float x, float y, int side, Furniture f);
-    void doThing(int CurentN[3], int px, int py, std::vector<CellGrid*>* nodesToSearch);
+    CellGrid* doThing(int CurentN[3], int px, int py, std::vector<CellGrid*>* nodesToSearch);
     GLuint VAO;
     std::vector<CellGrid*> getpath(int start, int end);
 };

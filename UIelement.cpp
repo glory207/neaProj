@@ -121,12 +121,13 @@ void UIslider::draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, b
 	drawString(VAO, ShaderUI, vec2(0, 0.75) * vec2(1, 0.5) * (sca * sc) + (pos * sc + ps),vec2(1,0.5) * (sca * sc), t);
 }
 
-UItoggler::UItoggler(vec2 pos, vec2 sca, vec4 back, vec4 four, string txt) {
+UItoggler::UItoggler(vec2 pos, vec2 sca, vec4 back, vec4 four, string txt, bool tr) {
 	this->pos = pos;
 	this->sca = sca;
 	this->back = back;
 	this->four = four;
 	this->text = txt;
+	this->isTrue = tr;
 	chr = -1;
 }
 
@@ -227,7 +228,7 @@ UImenue::UImenue() {
 	UIDIV* dificultyBox = new UIDIV(vec2(0.375, 0), vec2(0.575f, 0.9), vec4(vec3(0.6), 1.0f), vec4(1.0f));
 	UIslider* brightnessSlider = new UIslider(vec2(0, 0.75), vec2(0.9, 0.2), vec4(vec3(0.9), 1.0f), vec4(1.0f), "brightness", 0.2);
 	UIslider* resSlider = new UIslider(vec2(0, 0.3), vec2(0.9, 0.2), vec4(vec3(0.9), 1.0f), vec4(1.0f), "resolution", 1.0);
-	UItoggler* framelockToggl = new UItoggler(vec2(0, -0.05), vec2(0.9, 0.1), vec4(vec3(0.9), 1.0f), vec4(1.0f), "unlimited frames  ");
+	UItoggler* framelockToggl = new UItoggler(vec2(0, -0.05), vec2(0.9, 0.1), vec4(vec3(0.9), 1.0f), vec4(1.0f), "unlimited frames  ",false);
 	settingsBox->children.push_back(settingsBar);
 	settingsBar->children.push_back(graphicsButton);
 	settingsBar->children.push_back(dificultyButton);

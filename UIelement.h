@@ -48,7 +48,7 @@ public:
 	bool isTrue = false;
 	bool isDown = false;
 	string text = " ";
-	UItoggler(vec2 pos, vec2 sca, vec4 back, vec4 four, string txt);
+	UItoggler(vec2 pos, vec2 sca, vec4 back, vec4 four, string txt, bool tr);
 	virtual void draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, bool mouseD);
 };
 void drawString(GLuint VAO, GLuint ShaderUI, vec2 pss, vec2 scc, string text);

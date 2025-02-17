@@ -3,11 +3,12 @@
     layout(location = 0) in  vec3 aVertexPosition;
     uniform vec2 campos;
     uniform float rt;
+    uniform float sc;
     void main() {
     mat2 rot = mat2(
     sin(-rt), -cos(-rt),
     cos(-rt), sin(-rt)
     
     );
-      gl_Position = vec4(rot * (aVertexPosition.xy - vec2(campos.y,campos.x))*0.1 ,0.0,1.0);
+      gl_Position = vec4(rot * (aVertexPosition.xy - vec2(campos.y,campos.x))*sc ,0.0,1.0);
     }
