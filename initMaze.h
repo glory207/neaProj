@@ -17,6 +17,26 @@ public:
 
     virtual ~Landmark() {}
 };
+
+
+class CellGrid {
+public:
+    CellGrid();
+    CellGrid(vec2 pos, int x, int y, int p);
+    int x;
+    int y;
+    int p;
+    vec2 pos;
+    bool visited = false;
+    CellGrid* parent = nullptr;
+    bool obstruction = false;
+    bool isPath = false;
+    int Holistic = 0;
+    int Distance = INFINITY;
+    int DH = INFINITY;
+};
+
+
 class Cell
 {
 public:
@@ -36,13 +56,17 @@ public:
     glm::vec2 pnt(int i,float thk);
     void conect(Cell* sender);
     void set();
-    
-};
 
+    CellGrid grid[3][3];
+    void setSearch(CellGrid* pos);
+
+    void visit(std::vector<Cell*>* nodesToSearch);
+};
 
 class Maze
 {
 public:
+    Maze();
     Maze(std::vector<Light>* ligh, int c);
     std::vector<glm::vec2> makeLines(int tp,int  sd,int  p0,int  p1,int  p2,int  p3,bool  swch,float thin);
     bool collide(glm::vec3* poss, glm::vec3* accc, glm::vec2 leway);
@@ -50,7 +74,6 @@ public:
     std::vector<Cell> nodes;
     std::vector<Furniture> fur;
     std::vector<Landmark*> Camps;
-
     InsObj furn;
     float size;
     int count;
@@ -61,8 +84,9 @@ public:
     SpObj obj2;
     void draw(int programInfo);
     float project(float x, float y, int side, Furniture f);
-
+    void doThing(int CurentN[3], int px, int py, std::vector<CellGrid*>* nodesToSearch);
     GLuint VAO;
+    std::vector<CellGrid*> getpath(int start, int end);
 };
 
 
@@ -82,4 +106,4 @@ public:
 };
 
 
-
+bool comp(CellGrid* a, CellGrid* b);

@@ -13,7 +13,7 @@ glm::mat4 Matrix(vec3 pos,vec3 sca, vec3 rot) {
     modelViewMatrix = scale(modelViewMatrix, sca);
     return modelViewMatrix;
 }
-
+Maze::Maze() {}
 Maze::Maze(std::vector<Light>* ligh, int c){
     // Define the random number generator and distribution
     std::random_device rd;  // Seed generator
@@ -97,7 +97,7 @@ Maze::Maze(std::vector<Light>* ligh, int c){
                if (glm::distance(vec2(posX, posY), vec2(nodes[i].x, nodes[i].y)) < sze)
                {
                   
-                   nodes[i].prob = 0.8f;
+                   nodes[i].prob = 0.55f;
                   
                }
             }
@@ -187,19 +187,17 @@ Maze::Maze(std::vector<Light>* ligh, int c){
             {0,1,0},
             {0,0,0}
         };
-        if (nodes[i].sides.size() == 4)grid[1][1] = 0;
-        else
-        {
+        
 
-            if (nodes[i].sides.size() == 3)grid[1][1] = 0;
             if (nodes[i].sidesi[0]) grid[1][2] = 1;
             if (nodes[i].sidesi[1]) grid[1][0] = 1;
             if (nodes[i].sidesi[2]) grid[0][1] = 1;
             if (nodes[i].sidesi[3]) grid[2][1] = 1;
-        }
+
         if (nodes[i].treasure)
         {
             int furrot = floor(Rand(gen) * 4);
+            Furniture::canFit(-2, furrot, &grid);
             Furniture ref = Furniture(-2, furrot, &grid, size, thk, ps);
             mds.push_back(Matrix(ref.pos, ref.sca, ref.rot));
             fur.push_back(ref);
@@ -227,7 +225,11 @@ Maze::Maze(std::vector<Light>* ligh, int c){
                
             }
         }
-
+        for (int j = 0; j < 9; j++)
+        {
+            nodes[i].grid[j % 3][j / 3] = CellGrid(nodes[i].pnt(0, 0) + vec2((j % 3) - 1,(j / 3) - 1) * vec2(0.25), j % 3, j / 3, i);
+            if (grid[j % 3][j / 3] >= 2)nodes[i].grid[j % 3][j / 3].obstruction = true;
+        }
 
     }
     furn = InsObj(initCubeBuffer({0,1,2,3,4,5, 6,7,8 }), 23, 12, initI(mds),initB(txt));
@@ -603,6 +605,110 @@ void Maze::draw(int programInfo) {
 
 }
 
+std::vector<CellGrid*> Maze::getpath(int start, int end) {
+    std::random_device rd;  // Seed generator
+    std::mt19937 gen(rd()); // Mersenne Twister engine
+    std::uniform_real_distribution<float> Rand(0.0f, 1.0f); // Range [0, 1]
+
+    std::vector<CellGrid*> path;
+    for (int i = 0; i < nodes.size(); i++)
+    {
+        nodes[i].setSearch(&nodes[start].grid[1][1]);
+    }
+    bool found = false;
+    int CurentN[3] = { 1,1,end };
+    int re = 0;
+    std::vector<CellGrid*> nodesToSearch;
+    while (!found)
+    {
+        re++;
+        //std::cout << "x " << CurentN[0] << " y " << CurentN[1] << " p " << CurentN[2] << std::endl;
+        if (CurentN[2] == start) {
+            CellGrid* cur = &nodes[CurentN[2]].grid[CurentN[0]][CurentN[1]];
+            while (cur != nullptr)
+            {
+
+                path.push_back(cur);
+                cur = cur->parent;
+            }
+
+            found = true;
+        }
+        else
+        {
+            //nodes[CurentN].visit(&nodesToSearch);
+            nodes[CurentN[2]].grid[CurentN[0]][CurentN[1]].visited = true;
+
+            std::vector<CellGrid*>::iterator it = std::find(nodesToSearch.begin(), nodesToSearch.end(), &nodes[CurentN[2]].grid[CurentN[0]][CurentN[1]]);
+            if (it != nodesToSearch.end())
+            {
+                nodesToSearch.erase(it);
+            }
+            
+            doThing(CurentN,-1,0,&nodesToSearch);
+            doThing(CurentN,1,0,&nodesToSearch);
+            doThing(CurentN,0,1,&nodesToSearch);
+            doThing(CurentN,0,-1,&nodesToSearch);
+
+            std::sort(nodesToSearch.begin(), nodesToSearch.end(), comp);
+            if (nodesToSearch.size() == 0) {
+                found = true;
+                std::cout << end << " no path "<<re << std::endl;
+            }
+            else
+            {
+                CurentN[0] = nodesToSearch[0]->x;
+                CurentN[1] = nodesToSearch[0]->y;
+                CurentN[2] = nodesToSearch[0]->p;
+            }
+        }
+    }
+
+    return path;
+}
+
+void Maze::doThing(int CurentN[3],int px,int py, std::vector<CellGrid*>* nodesToSearch) {
+    bool canAdd = true;
+    int addingN[3] = { CurentN[0] + px,CurentN[1] + py,CurentN[2] };
+    if (addingN[1] == -1) {
+        addingN[1] = 2;
+        addingN[2] -= count;
+        if (!nodes[CurentN[2]].sidesi[1]) canAdd = false;
+    }
+    if (addingN[1] == 3) {
+        addingN[1] = 0;
+        addingN[2] += count;
+        if (!nodes[CurentN[2]].sidesi[0]) canAdd = false;
+    }
+    if (addingN[0] == -1) {
+        addingN[0] = 2;
+        addingN[2] -= 1;
+        if (!nodes[CurentN[2]].sidesi[2]) canAdd = false;
+    }
+    if (addingN[0] == 3) {
+        addingN[0] = 0;
+        addingN[2] += 1;
+        if (!nodes[CurentN[2]].sidesi[3]) canAdd = false;
+    }
+    if(addingN[2] >= 0 && addingN[2] < nodes.size() && nodes[addingN[2]].grid[addingN[0]][addingN[1]].obstruction) canAdd = false;
+
+    if (canAdd && addingN[2] >= 0 && addingN[2] < nodes.size() && !nodes[addingN[2]].grid[addingN[0]][addingN[1]].visited) {
+        nodes[addingN[2]].grid[addingN[0]][addingN[1]].parent = &nodes[CurentN[2]].grid[CurentN[0]][CurentN[1]];
+        nodes[addingN[2]].grid[addingN[0]][addingN[1]].Distance = nodes[CurentN[2]].grid[CurentN[0]][CurentN[1]].Distance + 1;
+
+        std::vector<CellGrid*>::iterator it2 = std::find((*nodesToSearch).begin(), (*nodesToSearch).end(), &nodes[addingN[2]].grid[addingN[0]][addingN[1]]);
+        if (it2 == (*nodesToSearch).end())
+        {
+            (*nodesToSearch).push_back(&nodes[addingN[2]].grid[addingN[0]][addingN[1]]);
+        }
+    }
+}
+
+bool comp(CellGrid* a, CellGrid* b) {
+    return a->Distance+a->Holistic < b->Distance + b->Holistic;
+}
+
+
 Cell::Cell(int index, int count, float thk){
 
       this->index = index;
@@ -705,6 +811,43 @@ void Cell::set(){
       }
 }
 
+
+void Cell::setSearch(CellGrid* start) {
+
+    for (int i = 0; i < 9; i++)
+    {
+        grid[i % 3][i / 3].visited = false;
+        grid[i % 3][i / 3].parent = nullptr;
+        grid[i % 3][i / 3].isPath = false;
+        grid[i % 3][i / 3].Holistic = distance(start->pos, grid[i % 3][i / 3].pos);
+        grid[i % 3][i / 3].Distance = INFINITY;
+        grid[i % 3][i / 3].DH = INFINITY;
+    }
+}
+/*
+void Cell::visit(std::vector<Cell*>* nodesToSearch) {
+    visited = true;
+    
+    std::vector<Cell*>::iterator it = std::find((*nodesToSearch).begin(), (*nodesToSearch).end(), this);
+    if (it != (*nodesToSearch).end())
+    {
+        (*nodesToSearch).erase(it);
+    }
+    for (int i = 0; i < Conectednodes.size(); i++)
+    {   
+        if (!Conectednodes[i]->visited) {
+            Conectednodes[i]->parent = this;
+            Conectednodes[i]->Distance = Distance + 1;
+            
+            std::vector<Cell*>::iterator it2 = std::find((*nodesToSearch).begin(), (*nodesToSearch).end(), Conectednodes[i]);
+            if (it2 == (*nodesToSearch).end())
+            {
+                (*nodesToSearch).push_back(Conectednodes[i]);
+            }
+        }
+    }
+}*/
+
 EnCamp::EnCamp(vec2 pos, float size) {
 
     // Define the random number generator and distribution
@@ -755,4 +898,20 @@ EnCamp::EnCamp(vec2 pos, float size) {
 LootSpot::LootSpot(vec2 pos) {
     Pos = pos;
     Size = 0.01f;
+}
+
+CellGrid::CellGrid() {
+
+}
+CellGrid::CellGrid(vec2 pos, int x, int y, int p) {
+    this->pos = pos;
+    bool visited = false;
+    CellGrid* parent = nullptr;
+    bool isPath = false;
+    int Holistic = 0; 
+    int Distance = INFINITY; 
+    int DH = INFINITY; 
+    this->x = x;
+    this->y = y;
+    this->p = p;
 }

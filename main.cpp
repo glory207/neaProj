@@ -36,6 +36,19 @@ float ArmL2 = 0.0f;
 float ArmL3 = 1.25;
 float deltaTime = 1.0f;
 float UTime = 0.0f;
+Maze mz;
+bool onPath = false;
+float pathP = 0.0;
+int pathend = 0;
+std::vector<CellGrid*> path;
+
+// Define the random number generator and distribution
+std::random_device rd;  // Seed generator
+std::mt19937 gen(rd()); // Mersenne Twister engine
+std::uniform_real_distribution<float> Rand(0.0f, 1.0f); // Range [0, 1]
+
+
+
 int main()
 {
     cout << "a " << int(' ') << " A " << tolower(int(' ')) << endl;
@@ -78,10 +91,6 @@ int main()
     unsigned int ShaderUI = initShader("shaders/cam.vert", "shaders/UI.frag"); 
     createShadowFramebufferCube shBF = createShadowFramebufferCube(500);
 
-    // Define the random number generator and distribution
-    std::random_device rd;  // Seed generator
-    std::mt19937 gen(rd()); // Mersenne Twister engine
-    std::uniform_real_distribution<float> Rand(0.0f, 1.0f); // Range [0, 1]
     cout << "size" << endl;
     int c = 30;
     
@@ -99,7 +108,7 @@ int main()
     } 
     
     
-    Maze mz = Maze(&ligh,c);  
+    mz = Maze(&ligh,c);  
     cam = camera(glm::vec3(0.0f, 0.2f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f)); 
     
     player = PlayerClass(vec3(0.0f, 0.0f, 0.5f), vec3(0.0f, -3.1415 / 2.0f, 0.0f));
@@ -155,31 +164,7 @@ int main()
     glDepthFunc(GL_LEQUAL);
     glfwSwapInterval(1);
     
-    UIDIV ddd1 = UIDIV(vec2(0),vec2(0.95),vec4(vec3(0.6),1.0f), vec4(1.0f));
-    UIDIV* topBar = new UIDIV(vec2(0,0.85), vec2(0.85f,0.1), vec4(vec3(0.2), 1.0f), vec4(1.0f));
-    ddd1.children.push_back(topBar);
-    UIButton* menueButton = new UIButton(vec2(-0.67, 0), vec2(0.2f, 0.7), vec4(vec3(0.6), 1.0f), vec4(1.0f),"menue");
-    UIButton* settingsButton = new UIButton(vec2(-0.2, 0), vec2(0.2f, 0.7), vec4(vec3(0.6), 1.0f), vec4(1.0f),"settings");
-    topBar->children.push_back(menueButton);
-    topBar->children.push_back(settingsButton);
-    UIDIV* settingsBox = new UIDIV(vec2(0, -0.1), vec2(0.95f, 0.8), vec4(vec3(0.2), 1.0f), vec4(1.0f));
-    settingsButton->child = settingsBox;
-    UIDIV* settingsBar = new UIDIV(vec2(-0.6,0), vec2(0.35f, 0.9f), vec4(vec3(0.6), 1.0f), vec4(1.0f));
-    UIButton* graphicsButton = new UIButton(vec2(0,0.85), vec2(0.9f, 0.09f), vec4(vec3(0.85), 1.0f), vec4(1.0f),"graphics");
-    UIButton* dificultyButton = new UIButton(vec2(0,0.65), vec2(0.9f, 0.09f), vec4(vec3(0.85), 1.0f), vec4(1.0f),"dificulty");
-    UIDIV* graphicsBox = new UIDIV(vec2(0.375,0), vec2(0.575f, 0.9), vec4(vec3(0.6), 1.0f), vec4(1.0f));
-    UIDIV* dificultyBox = new UIDIV(vec2(0.375,0), vec2(0.575f, 0.9), vec4(vec3(0.6), 1.0f), vec4(1.0f));
-    UIslider* brightnessSlider = new UIslider(vec2(0,0.75),vec2(0.9,0.2), vec4(vec3(0.9), 1.0f), vec4(1.0f), "brightness",0.1);
-    UIslider* resSlider = new UIslider(vec2(0,0.3),vec2(0.9,0.2), vec4(vec3(0.9), 1.0f), vec4(1.0f), "resolution",1.0);
-    UItoggler* framelockToggl = new UItoggler(vec2(0,-0.05),vec2(0.9,0.1), vec4(vec3(0.9), 1.0f), vec4(1.0f), "unlimited frames  ");
-    settingsBox->children.push_back(settingsBar);
-    settingsBar->children.push_back(graphicsButton);
-    settingsBar->children.push_back(dificultyButton);
-    graphicsButton->child = graphicsBox;
-    graphicsBox->children.push_back(brightnessSlider);
-    graphicsBox->children.push_back(resSlider);
-    dificultyButton->child = dificultyBox;
-    graphicsBox->children.push_back(framelockToggl);
+    UImenue menue = UImenue();
     while (!glfwWindowShouldClose(window))
     {
         curTime = glfwGetTime();
@@ -223,6 +208,17 @@ int main()
                 vec3 ty = player.inp->acc;
                 vec3 tp = player.inp->pos;
                 player.inp->Grounded = mz.collide(&player.inp->pos, nullptr, vec2(0.075f, 0.0f));
+                if (pathP+1 >= path.size()) {
+                    onPath = false; 
+                    pathP = 0;
+                }
+                if (onPath) {
+                    vec2 psss1 = path[int(pathP)]->pos * mz.size;
+                    vec2 psss2 = path[int(pathP+1)]->pos * mz.size;
+                    player.inp->acc += 0.2f*((player.inp->pos-vec3(psss1.x, player.inp->pos.y, psss1.y)) / distance(psss1, vec2(player.inp->pos.x, player.inp->pos.z)));
+                    if(distance(psss1,vec2(player.inp->pos.x, player.inp->pos.z)) < 0.05)pathP ++;
+
+                }
 
                 glDisable(GL_BLEND);
 
@@ -433,7 +429,7 @@ int main()
 
 
                 glUniform1i(glGetUniformLocation(cam.shader, "light"), 1);
-                glUniform1f(glGetUniformLocation(cam.shader, "brightness"), brightnessSlider->fraction * 0.5);
+                glUniform1f(glGetUniformLocation(cam.shader, "brightness"), *menue.settings.brightness * 0.2);
                 cam.draw(cam.shader);
                 glDisable(GL_BLEND);
 
@@ -531,17 +527,17 @@ int main()
                 GLuint qweewq = texture(30);
                 glBindTexture(GL_TEXTURE_2D,qweewq);
 
-                ddd1.draw(cam.VAO, ShaderUI,vec2(0),vec2(1), mousep, glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS);
-                if (framelockToggl->isTrue) {
-
+                menue.draw(cam.VAO, ShaderUI,vec2(0),vec2(1), mousep, glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS);
+                if (!menue.settings.frameLock) {
+               
                     glfwSwapInterval(0);
                 }
                 else
                 {
-
+               
                     glfwSwapInterval(1);
                 }
-                resolution = pow(int((1.0-resSlider->fraction) * 10)+1, -2.0f);
+                resolution = pow(int((1.0-*menue.settings.resolution) * 10)+1, -2.0f);
                 cam.updateSize(vec2(SCR_WIDTH, SCR_HEIGHT)* resolution);
             }
         }
@@ -621,18 +617,19 @@ void processInput(GLFWwindow* window)
     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)    LightSetings.x += -0.05;
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)    LightSetings.y += 0.05;
     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)   LightSetings.y += -0.05;
+    if (glfwGetKey(window, GLFW_KEY_KP_5) == GLFW_PRESS)   pathend = int((player.inp->pos.x + 0.5) / mz.size) + int((player.inp->pos.z + 0.5) / mz.size) * mz.count;
     
-    if (glfwGetKey(window, GLFW_KEY_KP_ENTER) == GLFW_PRESS) cam.updateSize(vec2(SCR_WIDTH, SCR_HEIGHT) * resolution);
-    if (glfwGetKey(window, GLFW_KEY_KP_0) == GLFW_PRESS)  resolution = 1.0f / pow(2.5f, 2.0f);
-    if (glfwGetKey(window, GLFW_KEY_KP_1) == GLFW_PRESS)  resolution = 1.0f;
-    if (glfwGetKey(window, GLFW_KEY_KP_2) == GLFW_PRESS)  resolution = 1.0f/pow(2.0f,2.0f);
-    if (glfwGetKey(window, GLFW_KEY_KP_3) == GLFW_PRESS)  resolution = 1.0f/pow(3.0f,2.0f);
-    if (glfwGetKey(window, GLFW_KEY_KP_4) == GLFW_PRESS)  resolution = 1.0f/pow(4.0f,2.0f);
-    if (glfwGetKey(window, GLFW_KEY_KP_5) == GLFW_PRESS)  resolution = 1.0f/pow(5.0f,2.0f);
-    if (glfwGetKey(window, GLFW_KEY_KP_6) == GLFW_PRESS)  resolution = 1.0f/pow(6.0f,2.0f);
-    if (glfwGetKey(window, GLFW_KEY_KP_7) == GLFW_PRESS)  resolution = 1.0f/pow(7.0f,2.0f);
-    if (glfwGetKey(window, GLFW_KEY_KP_8) == GLFW_PRESS)  resolution = 1.0f/pow(8.0f,2.0f);
-    if (glfwGetKey(window, GLFW_KEY_KP_9) == GLFW_PRESS)  resolution = 1.0f/pow(9.0f,2.0f);
+
+    if (!onPath && glfwGetKey(window, GLFW_KEY_KP_4) == GLFW_PRESS)
+    {
+        onPath = true;
+        path = mz.getpath(
+            int((player.inp->pos.x + 0.5) / mz.size) + int((player.inp->pos.z + 0.5) / mz.size) * mz.count,
+
+            //int(Rand(gen) * 900)
+            pathend
+        );
+    }
     //LightSetings
     float armL = 0.27f;
     float armL2 = 0.05f;

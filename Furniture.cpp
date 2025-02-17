@@ -5,7 +5,7 @@ vec2 rott(vec2 v, float r)
     return vec2(v.x * cos(r) + v.y * sin(r), -v.x * sin(r) + v.y * cos(r));
 }
 
-Furniture::Furniture(int i, int k, int (*grid)[3][3], float size, float thk, vec3 ps) {
+Furniture::Furniture(int i, int k, int(*grid)[3][3], float size, float thk, vec3 ps) {
 	std::random_device rd;  // Seed generator
 	std::mt19937 gen(rd()); // Mersenne Twister engine
 	std::uniform_real_distribution<float> Rand(0.0f, 1.0f); // Range [0, 1]
@@ -136,7 +136,8 @@ bool Furniture::canFit(int i, int k, int(*grid)[3][3]) {
         cnt.push_back(vec3(-1, 1, 0));
         break;
     case 4:
-        cnt.push_back(vec3(-1, 0, 1));
+        cnt.push_back(vec3(-1, 0, 0));
+
         break;
     case 5:
         cnt.push_back(vec3(0, 0, 0));
@@ -149,6 +150,9 @@ bool Furniture::canFit(int i, int k, int(*grid)[3][3]) {
     case 7:
         cnt.push_back(vec3(-1, -1, 0));
         cnt.push_back(vec3(-1, 0, 0));
+        break;
+    case -2:
+        cnt.push_back(vec3(0,0, 0));
         break;
     default:
         return false;

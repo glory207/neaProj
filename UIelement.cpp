@@ -203,3 +203,67 @@ void drawString(GLuint VAO, GLuint ShaderUI, vec2 pss, vec2 scc,string text) {
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 	}
 }
+
+UImenue::UImenue() {
+	
+	pos = vec2(0);
+	sca = vec2(0.95);
+	back = vec4(vec3(0.6), 1.0f);
+	four = vec4(1.0f);
+	chr = -1;
+
+	UIDIV* topBar = new UIDIV(vec2(0, 0.85), vec2(0.85f, 0.1), vec4(vec3(0.2), 1.0f), vec4(1.0f));
+	this->children.push_back(topBar);
+	UIButton* menueButton = new UIButton(vec2(-0.67, 0), vec2(0.2f, 0.7), vec4(vec3(0.6), 1.0f), vec4(1.0f), "menue");
+	UIButton* settingsButton = new UIButton(vec2(-0.2, 0), vec2(0.2f, 0.7), vec4(vec3(0.6), 1.0f), vec4(1.0f), "settings");
+	topBar->children.push_back(menueButton);
+	topBar->children.push_back(settingsButton);
+	UIDIV* settingsBox = new UIDIV(vec2(0, -0.1), vec2(0.95f, 0.8), vec4(vec3(0.2), 1.0f), vec4(1.0f));
+	settingsButton->child = settingsBox;
+	UIDIV* settingsBar = new UIDIV(vec2(-0.6, 0), vec2(0.35f, 0.9f), vec4(vec3(0.6), 1.0f), vec4(1.0f));
+	UIButton* graphicsButton = new UIButton(vec2(0, 0.85), vec2(0.9f, 0.09f), vec4(vec3(0.85), 1.0f), vec4(1.0f), "graphics");
+	UIButton* dificultyButton = new UIButton(vec2(0, 0.65), vec2(0.9f, 0.09f), vec4(vec3(0.85), 1.0f), vec4(1.0f), "dificulty");
+	UIDIV* graphicsBox = new UIDIV(vec2(0.375, 0), vec2(0.575f, 0.9), vec4(vec3(0.6), 1.0f), vec4(1.0f));
+	UIDIV* dificultyBox = new UIDIV(vec2(0.375, 0), vec2(0.575f, 0.9), vec4(vec3(0.6), 1.0f), vec4(1.0f));
+	UIslider* brightnessSlider = new UIslider(vec2(0, 0.75), vec2(0.9, 0.2), vec4(vec3(0.9), 1.0f), vec4(1.0f), "brightness", 0.2);
+	UIslider* resSlider = new UIslider(vec2(0, 0.3), vec2(0.9, 0.2), vec4(vec3(0.9), 1.0f), vec4(1.0f), "resolution", 1.0);
+	UItoggler* framelockToggl = new UItoggler(vec2(0, -0.05), vec2(0.9, 0.1), vec4(vec3(0.9), 1.0f), vec4(1.0f), "unlimited frames  ");
+	settingsBox->children.push_back(settingsBar);
+	settingsBar->children.push_back(graphicsButton);
+	settingsBar->children.push_back(dificultyButton);
+	graphicsButton->child = graphicsBox;
+	graphicsBox->children.push_back(brightnessSlider);
+	graphicsBox->children.push_back(resSlider);
+	dificultyButton->child = dificultyBox;
+	graphicsBox->children.push_back(framelockToggl);
+	settings = UIsettings();
+	settings.brightness = &brightnessSlider->fraction;
+	settings.resolution = &resSlider->fraction;
+	settings.frameLock = &framelockToggl->isTrue;
+}
+
+void UImenue::draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, bool mouseD) {
+	UIelement::draw(VAO, ShaderUI, ps, sc, mouse, mouseD);
+
+	for (int n = 0; n < children.size(); n++) {
+		if (dynamic_cast<UIDIV*>(children[n]) != nullptr)(*children[n]).draw(VAO, ShaderUI, pos * sc + ps, sca * sc, mouse, mouseD);
+		if (dynamic_cast<UIButton*>(children[n]) != nullptr)
+		{
+			UIButton* buton = dynamic_cast<UIButton*>(children[n]);
+			if (mouseD &&
+				mouse.x > (pos.x * sc.x + ps.x + ((*buton).pos.x * sca.x * sc.x)) - (sca.x * sc.x * (*buton).sca.x) &&
+				mouse.x < (pos.x * sc.x + ps.x + ((*buton).pos.x * sca.x * sc.x)) + (sca.x * sc.x * (*buton).sca.x) &&
+				mouse.y >(pos.y * sc.y + ps.y + ((*buton).pos.y * sca.y * sc.y)) - (sca.y * sc.y * (*buton).sca.y) &&
+				mouse.y < (pos.y * sc.y + ps.y + ((*buton).pos.y * sca.y * sc.y)) + (sca.y * sc.y * (*buton).sca.y)
+
+				)
+				cur = n;
+			if (cur == n && (*buton).child != nullptr)(*buton).child->draw(VAO, ShaderUI, ps, sc, mouse, mouseD);
+		}
+		(*children[n]).draw(VAO, ShaderUI, pos * sc + ps, sca * sc, mouse, mouseD);
+	}
+}
+
+UIsettings::UIsettings() {
+
+}
