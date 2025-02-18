@@ -86,7 +86,7 @@ public:
     float project(float x, float y, int side, Furniture f);
     CellGrid* doThing(int CurentN[3], int px, int py, std::vector<CellGrid*>* nodesToSearch);
     GLuint VAO;
-    std::vector<CellGrid*> getpath(int start, int end);
+    std::vector<CellGrid*> getpath(int sx, int sy, int start, int ex, int ey, int end);
 };
 
 

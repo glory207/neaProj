@@ -33,7 +33,7 @@ Maze::Maze(std::vector<Light>* ligh, int c){
         Camps.push_back(new EnCamp(vec2(Rand(gen), Rand(gen)), i));
 
     }
-    for (int i = 0; i < 100; i++)
+    for (int i = 0; i < count; i++)
     {
         Camps.push_back(new LootSpot(vec2(Rand(gen), Rand(gen))));
 
@@ -86,29 +86,29 @@ Maze::Maze(std::vector<Light>* ligh, int c){
         nodes[i].prob = 0.1f;
         for(Landmark* landm : Camps)
         {
+            int posX = (int)((*landm).Pos.x * count);
+            int posY = (int)((*landm).Pos.y * count);
             if (dynamic_cast<EnCamp*>(landm) != nullptr)
             {
                 EnCamp* Camp = dynamic_cast<EnCamp*>(landm);
 
-               float posX = (int)((*Camp).Pos.x * count);
-               float posY = (int)((*Camp).Pos.y * count);
                float sze = (*Camp).Size * count;
               
                if (glm::distance(vec2(posX, posY), vec2(nodes[i].x, nodes[i].y)) < sze)
                {
                   
                    nodes[i].prob = 0.7f;
-                  
                }
             }
             else if (dynamic_cast<LootSpot*>(landm) != nullptr)
             {
                 LootSpot* Camp = dynamic_cast<LootSpot*>(landm);
-                int posX = (int)((*Camp).Pos.x * count);
-                int posY = (int)((*Camp).Pos.y * count);
-                if(nodes[i].index == posX + posY * count)  nodes[i].treasure = true;
-           
+                if (nodes[i].index == posX + posY * count) {
+                    nodes[i].treasure = true;
+                }
             }
+            (*landm).Pos.x = posX / float(count);
+            (*landm).Pos.y = posY /float(count);
         }
 
         if (i != 0 && i % count != 0)
@@ -615,25 +615,32 @@ void Maze::draw(int programInfo) {
 
 }
 
-std::vector<CellGrid*> Maze::getpath(int start, int end) {
+std::vector<CellGrid*> Maze::getpath(int sx, int sy,int start, int ex, int ey, int end) {
     std::random_device rd;  // Seed generator
     std::mt19937 gen(rd()); // Mersenne Twister engine
     std::uniform_real_distribution<float> Rand(0.0f, 1.0f); // Range [0, 1]
-
+    if (sx > 8)sx = 8;
+    if (sy > 8)sy = 8;
+    if (sx < 0)sx = 0;
+    if (sy < 0)sy = 0;
+    if (ex > 8)ex = 8;
+    if (ey > 8)ey = 8;
+    if (ex < 0)ex = 0;
+    if (ey < 0)ey = 0;
     std::vector<CellGrid*> path;
     for (int i = 0; i < nodes.size(); i++)
     {
-        nodes[i].setSearch(&nodes[start].grid[5][5]);
+        nodes[i].setSearch(&nodes[start].grid[sx][sy]);
     }
     bool found = false;
-    int CurentN[3] = { 5,5,end };
+    int CurentN[3] = { ex,ey,end };
     int re = 0;
     std::vector<CellGrid*> nodesToSearch;
     while (!found)
     {
         re++;
         //std::cout << "x " << CurentN[0] << " y " << CurentN[1] << " p " << CurentN[2] << std::endl;
-        if (CurentN[0] == 5 && CurentN[1] == 5 && CurentN[2] == start) {
+        if (CurentN[0] == sx && CurentN[1] == sy && CurentN[2] == start) {
             CellGrid* cur = &nodes[CurentN[2]].grid[CurentN[0]][CurentN[1]];
             while (cur != nullptr)
             {
@@ -683,7 +690,6 @@ std::vector<CellGrid*> Maze::getpath(int start, int end) {
                 }
 
             }
-
 
             std::sort(nodesToSearch.begin(), nodesToSearch.end(), comp);
             if (nodesToSearch.size() == 0) {
