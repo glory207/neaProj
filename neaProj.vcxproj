@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="camera.cpp" />
+    <ClCompile Include="Enemy.cpp" />
     <ClCompile Include="frameBuffer.cpp" />
     <ClCompile Include="Furniture.cpp" />
     <ClCompile Include="glad.c" />
@@ -39,6 +40,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h" />
+    <ClInclude Include="Enemy.h" />
     <ClInclude Include="frameBuffer.h" />
     <ClInclude Include="Furniture.h" />
     <ClInclude Include="include\glad\glad.h" />

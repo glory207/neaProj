@@ -627,6 +627,10 @@ std::vector<CellGrid*> Maze::getpath(int sx, int sy,int start, int ex, int ey, i
     if (ey > 8)ey = 8;
     if (ex < 0)ex = 0;
     if (ey < 0)ey = 0;
+    if (start > nodes.size() - 1)start = nodes.size() - 1;
+    if (start < 0)start = 0;
+    if (end > nodes.size() - 1)end = nodes.size() - 1;
+    if (end < 0)end = 0;
     std::vector<CellGrid*> path;
     for (int i = 0; i < nodes.size(); i++)
     {
@@ -866,29 +870,7 @@ void Cell::setSearch(CellGrid* start) {
         grid[i % 9][i / 9].DH = INFINITY;
     }
 }
-/*
-void Cell::visit(std::vector<Cell*>* nodesToSearch) {
-    visited = true;
-    
-    std::vector<Cell*>::iterator it = std::find((*nodesToSearch).begin(), (*nodesToSearch).end(), this);
-    if (it != (*nodesToSearch).end())
-    {
-        (*nodesToSearch).erase(it);
-    }
-    for (int i = 0; i < Conectednodes.size(); i++)
-    {   
-        if (!Conectednodes[i]->visited) {
-            Conectednodes[i]->parent = this;
-            Conectednodes[i]->Distance = Distance + 1;
-            
-            std::vector<Cell*>::iterator it2 = std::find((*nodesToSearch).begin(), (*nodesToSearch).end(), Conectednodes[i]);
-            if (it2 == (*nodesToSearch).end())
-            {
-                (*nodesToSearch).push_back(Conectednodes[i]);
-            }
-        }
-    }
-}*/
+
 
 EnCamp::EnCamp(vec2 pos, float size) {
 

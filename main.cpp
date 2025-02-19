@@ -4,15 +4,18 @@
 #include <GLFW/glfw3.h>
 #include "shader.h"
 #include <iostream>
-#include "object.h"
-#include "initMaze.h"
-#include "camera.h"
-#include "PlayerClass.h"
 #include<glm/gtc/matrix_transform.hpp>
 #include<gl/GL.h>
+#include"object.h"
+#include "initMaze.h"
+#include "Enemy.h"
+#include "camera.h"
+#include "PlayerClass.h"
 #include "UIelement.h"
 #include <random>
 #include <thread>
+#include <queue>
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 
@@ -24,6 +27,9 @@ camera cam;
 vector<Light> ligh;
 Light tourch;
 PlayerClass player;
+PathFind pathf;
+queue<PathFind*> pathfq;
+vector<Enemy> enmi;
 float resolution = 1.0f;
 bool MouseLocked = false;
 bool ELocked = false;
@@ -38,11 +44,7 @@ float deltaTime = 1.0f;
 float UTime = 0.0f;
 float sceeee = 1.0f;
 Maze mz;
-bool onPath = false;
-bool waitPath = false;
-float pathP = 0.0;
 vec3 pathend;
-std::vector<CellGrid*> path;
 
 // Define the random number generator and distribution
 std::random_device rd;  // Seed generator
@@ -53,19 +55,16 @@ void foo(int Z)
 {
     while (!glfwWindowShouldClose(window))
     {
-        if (waitPath) {
-            path = mz.getpath(
-                int(9.0 * (player.inp->pos.x / mz.size + mz.thk) / (mz.thk * 2.0)) - 10 * int((player.inp->pos.x + 1.0f) / mz.size),
-                int(9.0 * (player.inp->pos.z / mz.size + mz.thk) / (mz.thk * 2.0)) - 10 * int((player.inp->pos.z + 1.0f) / mz.size),
-                int((player.inp->pos.x + 1.0f) / mz.size) + int((player.inp->pos.z + 1.0f) / mz.size) * mz.count,
-                pathend.x,
-                pathend.y,
-                pathend.z
-                
-                //  pathend
+        if (!pathfq.empty()) {
+            cout << pathfq.size() <<" left"<<endl;
+            PathFind* pt = pathfq.front();
+            pt->path = mz.getpath(pt->startpos().x, pt->startpos().y, pt->startpos().z, pt->endpos().x, pt->endpos().y, pt->endpos().z
             );
-            onPath = true;
-            waitPath = false;
+            pt->OnPath = true;
+            pt->WaitingForPath = false;
+            pt->pathP = 0.0f;
+            pathfq.pop();
+
         }
     }
 }
@@ -114,7 +113,7 @@ int main()
     createShadowFramebufferCube shBF = createShadowFramebufferCube(500);
 
     cout << "size" << endl;
-    int c = 5;
+    int c = 20;
     
     while (c <= 1 || c > 50)
     {
@@ -134,7 +133,12 @@ int main()
     cam = camera(glm::vec3(0.0f, 0.2f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f)); 
     
     player = PlayerClass(vec3(0.0f, 0.0f, 0.5f), vec3(0.0f, -3.1415 / 2.0f, 0.0f));
-    
+    for (int i = 0; i < 150; i++)
+    {
+        enmi.push_back(Enemy(vec3(int(Rand(gen) * mz.count) * mz.size, 0.0f, int(Rand(gen) * mz.count) * mz.size), vec3(0.0f, -3.1415 / 2.0f, 0.0f)));
+        mz.collide(&enmi[i].pos, nullptr, vec2(0.07f, 0.0f));
+        enmi[i].pos.y = 0;
+    } 
     
     float vertices[] = {
         0.0f, -0.01f, 0.0f,
@@ -217,21 +221,23 @@ int main()
 
                 processInput(window);
                 player.update(deltaTime);
+                for (int i = 0; i < enmi.size(); i++)enmi[i].update(deltaTime, cam.pos, &mz, &pathfq);
                 vec3 ty = player.inp->acc;
                 vec3 tp = player.inp->pos;
                 player.inp->Grounded = mz.collide(&player.inp->pos, nullptr, vec2(0.075f, 0.0f));
-                
-                if (pathP+1 >= path.size()) {
-                    onPath = false; 
-                    pathP = 0;
+                //for (int i = 0; i < enmi.size(); i++)mz.collide(&enmi[i].pos, nullptr, vec2(0.07f, 0.0f));
+                if (pathf.pathP+1 >= pathf.path.size()) {
+                    pathf.OnPath = false;
+                    pathf.pathP = 0;
                 }
-                if (onPath) {
-                    vec2 psss1 = path[int(pathP)]->pos * mz.size;
-                   vec2 psss2 = path[int(pathP+1)]->pos * mz.size;
+                if (pathf.OnPath) {
+                    vec2 psss1 = pathf.path[int(pathf.pathP)]->pos * mz.size;
+                   vec2 psss2 = pathf.path[int(pathf.pathP+1)]->pos * mz.size;
                   // player.inp->pos = vec3(psss1.x, player.inp->pos.y, psss1.y) + ((vec3(psss2.x, player.inp->pos.y, psss2.y)) - vec3(psss1.x, player.inp->pos.y, psss1.y)) * (pathP-int(pathP));
                   // pathP += deltaTime * 3.0f;
                     player.inp->acc += 0.2f*((player.inp->pos-vec3(psss2.x, player.inp->pos.y, psss2.y)) / distance(psss2, vec2(player.inp->pos.x, player.inp->pos.z)));
-                    if(distance(psss1,vec2(player.inp->pos.x, player.inp->pos.z)) > distance(psss2, vec2(player.inp->pos.x, player.inp->pos.z)))pathP ++;
+                    if(distance(psss1,vec2(player.inp->pos.x, player.inp->pos.z)) > distance(psss2, vec2(player.inp->pos.x, player.inp->pos.z)))
+                        pathf.pathP ++;
 
                 }
                 
@@ -331,6 +337,7 @@ int main()
                         else
                         {
                             player.draw(curTime, shaderShadowProgram);
+                            for (int i = 0; i < enmi.size(); i++)if(distance(player.inp->pos,enmi[i].pos)<7.0) enmi[i].draw(deltaTime, shaderShadowProgram);
                         }
                     }
                     else {
@@ -356,6 +363,7 @@ int main()
                 glDisable(GL_CULL_FACE);
 
                 player.draw(curTime, shaderProgram);
+                for (int i = 0; i < enmi.size(); i++)if (distance(player.inp->pos, enmi[i].pos) < 7.0)enmi[i].draw(curTime, shaderProgram);
 
 
                 glUseProgram(shaderInstaceProgram);
@@ -503,16 +511,17 @@ int main()
                    
                     }
 
-                    for (int j = 0; j < path.size(); j++)
+                    for (int j = pathf.pathP; j < pathf.path.size(); j++)
                     {
 
                         glUniform3f(glGetUniformLocation(shaderMazeProgram, "col"), 1.0f, 0.0f, 1.0f);
 
-                        glUniform2f(glGetUniformLocation(shaderMazeProgram, "campos"), -path[j]->pos.x + player.inp->pos.x / mz.size, -path[j]->pos.y + player.inp->pos.z / mz.size);
+                        glUniform2f(glGetUniformLocation(shaderMazeProgram, "campos"), -pathf.path[j]->pos.x + player.inp->pos.x / mz.size, -pathf.path[j]->pos.y + player.inp->pos.z / mz.size);
                         glDrawArrays(GL_LINES, 0, 4);
 
 
                     }
+                   
 
                     glUniform1f(glGetUniformLocation(shaderMazeProgram, "sc1"), 10);
                     for (Landmark* landm : mz.Camps)
@@ -532,6 +541,12 @@ int main()
                         }
 
                         glUniform2f(glGetUniformLocation(shaderMazeProgram, "campos"), -landm->Pos.x * mz.count + player.inp->pos.x / mz.size, -landm->Pos.y * mz.count + player.inp->pos.z / mz.size);
+                        glDrawArrays(GL_LINES, 0, 4);
+                    }
+
+                    glUniform3f(glGetUniformLocation(shaderMazeProgram, "col"), 0.5f, 1.0f, 1.0f);
+                    for (int i = 0; i < enmi.size(); i++) {
+                        glUniform2f(glGetUniformLocation(shaderMazeProgram, "campos"), (-enmi[i].pos.x + player.inp->pos.x) / mz.size, (-enmi[i].pos.z + player.inp->pos.z) / mz.size);
                         glDrawArrays(GL_LINES, 0, 4);
                     }
 
@@ -711,16 +726,13 @@ void processInput(GLFWwindow* window)
     }
     if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) pathend = vec3(5,5,int(Rand(gen) * mz.count * mz.count));
     if (glfwGetKey(window, GLFW_KEY_KP_6) == GLFW_PRESS) {
-        onPath = false;
-        pathP = 0;
+        pathf.FindPath(vec3(int(9.0 * (player.inp->pos.x / mz.size + mz.thk) / (mz.thk * 2.0)) - 10 * int((player.inp->pos.x + 1.0f) / mz.size),
+            int(9.0 * (player.inp->pos.z / mz.size + mz.thk) / (mz.thk * 2.0)) - 10 * int((player.inp->pos.z + 1.0f) / mz.size),
+            int((player.inp->pos.x + 1.0f) / mz.size) + int((player.inp->pos.z + 1.0f) / mz.size) * mz.count),
+            pathend, &pathfq);
     }
     
 
-    if (!waitPath && !onPath && glfwGetKey(window, GLFW_KEY_KP_4) == GLFW_PRESS)
-    {
-        waitPath = true;
-        
-    }
     //LightSetings
     float armL = 0.27f;
     float armL2 = 0.05f;

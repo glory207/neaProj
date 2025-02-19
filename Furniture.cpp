@@ -198,7 +198,7 @@ Furniture::Furniture(int i, int k, int(*grid)[9][9], float size, float thk, vec3
         //big bed
 
         rectP = vec2(-1, -1);
-        sca = vec3(0.21f, 0.09f, 0.4f);
+        sca = vec3(0.18f, 0.09f, 0.4f);
         rot = vec3(0.0f, 3.1415f, 0.0f);
         type1 = 2;
 
