@@ -357,6 +357,8 @@
     <None Include="shaders\cam.frag" />
     <None Include="shaders\cam.vert" />
     <None Include="shaders\camPost.frag" />
+    <None Include="shaders\debug.geom" />
+    <None Include="shaders\debug.vert" />
     <None Include="shaders\def.frag" />
     <None Include="shaders\def.geom" />
     <None Include="shaders\def.vert" />

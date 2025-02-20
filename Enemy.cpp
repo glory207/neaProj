@@ -18,8 +18,12 @@ Enemy::Enemy() {}
 Enemy::Enemy(vec3 pos, vec3 rot) {
 	this->pos = pos;
 	this->rot = rot;
-	obj = SpObj(pos, rot, vec3(0.2), initCubeBuffer({ 9 }), 28,29);
+	obj = SpObj(pos, rot, vec3(0.3), initCubeBuffer({ 9 }), 28,29);
 
+	random_device rd;  // Seed generator
+	mt19937 gen(rd()); // Mersenne Twister engine
+	uniform_real_distribution<float> Rand(0.0f, 1.0f); // Range [0, 1]
+	frame = Rand(gen) * 15;
 }
 void Enemy::update(float deltaTime,vec3 cam,Maze* mz, queue<PathFind*>* pathfq) {
 

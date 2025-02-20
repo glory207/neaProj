@@ -51,6 +51,7 @@ public:
     bool conected = false;
     std::vector<Cell*> Conectablednodes;
     std::vector<Cell*> Conectednodes;
+    std::vector<Furniture> fur;
     std::vector<int> sides;
     bool sidesi[4] = {false,false,false,false};
     glm::vec2 pnt(int i,float thk);
@@ -72,7 +73,6 @@ public:
     bool collide(glm::vec3* poss, glm::vec3* accc, glm::vec2 leway);
     void drawMap(int programInfo);
     std::vector<Cell> nodes;
-    std::vector<Furniture> fur;
     std::vector<Landmark*> Camps;
     InsObj furn;
     float size;

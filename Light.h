@@ -3,7 +3,6 @@
 #include "object.h"
 #include "frameBuffer.h"
 
-
 class Light
 {
 public:
@@ -15,6 +14,7 @@ public:
 	GLuint depthTexPre;
 	GLuint64 handle;
 	glm::mat4 rotationMatrix;
+	glm::vec2 perch = glm::vec2(-1);
 	int size;
 	Light(glm::vec3 pos);
 	void update(float deltaTime);

@@ -206,11 +206,11 @@ Maze::Maze(std::vector<Light>* ligh, int c){
             Furniture::canFit(-2, furrot, &grid);
             Furniture ref = Furniture(-2, furrot, &grid, size, thk, ps);
             mds.push_back(Matrix(ref.pos, ref.sca, ref.rot));
-            fur.push_back(ref);
+            nodes[i].fur.push_back(ref);
             txt.push_back(ref.type1); 
             txt.push_back(ref.type2); 
         }
-        for (int j = 0; j < 4; j++) 
+        for (int j = 0; j < 6; j++) 
         {
             int furt = floor(Rand(gen) * 8);
             int furrot = floor(Rand(gen) * 4);
@@ -224,10 +224,16 @@ Maze::Maze(std::vector<Light>* ligh, int c){
                     ref.sca.y *= 0.5f;
                     ref.pos.y = ref.sca.y;
                 }
-                fur.push_back(ref);
+                nodes[i].fur.push_back(ref);
                 txt.push_back(ref.type1);
                 txt.push_back(ref.type2);
-               if(furt == 4) (*ligh).push_back(Light(vec3(ref.pos.x, ref.pos.y + ref.sca.y, ref.pos.z)));
+               if(furt == 4) 
+               {
+                   Light l = Light(vec3(ref.pos.x, ref.pos.y + ref.sca.y, ref.pos.z));
+                   l.perch = vec2(i, nodes[i].fur.size()-1);
+                   (*ligh).push_back(l);
+               }
+               
                
             }
         }
@@ -238,7 +244,7 @@ Maze::Maze(std::vector<Light>* ligh, int c){
         }
 
     }
-    furn = InsObj(initCubeBuffer({0,1,2,3,4,5, 6,7,8 }), 23, 12, initI(mds),initB(txt));
+    furn = InsObj(initCubeBuffer({0,1,2,3,4,5, 6,7,8 }), 23, 12, initI(mds),initB(txt), mds.size());
 
 
     furn.textOff2 = glm::vec4(0.0f, 0.0f, 5.0f, 5.0f);
@@ -498,7 +504,7 @@ bool Maze::collide(glm::vec3* pos, glm::vec3* acc, glm::vec2 leway) {
     (*pos) *= size;
 
 
-    for (Furniture f : fur) {
+    for (Furniture f : nodes[nd].fur) {
         
         if (pow((*pos).x - f.pos.x, 2.0) + pow((*pos).z - f.pos.z, 2.0) < max(f.sca.x, f.sca.z) * 2.0)
         {

@@ -163,8 +163,8 @@ Furniture::Furniture(int i, int k, int(*grid)[9][9], float size, float thk, vec3
     case 4:
         //tourch
 
-        rectP = vec2(-0.8f, 0);
-        sca = vec3(0.07f, 0.22f, 0.07f);
+        rectP = vec2(-0.7f, 0);
+        sca = vec3(0.07f, 0.2f, 0.07f);
         rot = vec3(0.0f);
 
         type1 = 3;

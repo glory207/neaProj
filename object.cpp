@@ -59,8 +59,8 @@ void SpObj::draw(int programInfo){
     glDrawElements(GL_TRIANGLES,buffer.length,GL_UNSIGNED_INT, 0);
     
 }
-InsObj::InsObj(BufferGroup buffers, int img1, int img2, GLuint modelBuffer, GLuint textureBuffer){
-   
+InsObj::InsObj(BufferGroup buffers, int img1, int img2, GLuint modelBuffer, GLuint textureBuffer, int count){
+    this->count = count;
     buffer = buffers;
     textOff = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
     textOff2 = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
@@ -110,7 +110,7 @@ InsObj::InsObj() {
     textOff = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
 
 }
-void InsObj::draw(int programInfo,int count){
+void InsObj::draw(int programInfo){
 
     glUniform4f(glGetUniformLocation(programInfo,"textureMatrix"),textOff.x,textOff.y,textOff.z,textOff.w);
     glUniform4f(glGetUniformLocation(programInfo,"textureMatrix2"),textOff2.x,textOff2.y,textOff2.z,textOff2.w);

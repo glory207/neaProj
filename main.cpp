@@ -36,7 +36,7 @@ bool ELocked = false;
 bool erere = false;
 int adee = 1;
 float adeee = 0;
-vec2 LightSetings = vec2(1.1,1.2);
+vec2 LightSetings = vec2(1.1,0.25);
 float ArmL = 0.27f;
 float ArmL2 = 0.0f;
 float ArmL3 = 1.25;
@@ -44,6 +44,7 @@ float deltaTime = 1.0f;
 float UTime = 0.0f;
 float sceeee = 1.0f;
 Maze mz;
+vec3 ray;
 vec3 pathend;
 
 // Define the random number generator and distribution
@@ -56,7 +57,7 @@ void foo(int Z)
     while (!glfwWindowShouldClose(window))
     {
         if (!pathfq.empty()) {
-            cout << pathfq.size() <<" left"<<endl;
+
             PathFind* pt = pathfq.front();
             pt->path = mz.getpath(pt->startpos().x, pt->startpos().y, pt->startpos().z, pt->endpos().x, pt->endpos().y, pt->endpos().z
             );
@@ -110,10 +111,11 @@ int main()
     unsigned int shaderMazeProgram = initShader("shaders/maze.vert", "shaders/maze.geom", "shaders/maze.frag"); 
     unsigned int ShaderPost = initShader("shaders/cam.vert", "shaders/camPost.frag"); 
     unsigned int ShaderUI = initShader("shaders/cam.vert", "shaders/UI.frag"); 
+    unsigned int ShaderDebug = initShader("shaders/debug.vert", "shaders/debug.geom", "shaders/maze.frag");
     createShadowFramebufferCube shBF = createShadowFramebufferCube(500);
 
     cout << "size" << endl;
-    int c = 20;
+    int c = 30;
     
     while (c <= 1 || c > 50)
     {
@@ -133,7 +135,7 @@ int main()
     cam = camera(glm::vec3(0.0f, 0.2f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f)); 
     
     player = PlayerClass(vec3(0.0f, 0.0f, 0.5f), vec3(0.0f, -3.1415 / 2.0f, 0.0f));
-    for (int i = 0; i < 150; i++)
+    for (int i = 0; i < 0; i++)
     {
         enmi.push_back(Enemy(vec3(int(Rand(gen) * mz.count) * mz.size, 0.0f, int(Rand(gen) * mz.count) * mz.size), vec3(0.0f, -3.1415 / 2.0f, 0.0f)));
         mz.collide(&enmi[i].pos, nullptr, vec2(0.07f, 0.0f));
@@ -183,6 +185,7 @@ int main()
     thread th3(foo, 3);
     while (!glfwWindowShouldClose(window))
     {
+        cout << LightSetings.x << " " << LightSetings.y << endl;
         curTime = glfwGetTime();
         timeDif = curTime - preTime;
         counter++;
@@ -240,7 +243,7 @@ int main()
                         pathf.pathP ++;
 
                 }
-                
+                int playerIndex = int((player.inp->pos.x + 1) / mz.size) + int((player.inp->pos.z + 1) / mz.size) * mz.count;
                 glDisable(GL_BLEND);
 
 
@@ -279,7 +282,7 @@ int main()
 
                         for (int i = 0; i < 6; i++)glUniformMatrix4fv(glGetUniformLocation(shaderInstaceShadowProgram, ii[i].c_str()), 1, GL_FALSE, glm::value_ptr(matr4[i]));
                         glUniform3f(glGetUniformLocation(shaderInstaceShadowProgram, "lpos"), tourch.pos.x, tourch.pos.y, tourch.pos.z);
-                        mz.furn.draw(shaderInstaceShadowProgram, mz.fur.size());
+                        mz.furn.draw(shaderInstaceShadowProgram);
                     }
                     else {
                         tourch.activate(false);
@@ -332,7 +335,7 @@ int main()
 
                             for (int i = 0; i < 6; i++)glUniformMatrix4fv(glGetUniformLocation(shaderInstaceShadowProgram, ii[i].c_str()), 1, GL_FALSE, glm::value_ptr(matr4[i]));
                             glUniform3f(glGetUniformLocation(shaderInstaceShadowProgram, "lpos"), ligh[t].pos.x, ligh[t].pos.y, ligh[t].pos.z);
-                            mz.furn.draw(shaderInstaceShadowProgram, mz.fur.size());
+                            mz.furn.draw(shaderInstaceShadowProgram);
                         }
                         else
                         {
@@ -369,7 +372,7 @@ int main()
                 glUseProgram(shaderInstaceProgram);
                 glUniformMatrix4fv(glGetUniformLocation(shaderInstaceProgram, "uProjectionMatrix"), 1, GL_FALSE, glm::value_ptr(ma));
                 glUniform3f(glGetUniformLocation(shaderInstaceProgram, "camPos"), cam.pos.x, cam.pos.y, cam.pos.z);
-                mz.furn.draw(shaderInstaceProgram, mz.fur.size());
+                mz.furn.draw(shaderInstaceProgram);
 
                 glUseProgram(shaderLightProgram);
                 glUniformMatrix4fv(glGetUniformLocation(shaderLightProgram, "uProjectionMatrix"), 1, GL_FALSE, glm::value_ptr(ma));
@@ -423,7 +426,7 @@ int main()
                         glUniform1f(glGetUniformLocation(cam.shader, "ConeAngle"), 0.68);
                         glUniform3f(glGetUniformLocation(cam.shader, "lightPos"), tourch.pos.x, tourch.pos.y, tourch.pos.z);
                         glUniform3f(glGetUniformLocation(cam.shader, "lightCol"), 1.0, 1.0, 1.0);
-                        glUniform2f(glGetUniformLocation(cam.shader, "LightSetings"), 20.0, 1.1 + sin(curTime * 2) * 0.3f);
+                        glUniform2f(glGetUniformLocation(cam.shader, "LightSetings"), 20.0, 0.3f);
 
 
                         cam.draw(cam.shader);
@@ -456,7 +459,7 @@ int main()
 
 
                 glUniform1i(glGetUniformLocation(cam.shader, "light"), 1);
-                glUniform1f(glGetUniformLocation(cam.shader, "brightness"), *menue.settings.brightness * 0.2);
+                glUniform1f(glGetUniformLocation(cam.shader, "brightness"), *menue.settings.brightness * 0.05);
                 cam.draw(cam.shader);
                 glDisable(GL_BLEND);
 
@@ -490,15 +493,14 @@ int main()
 
                 glUniform1f(glGetUniformLocation(shaderMazeProgram, "sc"), sceeee);
                 glUniform1f(glGetUniformLocation(shaderMazeProgram, "sc1"), 3.0);
-
+                
                     for (int j = 0; j < 9; j++)
                     {
-                        float reerre = 1.0;
-                        if (int((player.inp->pos.x + reerre) / mz.size) + int((player.inp->pos.z + reerre) / mz.size) * mz.count + (j % 3) - 1 + (j / 3 - 1) * mz.count >= 0 &&
-                            int((player.inp->pos.x + reerre) / mz.size) + int((player.inp->pos.z + reerre) / mz.size) * mz.count + (j % 3) - 1 + (j / 3 - 1) * mz.count < mz.nodes.size()) {
+                        if (playerIndex + (j % 3) - 1 + (j / 3 - 1) * mz.count >= 0 &&
+                            playerIndex + (j % 3) - 1 + (j / 3 - 1) * mz.count < mz.nodes.size()) {
                             for (int k = 0; k < 9 * 9; k++)
                             {
-                                CellGrid* cgr = &mz.nodes[int((player.inp->pos.x + reerre) / mz.size) + int((player.inp->pos.z + reerre) / mz.size) * mz.count + (j % 3) - 1 + (j / 3 - 1) * mz.count].grid[k % 9][k / 9];
+                                CellGrid* cgr = &mz.nodes[playerIndex].grid[k % 9][k / 9];
                                 if (cgr->obstruction)
                                     glUniform3f(glGetUniformLocation(shaderMazeProgram, "col"), 0.0f, 1.0f, 0.0f);
                                 else
@@ -544,6 +546,7 @@ int main()
                         glDrawArrays(GL_LINES, 0, 4);
                     }
 
+                    glUniform1f(glGetUniformLocation(shaderMazeProgram, "sc1"), 50);
                     glUniform3f(glGetUniformLocation(shaderMazeProgram, "col"), 0.5f, 1.0f, 1.0f);
                     for (int i = 0; i < enmi.size(); i++) {
                         glUniform2f(glGetUniformLocation(shaderMazeProgram, "campos"), (-enmi[i].pos.x + player.inp->pos.x) / mz.size, (-enmi[i].pos.z + player.inp->pos.z) / mz.size);
@@ -580,6 +583,93 @@ int main()
                 glUniform4f(glGetUniformLocation(cam.MapShader, "textureMatrix"), 0, 0, 1, 1);
                 glUniform2f(glGetUniformLocation(cam.MapShader, "screen"), SCR_WIDTH, SCR_HEIGHT);
                 cam.drawScreen();
+
+                glUseProgram(ShaderDebug);
+                glUniform3f(glGetUniformLocation(ShaderDebug, "p1"), player.obj.pos.x, player.obj.pos.y, player.obj.pos.z);
+                glUniform3f(glGetUniformLocation(ShaderDebug, "p2"), ligh[0].pos.x, ligh[0].pos.y, ligh[0].pos.z);
+                glUniform3f(glGetUniformLocation(ShaderDebug, "col"), 1,0,0);
+                glUniformMatrix4fv(glGetUniformLocation(ShaderDebug, "mtr"), 1, GL_FALSE, glm::value_ptr(ma));
+                glBindVertexArray(VAO);
+                glLineWidth(10);
+               // glDrawArrays(GL_LINES, 0, 4);
+                glLineWidth(5);
+                for (int t = 0; t < ligh.size(); t++)
+                {
+                    ray = ligh[t].pos;
+                    if (ligh[t].active) {
+                        vec3 DirectionOfRay = -normalize(player.obj.pos - ray);
+                        vec3 startOfRay = player.obj.pos;
+                        vec3 PR2 = ray;
+
+                        for (int j = 0; j < 9; j++)
+                        {
+                            if (playerIndex + (j % 3) - 1 + (j / 3 - 1) * mz.count >= 0 &&
+                                playerIndex + (j % 3) - 1 + (j / 3 - 1) * mz.count < mz.nodes.size()) {
+                                int rp = playerIndex + (j % 3) - 1 + (j / 3 - 1) * mz.count;
+                                for (int j = 0; j < mz.nodes[rp].fur.size(); j++)
+                                {
+                                    if (ligh[t].perch != vec2(rp,j)) {
+
+                                    mat4 modelViewMatrix;
+                                    modelViewMatrix = rotate(modelViewMatrix, mz.nodes[rp].fur[j].rot.z, glm::vec3(0, 0, 1));
+                                    modelViewMatrix = rotate(modelViewMatrix, mz.nodes[rp].fur[j].rot.y, glm::vec3(0, 1, 0));
+                                    modelViewMatrix = rotate(modelViewMatrix, mz.nodes[rp].fur[j].rot.x, glm::vec3(1, 0, 0));
+                                    modelViewMatrix = scale(modelViewMatrix, mz.nodes[rp].fur[j].sca);
+                                    vec3 P[6] = {
+                                        modelViewMatrix * vec4(1,0,0,1) ,
+                                        modelViewMatrix * vec4(0,1,0,1) ,
+                                        modelViewMatrix * vec4(0,0,1,1) ,
+                                        modelViewMatrix * vec4(-1,0,0,1),
+                                        modelViewMatrix * vec4(0,-1,0,1),
+                                        modelViewMatrix * vec4(0,0,-1,1)
+                                    };
+
+                                    bool clip = false;
+                                    for (int i = 0; i < 6; i++)
+                                    {
+
+                                        //for math
+                                        vec3 PP1 = (P[i] + P[(i + 1) % 6] + P[(i + 2) % 6]) + mz.nodes[rp].fur[j].pos;
+                                        vec3 PP2 = (P[i] + P[(i + 1) % 6] - P[(i + 2) % 6]) + mz.nodes[rp].fur[j].pos;
+                                        vec3 PP3 = (P[i] - P[(i + 1) % 6] - P[(i + 2) % 6]) + mz.nodes[rp].fur[j].pos;
+                                        vec3 PP4 = (P[i] - P[(i + 1) % 6] + P[(i + 2) % 6]) + mz.nodes[rp].fur[j].pos;
+
+                                        float t = dot(normalize(P[i]), ((P[i] + mz.nodes[rp].fur[j].pos) - startOfRay)) / dot(normalize(P[i]), DirectionOfRay);
+                                        vec3 asd = startOfRay + DirectionOfRay * t;
+
+
+                                        if (dot(normalize(PP1 - PP2), asd) > dot(normalize(PP1 - PP2), PP2) && dot(PP1 - PP2, asd) < dot(PP1 - PP2, PP1) &&
+                                            dot(normalize(PP1 - PP4), asd) > dot(normalize(PP1 - PP4), PP4) && dot(PP1 - PP4, asd) < dot(PP1 - PP4, PP1) &&
+                                            dot(normalize(DirectionOfRay), asd) > dot(normalize(DirectionOfRay), startOfRay))
+                                        {
+
+                                            glUniform3f(glGetUniformLocation(ShaderDebug, "p2"), asd.x, asd.y, asd.z);
+                                            glUniform3f(glGetUniformLocation(ShaderDebug, "p1"), asd.x, asd.y + 0.01f, asd.z);
+
+                                            glUniform3f(glGetUniformLocation(ShaderDebug, "col"), 0, 1, 0);
+                                            glDrawArrays(GL_LINES, 0, 4);
+
+                                            if (distance(startOfRay, asd) < distance(startOfRay, PR2))
+                                            {
+                                                PR2 = asd;
+
+                                            }
+                                        }
+
+                                    }
+                                }
+                                }
+                            }
+                        }
+
+                       glUniform3f(glGetUniformLocation(ShaderDebug, "p1"), PR2.x, PR2.y, PR2.z);
+                       glUniform3f(glGetUniformLocation(ShaderDebug, "p2"), startOfRay.x, startOfRay.y, startOfRay.z);
+                       glUniform3f(glGetUniformLocation(ShaderDebug, "col"), 0, 1, 1);
+                       glDrawArrays(GL_LINES, 0, 4);
+                    
+
+                    }
+                }
 
             }
             else {
@@ -683,11 +773,7 @@ void processInput(GLFWwindow* window)
     }
     if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
     {
-        adee = 1;
-    }
-    else if (glfwGetKey(window, GLFW_KEY_F) != GLFW_PRESS)
-    {
-        adee = 2;
+        ray = ligh[0].pos;
     }
 
     player.inp->SH = (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS);

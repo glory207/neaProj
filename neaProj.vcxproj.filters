@@ -1031,5 +1031,7 @@
     <None Include="shaders\shadowInst.geom" />
     <None Include="shaders\UI.frag" />
     <None Include="img\textM.aseprite" />
+    <None Include="shaders\debug.vert" />
+    <None Include="shaders\debug.geom" />
   </ItemGroup>
 </Project>

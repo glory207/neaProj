@@ -48,7 +48,7 @@
        // float a = 10.0;
        // float b = 0.0;
        // float Falloff = 1.0 / (a * dist * dist + b * dist + 1.0);
-        float Falloff = 1.0 - pow((dist)/LightSetings.x,1.0) + 0.15;
+        float Falloff = 1.0 - pow((dist)/LightSetings.x,2.0) + 0.15;
         if(Falloff<0)Falloff=0;
         difVal *= Falloff;
 
@@ -64,7 +64,7 @@
   
       if(ConeAngle == 0) difVal2 *= 0.0;  
       else  difVal = difVal2;
-        float asd = 6.0;
+        float asd = 3.0;
         if(difVal < 0.05) return 0;
         difVal = floor((difVal * asd))/asd;
 
@@ -83,8 +83,12 @@ void main() {
     if(light == 1){
         
             vec3 color;
-         
-         color = texture(ColT, texPos).xyz * brightness;
+         float difVal = 0; 
+         difVal += floor((max(dot(normalize(texture(NormT, texPos).xyz)*2, vec3(1,0.5,0)), 0.0) * 6.0))/6.0; 
+         difVal += floor((max(dot(normalize(texture(NormT, texPos).xyz)*2, vec3(-1,0.5,0)), 0.0) * 6.0))/6.0; 
+         difVal += floor((max(dot(normalize(texture(NormT, texPos).xyz)*2, vec3(0,0.5,-1)), 0.0) * 6.0))/6.0; 
+         difVal += floor((max(dot(normalize(texture(NormT, texPos).xyz)*2, vec3(0,0.5,1)), 0.0) * 6.0))/6.0; 
+         color = texture(ColT, texPos).xyz * brightness * floor((difVal * 3.0))/3.0;
           fragColor = vec4(color,1.0);
         if(texture(PosT, texPos).y == -1.0){
             fragColor = vec4((texture(ColT, texPos).xyz)*4,1.0);
@@ -96,7 +100,7 @@ void main() {
     }
         else{
           
-     vec3 color = texture(ColT, texPos).xyz * getLight(lightPos,texture(PosT, texPos).xyz+camPos,texture(NormT, texPos).xyz,texture(NormFT, texPos).xyz,uSamplerS,rotcam)
+     vec3 color = texture(ColT, texPos).xyz * getLight(lightPos,texture(PosT, texPos).xyz+camPos,normalize(texture(NormT, texPos).xyz) * 1.5f,normalize(texture(NormFT, texPos).xyz),uSamplerS,rotcam)
       * normalize(lightCol);
      // * vec3(1.0,0.8,0.6);
        
