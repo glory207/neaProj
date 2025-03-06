@@ -75,6 +75,11 @@ void Enemy::update(float deltaTime,vec3 cam,Maze* mz, queue<PathFind*>* pathfq) 
 		(int)(dir) % 8,
 		1.0 / 14.0,
 		1.0 / 8.0);
+	obj.textOff2 = vec4(
+		(int)(frame) % 14,
+		(int)(dir) % 8,
+		1.0 / 14.0,
+		1.0 / 8.0);
 	obj.rot.y = rot.y;
 }
 

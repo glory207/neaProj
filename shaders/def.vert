@@ -6,6 +6,7 @@ layout(location = 1) in  vec2 aTexturePosition;
     uniform mat4 uProjectionMatrix;
     uniform mat3 normalMatrix;
     uniform vec4 textureMatrix;
+    uniform vec4 NormalTextureMatrix;
 
     out DATA
 {
@@ -18,7 +19,7 @@ layout(location = 1) in  vec2 aTexturePosition;
     void main() {
 
     data_in.texCoord = vec3((aTexturePosition + textureMatrix.xy) * textureMatrix.zw,0);
-    data_in.texCoord2 = vec3((aTexturePosition + textureMatrix.xy) * textureMatrix.zw,0);
+    data_in.texCoord2 = vec3((aTexturePosition + NormalTextureMatrix.xy) * NormalTextureMatrix.zw,0);
     data_in.projection = uProjectionMatrix;
     gl_Position = uModelViewMatrix * aVertexPosition;
     }

@@ -7,11 +7,9 @@ class Furniture
 public:
 	Furniture();
 	Furniture(int i, int k, int(*grid)[9][9], float size, float thk, vec3 ps);
-	vec3 pos;
-	vec3 sca;
-	vec3 rot;
-	int type1;
-	int type2;
+	SpObj obj;
+	int ColorTexture;
+	int NormalTexture;
 	static bool canFit(int i, int k, int(*grid)[9][9]);
 };
 

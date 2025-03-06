@@ -2,90 +2,93 @@
 #include <random>
 vec2 rott(vec2 v, float r)
 {
+    // rotates a vector v by angle r in radians
     return vec2(v.x * cos(r) + v.y * sin(r), -v.x * sin(r) + v.y * cos(r));
 }
 
-Furniture::Furniture(int i, int k, int(*grid)[9][9], float size, float thk, vec3 ps) {
-	std::random_device rd;  // Seed generator
-	std::mt19937 gen(rd()); // Mersenne Twister engine
-	std::uniform_real_distribution<float> Rand(0.0f, 1.0f); // Range [0, 1]
-    type1 = 2;
-    type2 = 0;
+Furniture::Furniture(int type, int orientation, int(*grid)[9][9], float size, float thk, vec3 ps) {
 
-    vec2 rectP;
-    std::vector<vec2> cnt;
+    vec3 pos;
+    vec3 sca;
+    vec3 rot;
+
+    ColorTexture = 2;
+    NormalTexture = 12;
+
+    vec2 furnPos;
+    std::vector<vec2> Sectors;
     /*
     switch (i) {
     case 0:
-        rectP = vec2(-1, -1);
+        furnPos = vec2(-1, -1);
         sca = vec3(0.4f, 0.4f, 0.05f);
         rot = vec3(0.0f,-3.1415f*3 / 4.0f, 0.0f);
-        type1 = 5;
-        cnt.push_back(vec2(-1.0f, -1.0f));
-        cnt.push_back(vec2(-1, 0));
-        cnt.push_back(vec2(0, -1));
+        ColorTexture = 5;
+        Sectors.push_back(vec2(-1.0f, -1.0f));
+        Sectors.push_back(vec2(-1, 0));
+        Sectors.push_back(vec2(0, -1));
         break;
     case 1:
-        rectP = vec2(-1, -1);
+        furnPos = vec2(-1, -1);
         sca = vec3(0.25f, 0.08f, 0.25f);
         rot = vec3(0.0f);
-        cnt.push_back(vec2(-1, -1));
-        type1 = 1;
+        Sectors.push_back(vec2(-1, -1));
+        ColorTexture = 1;
         break;
     case 2:
-        rectP = vec2(-1, 0);
+        furnPos = vec2(-1, 0);
         sca = vec3(0.15f, 0.2f, 0.15f);
         rot = vec3(0.0f, -3.1415f / 2.0f, 0.0f);
-        cnt.push_back(vec2(-1, 0));
-        type1 = 4;
+        Sectors.push_back(vec2(-1, 0));
+        ColorTexture = 4;
         break;
     case 3:
-        rectP = vec2(-1, 0);
+        furnPos = vec2(-1, 0);
         sca = vec3(0.7f, 0.5f, 0.075f);
         rot = vec3(0.0f,-3.1415f/2.0f,0.0f);
-        cnt.push_back(vec2(-1, 0));
-        cnt.push_back(vec2(-1, -1));
-        cnt.push_back(vec2(-1, 1));
-        type1 = 5;
+        Sectors.push_back(vec2(-1, 0));
+        Sectors.push_back(vec2(-1, -1));
+        Sectors.push_back(vec2(-1, 1));
+        ColorTexture = 5;
         break;
     case 4:
-        rectP = vec2(-0.8f, 0);
+        furnPos = vec2(-0.8f, 0);
         sca = vec3(0.07f, 0.22f, 0.07f);
         rot = vec3(0.0f);
-        cnt.push_back(vec2(-1, 0));
-        type1 = 3;
+        Sectors.push_back(vec2(-1, 0));
+        ColorTexture = 3;
         break;
     case 5:
-        rectP = vec2(0, 0);
+        furnPos = vec2(0, 0);
         sca = vec3(0.2f, 0.5f, 0.2f);
         rot = vec3(0.0f, 3.1415f / 4.0f, 0.0f);
-        cnt.push_back(vec2(0, 0));
-        type1 = 6;
+        Sectors.push_back(vec2(0, 0));
+        ColorTexture = 6;
         break;
     case 6:
-        rectP = vec2(-1, 0);
+        furnPos = vec2(-1, 0);
         sca = vec3(0.2f, 0.09f, 0.35f);
         rot = vec3(0.0f, -3.1415f / 2.0f, 0.0f);
-        cnt.push_back(vec2(-1, 0));
-        cnt.push_back(vec2(0, 0));
+        Sectors.push_back(vec2(-1, 0));
+        Sectors.push_back(vec2(0, 0));
 
         
-        type1 = 2;
+        ColorTexture = 2;
         break;
     case 7:
-        rectP = vec2(-1, -1);
+        furnPos = vec2(-1, -1);
         sca = vec3(0.21f, 0.09f, 0.4f);
         rot = vec3(0.0f, 3.1415f, 0.0f);
-        cnt.push_back(vec2(-1, -1));
-        cnt.push_back(vec2(-1, 0));
-        type1 = 2;
+        Sectors.push_back(vec2(-1, -1));
+        Sectors.push_back(vec2(-1, 0));
+        ColorTexture = 2;
         break;
     case -2:
-        rectP = vec2(0,0);
+        furnPos = vec2(0,0);
         sca = vec3(0.13f, 0.07f, 0.07f);
         rot = vec3(0.0f);
-        cnt.push_back(vec2(0, 0));
-        type1 = 7;
+        Sectors.push_back(vec2(0, 0));
+        ColorTexture = 7;
         break;
     default:
         
@@ -93,247 +96,255 @@ Furniture::Furniture(int i, int k, int(*grid)[9][9], float size, float thk, vec3
         break;
     }
     */
-    switch (i)
+    // gets the Furniture data based off its type
+    switch (type)
     {
     case 0:
         //table
-        rectP = vec2(-1, -1);
+        furnPos = vec2(-1, -1);
         sca = vec3(0.25f, 0.08f, 0.25f);
         rot = vec3(0.0f);
-        type1 = 1;
+        ColorTexture = 15;
 
-        cnt.push_back(vec2(-4, -4));
-        cnt.push_back(vec2(-3, -4));
-        cnt.push_back(vec2(-2, -4));
+        Sectors.push_back(vec2(-4, -4));
+        Sectors.push_back(vec2(-3, -4));
+        Sectors.push_back(vec2(-2, -4));
 
-        cnt.push_back(vec2(-4, -3));
-        cnt.push_back(vec2(-3, -3));
-        cnt.push_back(vec2(-2, -3));
+        Sectors.push_back(vec2(-4, -3));
+        Sectors.push_back(vec2(-3, -3));
+        Sectors.push_back(vec2(-2, -3));
 
-        cnt.push_back(vec2(-4, -2));
-        cnt.push_back(vec2(-3, -2));
-        cnt.push_back(vec2(-2, -2));
+        Sectors.push_back(vec2(-4, -2));
+        Sectors.push_back(vec2(-3, -2));
+        Sectors.push_back(vec2(-2, -2));
         break;
     case 1:
         //pillar
 
-        rectP = vec2(0, 0);
+        furnPos = vec2(0, 0);
         sca = vec3(0.2f, 0.5f, 0.2f);
         rot = vec3(0.0f, 3.1415f / 4.0f, 0.0f);
-        type1 = 6;
+        ColorTexture = 26;
 
-        cnt.push_back(vec2(0, 0));
-        cnt.push_back(vec2(-1, 0));
-        cnt.push_back(vec2(0, -1));
-        cnt.push_back(vec2(1, 0));
-        cnt.push_back(vec2(0, 1));
+        Sectors.push_back(vec2(0, 0));
+        Sectors.push_back(vec2(-1, 0));
+        Sectors.push_back(vec2(0, -1));
+        Sectors.push_back(vec2(1, 0));
+        Sectors.push_back(vec2(0, 1));
         break;
     case 2:
         //turned bookshelf
 
-        rectP = vec2(-1, -1);
+        furnPos = vec2(-1, -1);
         sca = vec3(0.4f, 0.4f, 0.05f);
         rot = vec3(0.0f, -3.1415f * 3 / 4.0f, 0.0f);
-        type1 = 5;
+        ColorTexture = 25;
 
-        cnt.push_back(vec2(-4, -1));
-        cnt.push_back(vec2(-3, -2));
-        cnt.push_back(vec2(-2, -3));
-        cnt.push_back(vec2(-1, -4));
-        cnt.push_back(vec2(-2, -4));
-        cnt.push_back(vec2(-3, -3));
-        cnt.push_back(vec2(-4, -2));
+        Sectors.push_back(vec2(-4, -1));
+        Sectors.push_back(vec2(-3, -2));
+        Sectors.push_back(vec2(-2, -3));
+        Sectors.push_back(vec2(-1, -4));
+        Sectors.push_back(vec2(-2, -4));
+        Sectors.push_back(vec2(-3, -3));
+        Sectors.push_back(vec2(-4, -2));
         break;
     case 3:
         //straight bookshelf
 
-        rectP = vec2(-1, 0);
+        furnPos = vec2(-1, 0);
         sca = vec3(0.7f, 0.5f, 0.075f);
         rot = vec3(0.0f, -3.1415f / 2.0f, 0.0f);
-        type1 = 5;
+        ColorTexture = 25;
 
-        cnt.push_back(vec2(-4, -3));
-        cnt.push_back(vec2(-4, -2));
-        cnt.push_back(vec2(-4, -1));
-        cnt.push_back(vec2(-4, 0));
-        cnt.push_back(vec2(-4, 1));
-        cnt.push_back(vec2(-4, 2));
-        cnt.push_back(vec2(-4, 3));
+        Sectors.push_back(vec2(-4, -3));
+        Sectors.push_back(vec2(-4, -2));
+        Sectors.push_back(vec2(-4, -1));
+        Sectors.push_back(vec2(-4, 0));
+        Sectors.push_back(vec2(-4, 1));
+        Sectors.push_back(vec2(-4, 2));
+        Sectors.push_back(vec2(-4, 3));
         break;
     case 4:
         //tourch
 
-        rectP = vec2(-0.7f, 0);
+        furnPos = vec2(-0.7f, 0);
         sca = vec3(0.07f, 0.2f, 0.07f);
         rot = vec3(0.0f);
 
-        type1 = 3;
+        ColorTexture = 23;
 
-        cnt.push_back(vec2(-3, 0));
+        Sectors.push_back(vec2(-3, 0));
 
         break;
     case 5:
         //chair
 
-        rectP = vec2(-1, 0);
+        furnPos = vec2(-1, 0);
         sca = vec3(0.11f, 0.15f, 0.11f);
         rot = vec3(0.0f, -3.1415f / 2.0f, 0.0f);
 
-        type1 = 4;
+        ColorTexture = 24;
 
-        cnt.push_back(vec2(-4, 0));
+        Sectors.push_back(vec2(-4, 0));
         break;
     case -2:
         //chest
 
-        rectP = vec2(0, 0);
+        furnPos = vec2(0, 0);
         sca = vec3(0.13f, 0.07f, 0.07f);
         rot = vec3(0.0f);
 
-        type1 = 7;
+        ColorTexture = 13;
 
-        cnt.push_back(vec2(0, 0));
+        Sectors.push_back(vec2(0, 0));
         break;
     case 7:
         //big bed
 
-        rectP = vec2(-1, -1);
+        furnPos = vec2(-1, -1);
         sca = vec3(0.18f, 0.09f, 0.4f);
         rot = vec3(0.0f, 3.1415f, 0.0f);
-        type1 = 2;
+        ColorTexture = 16;
 
-        cnt.push_back(vec2(-4, -4));
-        cnt.push_back(vec2(-3, -4));
-        cnt.push_back(vec2(-4, -3));
-        cnt.push_back(vec2(-3, -3));
-        cnt.push_back(vec2(-4, -2));
-        cnt.push_back(vec2(-3, -2));
-        cnt.push_back(vec2(-4, -1));
-        cnt.push_back(vec2(-3, -1));
+        Sectors.push_back(vec2(-4, -4));
+        Sectors.push_back(vec2(-3, -4));
+        Sectors.push_back(vec2(-4, -3));
+        Sectors.push_back(vec2(-3, -3));
+        Sectors.push_back(vec2(-4, -2));
+        Sectors.push_back(vec2(-3, -2));
+        Sectors.push_back(vec2(-4, -1));
+        Sectors.push_back(vec2(-3, -1));
 
 
         break;
     case 8:
         //small bed
 
-        rectP = vec2(-1, 0);
+        furnPos = vec2(-1, 0);
         sca = vec3(0.12f, 0.07f, 0.25f);
         rot = vec3(0.0f, -3.1415f / 2.0f, 0.0f);
-        type1 = 2;
+        ColorTexture = 16;
 
-        cnt.push_back(vec2(-4, 0));
-        cnt.push_back(vec2(-3, 0));
-        cnt.push_back(vec2(-2, 0));
+        Sectors.push_back(vec2(-4, 0));
+        Sectors.push_back(vec2(-3, 0));
+        Sectors.push_back(vec2(-2, 0));
         break;
     default:
        
         break;
     }
-    for (int j = 0; j < cnt.size(); j++)
+
+    for (int j = 0; j < Sectors.size(); j++)
     {
-        cnt[j] = vec2(cnt[j].x * cos((3.1415f / 2.0f) * k) + cnt[j].y * sin((3.1415f / 2.0f) * k),
-            -cnt[j].x * sin((3.1415f / 2.0f) * k) + cnt[j].y * cos((3.1415f / 2.0f) * k));
-        if ((*grid)[(int)round(cnt[j].x + 4)][ (int)round(cnt[j].y + 4)] == 1) (*grid)[(int)round(cnt[j].x + 4)][ (int)round(cnt[j].y + 4)] = 3;
-        else (*grid)[(int)round(cnt[j].x + 4)][ (int)round(cnt[j].y + 4)] = 2;
-    }
-    
-    {
-        rectP = vec2(rectP.x * cos((3.1415f / 2.0f) * k) + rectP.y * sin((3.1415f / 2.0f) * k),
-            -rectP.x * sin((3.1415f / 2.0f) * k) + rectP.y * cos((3.1415f / 2.0f) * k));
-        rot.y += (3.1415f / 2.0f) * k;
+        // rotates the sector
+        Sectors[j] = vec2(Sectors[j].x * cos((3.1415f / 2.0f) * orientation) + Sectors[j].y * sin((3.1415f / 2.0f) * orientation),
+            -Sectors[j].x * sin((3.1415f / 2.0f) * orientation) + Sectors[j].y * cos((3.1415f / 2.0f) * orientation));
+
+        // fills the space
+        if ((*grid)[(int)round(Sectors[j].x + 4)][ (int)round(Sectors[j].y + 4)] == 1) (*grid)[(int)round(Sectors[j].x + 4)][ (int)round(Sectors[j].y + 4)] = 3;
+        else (*grid)[(int)round(Sectors[j].x + 4)][ (int)round(Sectors[j].y + 4)] = 2;
     }
 
+    // rotates the object
+    furnPos = vec2(furnPos.x * cos((3.1415f / 2.0f) * orientation) + furnPos.y * sin((3.1415f / 2.0f) * orientation),
+        -furnPos.x * sin((3.1415f / 2.0f) * orientation) + furnPos.y * cos((3.1415f / 2.0f) * orientation));
+
+    rot.y += (3.1415f / 2.0f) * orientation;
+    // scales the object
     sca *= size * thk;
+    // the distance that must be shifted to be within the cell
     vec2 width = vec2(
         max(abs(rott(vec2(-1, 1) * vec2(sca.x, sca.z) ,rot.y).x), abs(rott(vec2(-1, -1) * vec2(sca.x, sca.z), rot.y).x)),
         max(abs(rott(vec2(-1, -1) * vec2(sca.x, sca.z),rot.y).y), abs(rott(vec2(1, -1) * vec2(sca.x, sca.z), rot.y).y))) +  vec2(size * 0.02f, size * 0.02f);
-    vec2 rtP = (vec2(size * thk) - width) * rectP;
-    pos = vec3(rtP.x,sca.y, rtP.y) + ps;
-    
+    furnPos = (vec2(size * thk) - width) * furnPos;
+    pos = vec3(furnPos.x,sca.y, furnPos.y) + ps;
 
+    // initialises the object that will be dislpayed on screen
+    obj = SpObj(pos,rot,sca, initCubeBuffer({ 0,1,2,3,4,5, 6,7,8 }),ColorTexture,NormalTexture);
+    obj.textOff2 = glm::vec4(0.0f, 0.0f, 5.0f, 5.0f);
 }
 
-bool Furniture::canFit(int i, int k, int(*grid)[9][9]) {
+bool Furniture::canFit(int type, int orientation, int(*grid)[9][9]) {
 
-    std::vector<vec2> cnt;
-    switch (i)
+    std::vector<vec2> Sectors;
+    switch (type)
     {
     case 0:
         //table
-        cnt.push_back(vec2(-4, -4));
-        cnt.push_back(vec2(-3, -4));
-        cnt.push_back(vec2(-2, -4));
+        Sectors.push_back(vec2(-4, -4));
+        Sectors.push_back(vec2(-3, -4));
+        Sectors.push_back(vec2(-2, -4));
 
-        cnt.push_back(vec2(-4, -3));
-        cnt.push_back(vec2(-3, -3));
-        cnt.push_back(vec2(-2, -3));
+        Sectors.push_back(vec2(-4, -3));
+        Sectors.push_back(vec2(-3, -3));
+        Sectors.push_back(vec2(-2, -3));
 
-        cnt.push_back(vec2(-4, -2));
-        cnt.push_back(vec2(-3, -2));
-        cnt.push_back(vec2(-2, -2));
+        Sectors.push_back(vec2(-4, -2));
+        Sectors.push_back(vec2(-3, -2));
+        Sectors.push_back(vec2(-2, -2));
         break;
     case 1:
         //pillar
-        cnt.push_back(vec2(0, 0));
-        cnt.push_back(vec2(-1, 0));
-        cnt.push_back(vec2(0, -1));
-        cnt.push_back(vec2(1, 0));
-        cnt.push_back(vec2(0, 1));
+        Sectors.push_back(vec2(0, 0));
+        Sectors.push_back(vec2(-1, 0));
+        Sectors.push_back(vec2(0, -1));
+        Sectors.push_back(vec2(1, 0));
+        Sectors.push_back(vec2(0, 1));
         break;
     case 2:
         //turned bookshelf
-        cnt.push_back(vec2(-4, -1));
-        cnt.push_back(vec2(-3, -2));
-        cnt.push_back(vec2(-2, -3));
-        cnt.push_back(vec2(-1, -4));
-        cnt.push_back(vec2(-2, -4));
-        cnt.push_back(vec2(-3, -3));
-        cnt.push_back(vec2(-4, -2));
+        Sectors.push_back(vec2(-4, -1));
+        Sectors.push_back(vec2(-3, -2));
+        Sectors.push_back(vec2(-2, -3));
+        Sectors.push_back(vec2(-1, -4));
+        Sectors.push_back(vec2(-2, -4));
+        Sectors.push_back(vec2(-3, -3));
+        Sectors.push_back(vec2(-4, -2));
         break;
     case 3:
         //straight bookshelf
-        cnt.push_back(vec2(-4, -3));
-        cnt.push_back(vec2(-4, -2));
-        cnt.push_back(vec2(-4, -1));
-        cnt.push_back(vec2(-4, 0));
-        cnt.push_back(vec2(-4, 1));
-        cnt.push_back(vec2(-4, 2));
-        cnt.push_back(vec2(-4, 3));
+        Sectors.push_back(vec2(-4, -3));
+        Sectors.push_back(vec2(-4, -2));
+        Sectors.push_back(vec2(-4, -1));
+        Sectors.push_back(vec2(-4, 0));
+        Sectors.push_back(vec2(-4, 1));
+        Sectors.push_back(vec2(-4, 2));
+        Sectors.push_back(vec2(-4, 3));
         break;
     case 4:
         //tourch
 
-        cnt.push_back(vec2(-3, 0));
+        Sectors.push_back(vec2(-3, 0));
 
         break;
     case 5:
         //chair
 
-        cnt.push_back(vec2(-4, 0));
+        Sectors.push_back(vec2(-4, 0));
         break;
     case -2:
         //chest
 
-        cnt.push_back(vec2(0, 0));
+        Sectors.push_back(vec2(0, 0));
         break;
     case 7:
         //big bed
 
-        cnt.push_back(vec2(-4, -4));
-        cnt.push_back(vec2(-3, -4));
-        cnt.push_back(vec2(-4, -3));
-        cnt.push_back(vec2(-3, -3));
-        cnt.push_back(vec2(-4, -2));
-        cnt.push_back(vec2(-3, -2));
-        cnt.push_back(vec2(-4, -1));
-        cnt.push_back(vec2(-3, -1));
+        Sectors.push_back(vec2(-4, -4));
+        Sectors.push_back(vec2(-3, -4));
+        Sectors.push_back(vec2(-4, -3));
+        Sectors.push_back(vec2(-3, -3));
+        Sectors.push_back(vec2(-4, -2));
+        Sectors.push_back(vec2(-3, -2));
+        Sectors.push_back(vec2(-4, -1));
+        Sectors.push_back(vec2(-3, -1));
 
         break;
     case 8:
         //small bed
-        cnt.push_back(vec2(-4, 0));
-        cnt.push_back(vec2(-3, 0));
-        cnt.push_back(vec2(-2, 0));
+        Sectors.push_back(vec2(-4, 0));
+        Sectors.push_back(vec2(-3, 0));
+        Sectors.push_back(vec2(-2, 0));
         break;
     default:
         return false;
@@ -341,12 +352,15 @@ bool Furniture::canFit(int i, int k, int(*grid)[9][9]) {
         break;
     }
     bool fit = true;
-    for (int j = 0; j < cnt.size(); j++)
+    for (int j = 0; j < Sectors.size(); j++)
     {
-        cnt[j] = vec2(cnt[j].x * cos((3.1415f / 2.0f) * k) + cnt[j].y * sin((3.1415f / 2.0f) * k),
-            -cnt[j].x * sin((3.1415f / 2.0f) * k) + cnt[j].y * cos((3.1415f / 2.0f) * k));
-        if ((*grid)[(int)round(cnt[j].x + 4)][ (int)round(cnt[j].y + 4)] >= 1)
+        // rotates the sector
+        Sectors[j] = vec2(Sectors[j].x * cos((3.1415f / 2.0f) * orientation) + Sectors[j].y * sin((3.1415f / 2.0f) * orientation),
+            -Sectors[j].x * sin((3.1415f / 2.0f) * orientation) + Sectors[j].y * cos((3.1415f / 2.0f) * orientation));
+
+        if ((*grid)[(int)round(Sectors[j].x + 4)][ (int)round(Sectors[j].y + 4)] >= 1)
         {
+            // the space is taken
             fit = false;
             break;
         }

@@ -16,6 +16,9 @@ public:
     float Size;
 
     virtual ~Landmark() {}
+    Landmark(vec2 P, float S);
+    Landmark();
+    static void set(std::vector<Landmark*>* marks,float min, float max);
 };
 
 
@@ -48,12 +51,12 @@ public:
     int x;
     int y;
     bool treasure = false;
-    bool conected = false;
+    bool connected = false;
     std::vector<Cell*> Conectablednodes;
-    std::vector<Cell*> Conectednodes;
+    std::vector<Cell*> Connectednodes;
     std::vector<Furniture> fur;
     std::vector<int> sides;
-    bool sidesi[4] = {false,false,false,false};
+    bool sidesIsPath[4] = {false,false,false,false};
     glm::vec2 pnt(int i,float thk);
     void conect(Cell* sender);
     void set();
@@ -71,10 +74,8 @@ public:
     Maze(std::vector<Light>* ligh, int c);
     std::vector<glm::vec2> makeLines(int tp,int  sd,int  p0,int  p1,int  p2,int  p3,bool  swch,float thin);
     bool collide(glm::vec3* poss, glm::vec3* accc, glm::vec2 leway);
-    void drawMap(int programInfo);
     std::vector<Cell> nodes;
     std::vector<Landmark*> Camps;
-    InsObj furn;
     float size;
     int count;
     float thk;
@@ -82,9 +83,8 @@ public:
     BufferGroup MapBuffers;
     SpObj obj;
     SpObj obj2;
-    void draw(int programInfo);
     float project(float x, float y, int side, Furniture f);
-    CellGrid* doThing(int CurentN[3], int px, int py, std::vector<CellGrid*>* nodesToSearch);
+    CellGrid* adjacentCellGrid(int CurentN[3], int px, int py, std::vector<CellGrid*>* nodesToSearch);
     GLuint VAO;
     std::vector<CellGrid*> getpath(int sx, int sy, int start, int ex, int ey, int end);
 };
@@ -101,9 +101,9 @@ public:
 
 class EnCamp : public Landmark{
 public:
-    std::vector<vec2> cages;
+    std::vector<Landmark*> cages;
     EnCamp(vec2 pos, float size);
 };
 
 
-bool comp(CellGrid* a, CellGrid* b);
+bool order(CellGrid* a, CellGrid* b);

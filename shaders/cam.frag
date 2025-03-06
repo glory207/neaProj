@@ -88,6 +88,7 @@ void main() {
          difVal += floor((max(dot(normalize(texture(NormT, texPos).xyz)*2, vec3(-1,0.5,0)), 0.0) * 6.0))/6.0; 
          difVal += floor((max(dot(normalize(texture(NormT, texPos).xyz)*2, vec3(0,0.5,-1)), 0.0) * 6.0))/6.0; 
          difVal += floor((max(dot(normalize(texture(NormT, texPos).xyz)*2, vec3(0,0.5,1)), 0.0) * 6.0))/6.0; 
+         difVal += 0.5f; 
          color = texture(ColT, texPos).xyz * brightness * floor((difVal * 3.0))/3.0;
           fragColor = vec4(color,1.0);
         if(texture(PosT, texPos).y == -1.0){
@@ -102,7 +103,7 @@ void main() {
           
      vec3 color = texture(ColT, texPos).xyz * getLight(lightPos,texture(PosT, texPos).xyz+camPos,normalize(texture(NormT, texPos).xyz) * 1.5f,normalize(texture(NormFT, texPos).xyz),uSamplerS,rotcam)
       * normalize(lightCol);
-     // * vec3(1.0,0.8,0.6);
+
        
         
         fragColor = vec4(color,1.0);

@@ -37,5 +37,10 @@ void PlayerClass::draw(float time, int shader) {
 		(int)(inp->dir.x) % 8,
 		1.0 / inp->animation[2],
 		1.0 / 8.0);
+	obj.textOff2 = vec4(
+		(int)(inp->animation[4]) % ((int)(inp->animation[2]) - 1),
+		(int)(inp->dir.x) % 8,
+		1.0 / inp->animation[2],
+		1.0 / 8.0);
 	obj.draw(shader);
 }

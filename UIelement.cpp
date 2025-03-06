@@ -227,7 +227,7 @@ UImenue::UImenue() {
 	UIDIV* graphicsBox = new UIDIV(vec2(0.375, 0), vec2(0.575f, 0.9), vec4(vec3(0.6), 1.0f), vec4(1.0f));
 	UIDIV* dificultyBox = new UIDIV(vec2(0.375, 0), vec2(0.575f, 0.9), vec4(vec3(0.6), 1.0f), vec4(1.0f));
 	UIslider* brightnessSlider = new UIslider(vec2(0, 0.75), vec2(0.9, 0.2), vec4(vec3(0.9), 1.0f), vec4(1.0f), "brightness", 0.2);
-	UIslider* resSlider = new UIslider(vec2(0, 0.3), vec2(0.9, 0.2), vec4(vec3(0.9), 1.0f), vec4(1.0f), "resolution", 1.0);
+	UIslider* resSlider = new UIslider(vec2(0, 0.3), vec2(0.9, 0.2), vec4(vec3(0.9), 1.0f), vec4(1.0f), "resolution", 0.8);
 	UItoggler* framelockToggl = new UItoggler(vec2(0, -0.05), vec2(0.9, 0.1), vec4(vec3(0.9), 1.0f), vec4(1.0f), "unlimited frames  ",false);
 	settingsBox->children.push_back(settingsBar);
 	settingsBar->children.push_back(graphicsButton);

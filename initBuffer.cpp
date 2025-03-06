@@ -2,18 +2,17 @@
 #include <iostream>
 
 
-BufferGroup initBuffers2(std::vector<glm::vec2> pointss) {
+BufferGroup initMaze2DBuffers(std::vector<glm::vec2> points) {
 
     std::vector<float> positions;
     std::vector<int> indices;
-    float size = 2;
-    for (int i = 0; i < pointss.size() -1; i += 1) {
+    // sepperates the point out into xyz components and stores them into a buffer
+    for (int i = 0; i < points.size(); i += 1) {
         
-        positions.push_back(pointss[i].y); 
-        positions.push_back(pointss[i].x); 
+        positions.push_back(points[i].y); 
+        positions.push_back(points[i].x); 
         positions.push_back(0.0f); 
-
-
+        // The maze is drawn with lines not triangles so the order can be sequencial 
         indices.push_back((i));
     }
 
@@ -28,80 +27,44 @@ BufferGroup initBuffers2(std::vector<glm::vec2> pointss) {
 
 
 
-BufferGroup initBuffers(std::vector<glm::vec2> pointss) {
+BufferGroup initMazeBuffers(std::vector<glm::vec2> points) {
     std::vector<float> positions;
     std::vector<float> texturePos;
     std::vector<int> indices;
     float size = 0.5f;
-    for (int i = 0; i < pointss.size() - 2; i += 2) {
-        float dis = glm::sqrt(glm::pow(pointss[i].x - pointss[i + 1].x, 2.0f) + glm::pow(pointss[i].y - pointss[i + 1].y, 2.0f));
+    for (int i = 0; i < points.size() - 2; i += 2) {
+        // using distance dis the scale of textures wont be warped by the vairing wall sizes
+        float dis = glm::sqrt(glm::pow(points[i].x - points[i + 1].x, 2.0f) + glm::pow(points[i].y - points[i + 1].y, 2.0f));
 
-        glm::vec3 edge0 = glm::vec3(
-            pointss[i + 1].x - pointss[i].x,
-            0.0f,
-            pointss[i + 1].y - pointss[i].y
-        );
-        glm::vec3 edge1 = glm::vec3(
-            0.0f,
-            size,
-            0.0f
-        );
-        // start
+        // takes two points then extrudes them upwards to form a wall
 
-
-
-        glm::vec2 UV0 = glm::vec2(
-            dis,
-            0.0f
-        );
-
-        glm::vec2 UV1 = glm::vec2(
-            0.0f,
-            -size
-        );
-        float invDet = 1.0 / (UV0.x * UV1.y - UV0.y * UV1.x);
-        glm::vec3 tan = glm::vec3(
-            invDet * (UV1.y * edge0.x + UV0.y * edge1.x),
-            invDet * (UV1.y * edge0.y + UV0.y * edge1.y),
-            invDet * (UV1.y * edge0.z + UV0.y * edge1.z)
-        );
-        glm::vec3 bitan = glm::vec3(
-            invDet * (-UV1.x * edge0.x + UV0.x * edge1.x),
-            invDet * (-UV1.x * edge0.y + UV0.x * edge1.y),
-            invDet * (-UV1.x * edge0.z + UV0.x * edge1.z)
-        );
-        edge0 = glm::cross(edge1, edge0);
-        
-
-
-
-        positions.push_back(pointss[i + 1].x);
+        positions.push_back(points[i + 1].x);
         positions.push_back(0);
-        positions.push_back(pointss[i + 1].y);
+        positions.push_back(points[i + 1].y);
         texturePos.push_back(dis);
         texturePos.push_back(size);
 
-        positions.push_back(pointss[i].x);
+        positions.push_back(points[i].x);
         positions.push_back(0);
-        positions.push_back(pointss[i].y);
+        positions.push_back(points[i].y);
         texturePos.push_back(0);
         texturePos.push_back(size);
 
 
-        positions.push_back(pointss[i].x);
+        positions.push_back(points[i].x);
         positions.push_back(size);
-        positions.push_back(pointss[i].y);
+        positions.push_back(points[i].y);
         texturePos.push_back(0);
         texturePos.push_back(0);
 
-        positions.push_back(pointss[i + 1].x);
+        positions.push_back(points[i + 1].x);
         positions.push_back(size);
-        positions.push_back(pointss[i + 1].y);
+        positions.push_back(points[i + 1].y);
         texturePos.push_back(dis);
         texturePos.push_back(0);
 
 
-
+        // splits the 4 vertexes of the wall into two triangles
 
         indices.push_back((i * 2) + 1);
         indices.push_back((i * 2));
@@ -115,69 +78,37 @@ BufferGroup initBuffers(std::vector<glm::vec2> pointss) {
 
     {
 
-        int i = ((pointss.size() - 4) * 2) + 4;
-        float dis = (pointss[pointss.size() - 1].x - pointss[pointss.size() - 2].x);
+        int i = ((points.size() - 4) * 2) + 4;
+        // using distance dis the scale of textures wont be warped by the vairing floor and ceiling sizes
+        float dis = (points[points.size() - 1].x - points[points.size() - 2].x);
 
-
-        glm::vec3 edge0 = glm::vec3(
-            pointss[pointss.size() - 2].x - pointss[pointss.size() - 1].x,
-            0,
-            pointss[pointss.size() - 1].y - pointss[pointss.size() - 1].y
-        );
-
-        glm::vec3 edge1 = glm::vec3(
-            pointss[pointss.size() - 2].x - pointss[pointss.size() - 1].x,
-            0,
-            pointss[pointss.size() - 2].y - pointss[pointss.size() - 1].y
-        );
-
-        glm::vec2 UV0 = glm::vec2(
-            dis - 0,
-            0
-        );
-
-        glm::vec2 UV1 = glm::vec2(
-            dis - 0,
-            dis - 0
-        );
-        float invDet = 1.0f / (UV0.x * UV1.y - UV0.y * UV1.x);
-        glm::vec3 tan = glm::vec3(
-            invDet * (UV1.y * edge0.x + UV0.y * edge1.x),
-            invDet * (UV1.y * edge0.y + UV0.y * edge1.y),
-            invDet * (UV1.y * edge0.z + UV0.y * edge1.z)
-        );
-        glm::vec3 bitan = glm::vec3(
-            invDet * (-UV1.y * edge0.x + UV0.x * edge1.x),
-            invDet * (-UV1.y * edge0.y + UV0.x * edge1.y),
-            invDet * (-UV1.y * edge0.z + UV0.x * edge1.z)
-        );
-
-        positions.push_back(pointss[pointss.size() - 1].x);
+        // using the 2 corners of the map the floor is created
+        positions.push_back(points[points.size() - 1].x);
         positions.push_back(0);
-        positions.push_back(pointss[pointss.size() - 1].y);
+        positions.push_back(points[points.size() - 1].y);
         texturePos.push_back(0);
         texturePos.push_back(0);
 
 
 
-        positions.push_back(pointss[pointss.size() - 2].x);
+        positions.push_back(points[points.size() - 2].x);
         positions.push_back(0);
-        positions.push_back(pointss[pointss.size() - 1].y);
+        positions.push_back(points[points.size() - 1].y);
         texturePos.push_back(dis);
         texturePos.push_back(0);
 
-        positions.push_back(pointss[pointss.size() - 2].x);
+        positions.push_back(points[points.size() - 2].x);
         positions.push_back(0);
-        positions.push_back(pointss[pointss.size() - 2].y);
+        positions.push_back(points[points.size() - 2].y);
         texturePos.push_back(dis);
         texturePos.push_back(dis);
 
-        positions.push_back(pointss[pointss.size() - 1].x);
+        positions.push_back(points[points.size() - 1].x);
         positions.push_back(0);
-        positions.push_back(pointss[pointss.size() - 2].y);
+        positions.push_back(points[points.size() - 2].y);
         texturePos.push_back(0);
         texturePos.push_back(dis);
-
+        // splits the 4 vertexes of the floor into two triangles
         indices.push_back(i);
         indices.push_back(i + 1);
         indices.push_back(i + 2);
@@ -190,33 +121,34 @@ BufferGroup initBuffers(std::vector<glm::vec2> pointss) {
 
         i += 4;
 
+        // using the 2 corners of the map the ceiling is created
 
-        positions.push_back(pointss[pointss.size() - 1].x);
+        positions.push_back(points[points.size() - 1].x);
         positions.push_back(size);
-        positions.push_back(pointss[pointss.size() - 1].y);
+        positions.push_back(points[points.size() - 1].y);
         texturePos.push_back(0);
         texturePos.push_back(0);
 
 
 
-        positions.push_back(pointss[pointss.size() - 2].x);
+        positions.push_back(points[points.size() - 2].x);
         positions.push_back(size);
-        positions.push_back(pointss[pointss.size() - 1].y);
+        positions.push_back(points[points.size() - 1].y);
         texturePos.push_back(dis);
         texturePos.push_back(0);
 
-        positions.push_back(pointss[pointss.size() - 2].x);
+        positions.push_back(points[points.size() - 2].x);
         positions.push_back(size);
-        positions.push_back(pointss[pointss.size() - 2].y);
+        positions.push_back(points[points.size() - 2].y);
         texturePos.push_back(dis);
         texturePos.push_back(dis);
 
-        positions.push_back(pointss[pointss.size() - 1].x);
+        positions.push_back(points[points.size() - 1].x);
         positions.push_back(size);
-        positions.push_back(pointss[pointss.size() - 2].y);
+        positions.push_back(points[points.size() - 2].y);
         texturePos.push_back(0);
         texturePos.push_back(dis);
-
+        // splits the 4 vertexes of the ceiling into two triangles
       indices.push_back(i + 1);
       indices.push_back(i);
       indices.push_back(i + 2);
@@ -237,29 +169,30 @@ BufferGroup initBuffers(std::vector<glm::vec2> pointss) {
 }
 
 
-int initB(std::vector<float> pointss) {
-
+int initB(std::vector<float> points) {
+    // creates space in memory for a buffer fills it then returns a pointer to it 
     unsigned int B;
     glGenBuffers(1, &B);
     glBindBuffer(GL_ARRAY_BUFFER, B);
-    glBufferData(GL_ARRAY_BUFFER, pointss.size() * sizeof(float), pointss.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, points.size() * sizeof(float), points.data(), GL_STATIC_DRAW);
     return B;
 }
 
-int initI(std::vector<glm::mat4> pointss) {
-
+int initI(std::vector<glm::mat4> points) {
+    // creates space in memory for a buffer fills it then returns a pointer to it 
     unsigned int B;
     glGenBuffers(1, &B);
     glBindBuffer(GL_ARRAY_BUFFER, B);
-    glBufferData(GL_ARRAY_BUFFER, pointss.size() * sizeof(glm::mat4), pointss.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, points.size() * sizeof(glm::mat4), points.data(), GL_STATIC_DRAW);
     return B;
 }
 
-int initE(std::vector<int> pointss) {
+int initE(std::vector<int> points) {
+    // creates space in memory for a buffer fills it then returns a pointer to it 
     unsigned int B;
     glGenBuffers(1, &B);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, B);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, pointss.size() * sizeof(int), pointss.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, points.size() * sizeof(int), points.data(), GL_STATIC_DRAW);
     return B;
 }
 
@@ -272,6 +205,7 @@ BufferGroup::BufferGroup(GLuint positions, GLuint texturePos, GLuint indices, GL
 }
 
 
+// the vertex data of a cube
 
 float positionsCube[12][12] = {
     {// Front face 0
@@ -286,18 +220,18 @@ float positionsCube[12][12] = {
         1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0,
     },{// Left face 5
         -1.0, -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0,
-    },{// Z face L 8
+    },{// Z face L 6
         -1.0, -1.0, 0.0, 1.0, -1.0, 0.0, 1.0, 1.0, 0.0, -1.0, 1.0, 0.0,
-    },{// X face F 6
+    },{// X face F 7
         0.0, -1.0, -1.0, 0.0, 1.0, -1.0, 0.0, 1.0, 1.0, 0.0, -1.0, 1.0,
-    },{// Y face T 7
+    },{// Y face T 8
         -1.0, 0.0, -1.0, -1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, -1.0,
 
-    },{// Z face L 8
+    },{// X face full 9
         -1.0, -1.0, 0.0, 1.0, -1.0, 0.0, 1.0, 1.0, 0.0, -1.0, 1.0, 0.0,
-    },{// X face F 6
+    },{// Y face full 10
         0.0, -1.0, -1.0, 0.0, 1.0, -1.0, 0.0, 1.0, 1.0, 0.0, -1.0, 1.0,
-    },{// Y face T 7
+    },{// Z face full 11
         -1.0, 0.0, -1.0, -1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, -1.0,
 
     } };
@@ -305,62 +239,45 @@ float positionsCube[12][12] = {
 float textureCoordinatesCube[12][8] = { 
     { // Front
         0.375, 0.75, 0.375, 1, 0.625, 1, 0.625, 0.75,
-    }, 
-    {// Back
+    },{// Back
         0.375, 0.5, 0.625, 0.5, 0.625, 0.25, 0.375, 0.25,
-    }, 
-    {// Top
+    },{// Top
         0.625, 0.5, 0.875, 0.5, 0.875, 0.25, 0.625, 0.25,
-    }, 
-    {// Bottom
+    },{// Bottom
         0.125, 0.25, 0.125, 0.5, 0.375, 0.5, 0.375, 0.25,
-    }, 
-    {// Right
+    },{// Right
         0.375, 0.25, 0.625, 0.25, 0.625, 0, 0.375, 0,
-    }, 
-    {// Left
+    },{// Left
 
         0.375, 0.5, 0.375, 0.75, 0.625, 0.75, 0.625, 0.5,
-    }, 
-    {// Front da
+    }, {// X face
         0.0, 0.75, 0.0, 0.5, 0.25, 0.5,0.25, 0.75,
-    }, 
-    {// Front da
+    }, {// Y face
         0.75, 0.75, 1.0, 0.75, 1.0, 1.0, 0.75, 1.0,
-    }, 
-    {// Front da
+    },{// Z face
          0.25, 1.0, 0.25, 0.75,  0.0, 0.75,0.0, 1.0,
-    }, 
-    {// Front da
+    },{// X face full
         1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
-        // 0.0, 0.75, 0.0, 0.5, 0.25, 0.5,0.25, 0.75,
-    }, 
-    {// Front da
+    },{// Y face full
         1.0, 1.0, 1.0, 0.0,0.0, 0.0,0.0, 1.0,
-        //0.75, 0.75, 1.0, 0.75, 1.0, 1.0, 0.75, 1.0,
-    }, 
-    {// Front da
+    },{// Z face full
          1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
-         // 0.25, 1.0, 0.25, 0.75,  0.0, 0.75,0.0, 1.0,
     }
-    //, 
-    //{// Full
-    //    1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
-    //}  1.0, 1.0, 0.75, 1.0, 0.75, 0.75, 1.0, 0.75,
 };
 
 
 BufferGroup initCubeBuffer(std::vector<int> i) {
-
-    BufferGroup bg = BufferGroup(initPositionBuffer2(i), initTextureBuffer(i), initIndexBuffer2(i), i.size() * 6);
+    // creates a buffer group
+    BufferGroup bg = BufferGroup(initPositionBuffer(i), initTextureBuffer(i), initIndexBuffer(i), i.size() * 6);
 
     return bg;
 }
 
-GLuint initIndexBuffer2(std::vector<int> i) {
+GLuint initIndexBuffer(std::vector<int> i) {
 
     std::vector<int> indices;
     for (int j = 0; j < i.size(); j++) {
+        // the 4 vertexes of a side 0-3 must be split into two triangles 
         std::vector<int> v2 = {
             1 + (4 * j),
             0 + (4 * j),
@@ -372,34 +289,34 @@ GLuint initIndexBuffer2(std::vector<int> i) {
             0 + (4 * j),
 
         };
+        // They get added to the list of triangles
         indices.insert(indices.end(), v2.begin(), v2.end());
     }
 
     return initE(indices);
 
 }
-GLuint initPositionBuffer2(std::vector<int> i) {
+GLuint initPositionBuffer(std::vector<int> i) {
 
-
+    // adds the selected sides
     std::vector<float> positions;
     for (int j = 0; j < i.size(); j++) {
         for (int k = 0; k < 12; k++) {
             positions.push_back(positionsCube[i[j]][k]);
         }
     }
-    
-
 
     return initB(positions);
 }
 GLuint initTextureBuffer(std::vector<int> i) {
+
+    // adds the selected sides
     std::vector<float> textureCoordinates;
     for (int j = 0; j < i.size(); j++) {
         for (int k = 0; k < 8; k++) {
             textureCoordinates.push_back(textureCoordinatesCube[i[j]][k]);
         }
     }
-
 
     return initB(textureCoordinates);
 }
