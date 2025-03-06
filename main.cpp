@@ -187,10 +187,8 @@ int main()
 
     GLuint lyrs[6] = { 0,0,0,0,0,0 };
     unsigned int shaderProgram = initShader("shaders/def.vert", "shaders/def.geom", "shaders/def.frag");
-    unsigned int shaderInstaceProgram = initShader("shaders/defInst.vert", "shaders/defInst.geom", "shaders/defInst.frag");
     unsigned int shaderLightProgram = initShader("shaders/def.vert", "shaders/def.geom", "shaders/light.frag");
     unsigned int shaderShadowProgram = initShader("shaders/shadow.vert", "shaders/shadow.geom", "shaders/shadow.frag");
-    unsigned int shaderInstaceShadowProgram = initShader("shaders/shadowInst.vert", "shaders/shadowInst.geom", "shaders/shadowInst.frag");
     unsigned int shaderMazeProgram = initShader("shaders/maze.vert", "shaders/maze.geom", "shaders/maze.frag"); 
     unsigned int ShaderPost = initShader("shaders/cam.vert", "shaders/camPost.frag"); 
     unsigned int ShaderUI = initShader("shaders/cam.vert", "shaders/UI.frag"); 
@@ -360,7 +358,7 @@ int main()
                         }
                         glUniform3f(glGetUniformLocation(shaderShadowProgram, "lpos"), tourch.pos.x, tourch.pos.y, tourch.pos.z);
                         player.draw(curTime, shaderShadowProgram);
-                        mz.draw(shaderShadowProgram);
+                        mz.obj.draw(shaderShadowProgram);
                         for (int j = 0; j < rdi * rdi; j++)
                         {
                             if (playerIndex + (j % rdi) - (rdi / 2) + (j / rdi - (rdi / 2)) * mz.count >= 0 &&
@@ -419,7 +417,7 @@ int main()
                         }
                         glUniform3f(glGetUniformLocation(shaderShadowProgram, "lpos"), ligh[t].pos.x, ligh[t].pos.y, ligh[t].pos.z);
                         if (ligh[t].active2 || UTime == t % 50) {
-                            mz.draw(shaderShadowProgram);
+                            mz.obj.draw(shaderShadowProgram);
 
                             for (int j = 0; j < rdi * rdi; j++)
                             {
@@ -457,7 +455,7 @@ int main()
                 glUniform3f(glGetUniformLocation(shaderProgram, "camPos"), cam.pos.x, cam.pos.y, cam.pos.z);
                 glEnable(GL_CULL_FACE);
                 glCullFace(GL_FRONT);
-                mz.draw(shaderProgram);
+                mz.obj.draw(shaderProgram);
                 glDisable(GL_CULL_FACE);
 
                 player.draw(curTime, shaderProgram);

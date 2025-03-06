@@ -64,7 +64,7 @@
   
       if(ConeAngle == 0) difVal2 *= 0.0;  
       else  difVal = difVal2;
-        float asd = 3.0;
+        float asd = 4.0;
         if(difVal < 0.05) return 0;
         difVal = floor((difVal * asd))/asd;
 
@@ -83,13 +83,8 @@ void main() {
     if(light == 1){
         
             vec3 color;
-         float difVal = 0; 
-         difVal += floor((max(dot(normalize(texture(NormT, texPos).xyz)*2, vec3(1,0.5,0)), 0.0) * 6.0))/6.0; 
-         difVal += floor((max(dot(normalize(texture(NormT, texPos).xyz)*2, vec3(-1,0.5,0)), 0.0) * 6.0))/6.0; 
-         difVal += floor((max(dot(normalize(texture(NormT, texPos).xyz)*2, vec3(0,0.5,-1)), 0.0) * 6.0))/6.0; 
-         difVal += floor((max(dot(normalize(texture(NormT, texPos).xyz)*2, vec3(0,0.5,1)), 0.0) * 6.0))/6.0; 
-         difVal += 0.5f; 
-         color = texture(ColT, texPos).xyz * brightness * floor((difVal * 3.0))/3.0;
+         float difVal = 5.0f; 
+         color = texture(ColT, texPos).xyz * brightness * difVal;
           fragColor = vec4(color,1.0);
         if(texture(PosT, texPos).y == -1.0){
             fragColor = vec4((texture(ColT, texPos).xyz)*4,1.0);

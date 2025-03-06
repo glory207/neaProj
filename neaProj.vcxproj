@@ -362,9 +362,6 @@
     <None Include="shaders\def.frag" />
     <None Include="shaders\def.geom" />
     <None Include="shaders\def.vert" />
-    <None Include="shaders\defInst.frag" />
-    <None Include="shaders\defInst.geom" />
-    <None Include="shaders\defInst.vert" />
     <None Include="shaders\light.frag" />
     <None Include="shaders\map.vert" />
     <None Include="shaders\maze.frag" />

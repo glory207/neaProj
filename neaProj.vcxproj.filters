@@ -680,7 +680,6 @@
     <None Include="shaders\def.frag" />
     <None Include="shaders\def.geom" />
     <None Include="shaders\def.vert" />
-    <None Include="shaders\defInst.vert" />
     <None Include="shaders\light.frag" />
     <None Include="shaders\map.vert" />
     <None Include="shaders\maze.frag" />
@@ -1025,8 +1024,6 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="shaders\cam.frag" />
-    <None Include="shaders\defInst.frag" />
-    <None Include="shaders\defInst.geom" />
     <None Include="shaders\shadowInst.frag" />
     <None Include="shaders\shadowInst.geom" />
     <None Include="shaders\UI.frag" />

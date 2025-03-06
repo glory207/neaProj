@@ -18,7 +18,7 @@ Enemy::Enemy() {}
 Enemy::Enemy(vec3 pos, vec3 rot) {
 	this->pos = pos;
 	this->rot = rot;
-	obj = SpObj(pos, rot, vec3(0.3), initCubeBuffer({ 9 }), 28,29);
+	obj = SpObj(pos, rot, vec3(0.3), initCubeBuffer({ 9 }), 1,6);
 
 	random_device rd;  // Seed generator
 	mt19937 gen(rd()); // Mersenne Twister engine
@@ -71,14 +71,14 @@ void Enemy::update(float deltaTime,vec3 cam,Maze* mz, queue<PathFind*>* pathfq) 
 	if (dirr != NULL) dir = dirr;
 	else dir = 0;
 	obj.textOff = vec4(
-		(int)(frame) % 14,
+		(int)(frame) % 10,
 		(int)(dir) % 8,
-		1.0 / 14.0,
+		1.0 / 10.0,
 		1.0 / 8.0);
 	obj.textOff2 = vec4(
-		(int)(frame) % 14,
+		(int)(frame) % 10,
 		(int)(dir) % 8,
-		1.0 / 14.0,
+		1.0 / 10.0,
 		1.0 / 8.0);
 	obj.rot.y = rot.y;
 }

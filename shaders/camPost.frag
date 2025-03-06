@@ -9,7 +9,7 @@
       
 void main() {
    float dist = length(texture(PosT,texPos).xyz);
-   float dst = 2.0;
+   float dst = 3.0;
    if(dist > dst)fragColor = vec4(mix(vec3(0.0),texture(ColT,texPos).xyz,pow(2.0,-pow((dst -dist)/2.0,2.0))),1.0);
    else fragColor = vec4(texture(ColT,texPos).xyz,1);
 
