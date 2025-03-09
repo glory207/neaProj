@@ -42,7 +42,7 @@ public:
 	std::vector<glm::vec3> up;
 	
 	int size;
-	void bind(bool clear, int i, GLuint depthTex);
+	void bind(bool clear, GLuint depthTex);
 	createShadowFramebufferCube(int sz);
 	createShadowFramebufferCube();
 };

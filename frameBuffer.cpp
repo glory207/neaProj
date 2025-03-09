@@ -191,7 +191,7 @@ createShadowFramebufferCube::createShadowFramebufferCube(int sz) {
 
 
 }
-void createShadowFramebufferCube::bind(bool clear,int i, GLuint depthTex) {
+void createShadowFramebufferCube::bind(bool clear, GLuint depthTex) {
 
 
 

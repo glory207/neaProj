@@ -14,20 +14,7 @@ SpObj::SpObj(glm::vec3 poss,glm::vec3 rott,glm::vec3 scaa, BufferGroup buffers, 
     text1 = texture(img1);
     text2 = texture(img2);
 
-    // vertex atrribute object combines the buffers to be sent to the GPU
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, buffer.positions);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, buffer.texturePos);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(1);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer.indices);
     
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
 }
 SpObj::SpObj() {
     // the transformation data of an object
@@ -63,7 +50,7 @@ void SpObj::draw(int programInfo){
     glBindTexture(GL_TEXTURE_2D, text2);
     glUniform1i(glGetUniformLocation(programInfo, "uSampler2"), 1);
 
-    glBindVertexArray(VAO);
+    glBindVertexArray(buffer.VAO);
     // draws the object to the current frame buffer
     glDrawElements(GL_TRIANGLES,buffer.length,GL_UNSIGNED_INT, 0);
     

@@ -12,9 +12,10 @@ public:
         GLuint texturePos,
         GLuint indices,
         GLuint length);
-    GLuint positions;
-    GLuint texturePos;
-    GLuint indices;
+    BufferGroup(GLuint positions,
+        GLuint indices,
+        GLuint length);
+    GLuint VAO;
     GLuint length;
 };
 

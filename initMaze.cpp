@@ -14,7 +14,7 @@ glm::mat4 Matrix(vec3 pos,vec3 sca, vec3 rot) {
     return modelViewMatrix;
 }
 Maze::Maze() {}
-Maze::Maze(std::vector<Light>* ligh, int c){
+Maze::Maze(int c){
     // Define the random number generator and distribution
     std::random_device rd;  // Seed generator
     std::mt19937 gen(rd()); // Mersenne Twister engine
@@ -190,7 +190,7 @@ Maze::Maze(std::vector<Light>* ligh, int c){
                {
                    Light l = Light(vec3(ref.obj.pos.x, ref.obj.pos.y + ref.obj.sca.y, ref.obj.pos.z));
                    l.perch = vec2(i, nodes[i].fur.size()-1);
-                   (*ligh).push_back(l);
+                   nodes[i].ligh.push_back(l);
                }
                
             }
@@ -244,18 +244,6 @@ Maze::Maze(std::vector<Light>* ligh, int c){
     thk = 0.45f;
 
     MapBuffers = initMaze2DBuffers(lst1);
-    // as the map is simpler the extras that come with objects is unnecessary
-    // just the Buffer is needed
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, MapBuffers.positions);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, MapBuffers.indices);
-
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
 }
 std::vector<glm::vec2> Maze::makeLines(int tp,int  sd,int  p0,int  p1,int  p2,int  p3,bool  swch,float thin){
       std::vector<glm::vec2> lst;
@@ -366,27 +354,23 @@ bool Maze::collide(glm::vec3* pos, glm::vec3* acc, glm::vec2 leway) {
     {
         // if the object is within the walls move it out
         if (!nodes[nd].sidesIsPath[0] && (int)((*pos).z + 0.5f) - (*pos).z < -(thk + leway.x)) {
-            // console.log((int)((*pos).x+0.5) -(*pos).x , (int)((*pos).x+0.5) - (*pos).x);
             (*pos).z += (thk + leway.x) + (int)((*pos).z +0.5f) - (*pos).z;
             (*acc).z *= -1;
             //std::cout << "00" << std::endl;
         }
         if (!nodes[nd].sidesIsPath[1] && (int)((*pos).z +0.5f) - (*pos).z > (thk + leway.x)) {
-            // console.log((int)((*pos).x+0.5) -(*pos).x , (int)((*pos).x+0.5) - (*pos).x);
             (*pos).z += (int)((*pos).z +0.5f) - (*pos).z - (thk + leway.x);
             (*acc).z *= -1;
             //std::cout << "01" << std::endl;
         }
 
         if (!nodes[nd].sidesIsPath[2] && (int)((*pos).x +0.5f) - (*pos).x > (thk + leway.x)) {
-            //console.log((int)((*pos).x+0.5) -(*pos).x , (int)((*pos).x+0.5) - (*pos).x);
             (*pos).x += (int)((*pos).x +0.5f) - (*pos).x - (thk + leway.x);
             (*acc).x *= -1;
 
             //std::cout << "02" << std::endl;
         }
         if (!nodes[nd].sidesIsPath[3] && (int)((*pos).x +0.5f) - (*pos).x < -(thk + leway.x)) {
-            // console.log((int)((*pos).x+0.5) -(*pos).x , (int)((*pos).x+0.5) - (*pos).x);
             (*pos).x += (int)((*pos).x +0.5f) - (*pos).x + (thk + leway.x);
             (*acc).x *= -1;
             //std::cout << "03" << std::endl;
@@ -540,7 +524,6 @@ bool Maze::collide(glm::vec3* pos, glm::vec3* acc, glm::vec2 leway) {
                 else
                 if (abs(firstDist) > abs(secondDist))
                 {
-                    // w = v - 2 * (v ∙ n) * n
                     vec3 acct = vec3((*acc).x - 2 * ((*acc).x * (sin(f.obj.rot.y)) + (*acc).z * (cos(f.obj.rot.y))) * (sin(f.obj.rot.y)),
                         (*acc).y,
                         (*acc).z - 2 * ((*acc).x * (sin(f.obj.rot.y)) + (*acc).z * (cos(f.obj.rot.y))) * (cos(f.obj.rot.y))

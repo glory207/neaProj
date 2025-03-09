@@ -40,7 +40,7 @@
         
         if(shadow < 0.5) return 0;
         
-
+        
 
 
 
@@ -86,17 +86,14 @@ void main() {
          float difVal = 5.0f; 
          color = texture(ColT, texPos).xyz * brightness * difVal;
           fragColor = vec4(color,1.0);
-        if(texture(PosT, texPos).y == -1.0){
+        if(texture(PosT, texPos).xyz == vec3(-1.0)){
             fragColor = vec4((texture(ColT, texPos).xyz)*4,1.0);
         }
     }
     else if(light == 0 ){
-    if(texture(PosT, texPos).y == -1.0){
-
-    }
-        else{
-          
+    if(texture(PosT, texPos).xyz != vec3(-1.0)){
      vec3 color = texture(ColT, texPos).xyz * getLight(lightPos,texture(PosT, texPos).xyz+camPos,normalize(texture(NormT, texPos).xyz) * 1.5f,normalize(texture(NormFT, texPos).xyz),uSamplerS,rotcam)
+     //vec3 color = texture(ColT, texPos).xyz * getLight(lightPos,texture(PosT, texPos).xyz,normalize(texture(NormT, texPos).xyz) * 1.5f,normalize(texture(NormFT, texPos).xyz),uSamplerS,rotcam)
       * normalize(lightCol);
 
        

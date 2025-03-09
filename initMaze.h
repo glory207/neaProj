@@ -54,6 +54,7 @@ public:
     bool connected = false;
     std::vector<Cell*> Conectablednodes;
     std::vector<Cell*> Connectednodes;
+    std::vector<Light> ligh;
     std::vector<Furniture> fur;
     std::vector<int> sides;
     bool sidesIsPath[4] = {false,false,false,false};
@@ -71,7 +72,7 @@ class Maze
 {
 public:
     Maze();
-    Maze(std::vector<Light>* ligh, int c);
+    Maze(int c);
     std::vector<glm::vec2> makeLines(int tp,int  sd,int  p0,int  p1,int  p2,int  p3,bool  swch,float thin);
     bool collide(glm::vec3* poss, glm::vec3* accc, glm::vec2 leway);
     std::vector<Cell> nodes;
@@ -85,7 +86,6 @@ public:
     SpObj obj2;
     float project(float x, float y, int side, Furniture f);
     CellGrid* adjacentCellGrid(int CurentN[3], int px, int py, std::vector<CellGrid*>* nodesToSearch);
-    GLuint VAO;
     std::vector<CellGrid*> getpath(int sx, int sy, int start, int ex, int ey, int end);
 };
 

@@ -20,7 +20,8 @@ layout (location = 3) out vec4 gNormF;
       
       vec3 normal = tbn * ((texture(uSampler2, pos2.xy ).xyz * 2.0) - vec3(1));
       fragColor = vec4(texture(uSampler1, pos.xy ).xyz,1.0);
-      gPos = vec4(po-camPos,1.0);
+      gPos = vec4((po-camPos),1.0);
+      //gPos = vec4((po/10.0f),1.0);
       gNorm = vec4(normal,1.0);
        gNormF =  vec4(norm,1.0);
       }

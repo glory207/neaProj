@@ -16,23 +16,20 @@ BufferGroup initMaze2DBuffers(std::vector<glm::vec2> points) {
         indices.push_back((i));
     }
 
-    BufferGroup bg;
+    BufferGroup bg = BufferGroup(initB(positions), initE(indices), indices.size());
 
-
-    bg.positions = initB(positions);
-    bg.indices = initE(indices);
-    bg.length = indices.size();
     return  bg;
 }
-
 
 
 BufferGroup initMazeBuffers(std::vector<glm::vec2> points) {
     std::vector<float> positions;
     std::vector<float> texturePos;
     std::vector<int> indices;
+    // the scale of a rooms height
     float size = 0.5f;
     for (int i = 0; i < points.size() - 2; i += 2) {
+
         // using distance dis the scale of textures wont be warped by the vairing wall sizes
         float dis = glm::sqrt(glm::pow(points[i].x - points[i + 1].x, 2.0f) + glm::pow(points[i].y - points[i + 1].y, 2.0f));
 
@@ -75,6 +72,7 @@ BufferGroup initMazeBuffers(std::vector<glm::vec2> points) {
         indices.push_back((i * 2) );
 
     }
+
 
     {
 
@@ -121,6 +119,7 @@ BufferGroup initMazeBuffers(std::vector<glm::vec2> points) {
 
         i += 4;
 
+        return BufferGroup(initB(positions), initB(texturePos), initE(indices), indices.size());
         // using the 2 corners of the map the ceiling is created
 
         positions.push_back(points[points.size() - 1].x);
@@ -158,14 +157,8 @@ BufferGroup initMazeBuffers(std::vector<glm::vec2> points) {
       indices.push_back(i);
     }
 
-    BufferGroup bg;
+    return BufferGroup(initB(positions), initB(texturePos), initE(indices), indices.size());
 
-
-    bg.positions = initB(positions);
-    bg.texturePos = initB(texturePos);
-    bg.indices = initE(indices);
-    bg.length = indices.size();
-    return  bg;
 }
 
 
@@ -175,15 +168,6 @@ int initB(std::vector<float> points) {
     glGenBuffers(1, &B);
     glBindBuffer(GL_ARRAY_BUFFER, B);
     glBufferData(GL_ARRAY_BUFFER, points.size() * sizeof(float), points.data(), GL_STATIC_DRAW);
-    return B;
-}
-
-int initI(std::vector<glm::mat4> points) {
-    // creates space in memory for a buffer fills it then returns a pointer to it 
-    unsigned int B;
-    glGenBuffers(1, &B);
-    glBindBuffer(GL_ARRAY_BUFFER, B);
-    glBufferData(GL_ARRAY_BUFFER, points.size() * sizeof(glm::mat4), points.data(), GL_STATIC_DRAW);
     return B;
 }
 
@@ -197,10 +181,38 @@ int initE(std::vector<int> points) {
 }
 
 BufferGroup::BufferGroup() {};
+BufferGroup::BufferGroup(GLuint positions, GLuint indices, GLuint length) {
+
+    // vertex atrribute object combines the buffers to be sent to the GPU
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, positions);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indices);
+
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+    this->length = length;
+}
 BufferGroup::BufferGroup(GLuint positions, GLuint texturePos, GLuint indices, GLuint length) {
-    this->positions = positions;
-    this->texturePos = texturePos;
-    this->indices = indices;
+
+    // vertex atrribute object combines the buffers to be sent to the GPU
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, positions);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, texturePos);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indices);
+
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
     this->length = length;
 }
 
@@ -266,17 +278,15 @@ float textureCoordinatesCube[12][8] = {
 };
 
 
-BufferGroup initCubeBuffer(std::vector<int> i) {
+BufferGroup initCubeBuffer(std::vector<int> sides) {
     // creates a buffer group
-    BufferGroup bg = BufferGroup(initPositionBuffer(i), initTextureBuffer(i), initIndexBuffer(i), i.size() * 6);
-
-    return bg;
+    return BufferGroup(initPositionBuffer(sides), initTextureBuffer(sides), initIndexBuffer(sides), sides.size() * 6);
 }
 
-GLuint initIndexBuffer(std::vector<int> i) {
+GLuint initIndexBuffer(std::vector<int> sides) {
 
     std::vector<int> indices;
-    for (int j = 0; j < i.size(); j++) {
+    for (int j = 0; j < sides.size(); j++) {
         // the 4 vertexes of a side 0-3 must be split into two triangles 
         std::vector<int> v2 = {
             1 + (4 * j),
@@ -294,27 +304,29 @@ GLuint initIndexBuffer(std::vector<int> i) {
     }
 
     return initE(indices);
-
 }
-GLuint initPositionBuffer(std::vector<int> i) {
+
+GLuint initPositionBuffer(std::vector<int> sides) {
 
     // adds the selected sides
     std::vector<float> positions;
-    for (int j = 0; j < i.size(); j++) {
+    for (int j = 0; j < sides.size(); j++) {
+        // the x y and z positions of the 4 corners of a face
         for (int k = 0; k < 12; k++) {
-            positions.push_back(positionsCube[i[j]][k]);
+            positions.push_back(positionsCube[ sides[j] ] [ k]);
         }
     }
 
     return initB(positions);
 }
-GLuint initTextureBuffer(std::vector<int> i) {
+GLuint initTextureBuffer(std::vector<int> sides) {
 
     // adds the selected sides
     std::vector<float> textureCoordinates;
-    for (int j = 0; j < i.size(); j++) {
+    for (int j = 0; j < sides.size(); j++) {
+            // the x and y texture positions of the 4 corners of a face
         for (int k = 0; k < 8; k++) {
-            textureCoordinates.push_back(textureCoordinatesCube[i[j]][k]);
+            textureCoordinates.push_back(textureCoordinatesCube[ sides[j] ][k]);
         }
     }
 

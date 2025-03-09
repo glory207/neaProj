@@ -24,7 +24,6 @@ unsigned int SCR_HEIGHT = 900;
 unsigned int OFF_WIDTH = 0;
 unsigned int OFF_HEIGHT = 0;
 camera cam;
-vector<Light> ligh;
 Light tourch;
 PlayerClass player;
 PathFind pathf;
@@ -56,7 +55,7 @@ GLFWwindow* window;
 
 
 
-int main2()
+int main()
 {
 #pragma region Start
 
@@ -90,10 +89,195 @@ int main2()
 #pragma region Update
   
     glfwSwapInterval(1);
-    
+    cam = camera(vec3(0,3.1,0), vec3(-0.2f,-2.356,0));
+    mz = Maze(10);
+    unsigned int shaderProgram = initShader("shaders/def.vert", "shaders/def.geom", "shaders/def.frag");
+    unsigned int shaderShadowProgram = initShader("shaders/shadow.vert", "shaders/shadow.geom", "shaders/shadow.frag");
+    createShadowFramebufferCube shBF = createShadowFramebufferCube(500);
+    float time = 0;
     while (!glfwWindowShouldClose(window))
     {
-       
+        time += 0.003f;
+        cam.pos.x = sin(time) * 10.0f + 10;
+        cam.pos.z = cos(time) * 10.0f + 10;
+        cam.rot.y = time;/*
+                    if (mz.nodes[curIndex].ligh[tt].active2) 
+                    else
+                    {
+                        glBindTexture(GL_TEXTURE_CUBE_MAP, mz.nodes[curIndex].ligh[tt].depthTexPre);
+                        for (GLuint face = 0; face < 6; ++face) {
+                            glCopyImageSubData(mz.nodes[curIndex].ligh[tt].depthTexPre, GL_TEXTURE_CUBE_MAP, 0, 0, 0, face,
+                                mz.nodes[curIndex].ligh[tt].depthTex, GL_TEXTURE_CUBE_MAP, 0, 0, 0, face,
+                                mz.nodes[curIndex].ligh[tt].size, mz.nodes[curIndex].ligh[tt].size, 1);
+                        }
+                        shBF.bind(false, mz.nodes[curIndex].ligh[tt].depthTex);
+
+                    mz.nodes[curIndex].ligh[tt].activate(true);
+                    }*/
+
+        glViewport(0, 0, 500, 500);
+        glUseProgram(shaderShadowProgram);
+        for (int curIndex = 0; curIndex < mz.nodes.size(); curIndex++)
+        {
+                for (int tt = 0; tt < mz.nodes[curIndex].ligh.size(); tt++) {
+                    // binds the frambufer that gets the closest position of objects from the lights perspective
+                    shBF.bind(true, mz.nodes[curIndex].ligh[tt].depthTexPre);
+                    std::string ii[6];
+                    glm::mat4 matr4[6];
+                    for (int i = 0; i < 6; i++)
+                    {
+                        // gets the matrix that translates obgects into screen space
+                        // there are 6 for each direction (up down left right)
+                        float fov = (0.5f * 3.14159265358979323846f);
+                        float zNear = 0.01f;
+                        float zFar = 100.0f;
+                        glm::mat4 projectionMatrix; 
+                        glm::mat4 view; 
+                        projectionMatrix = glm::perspective(fov, 1.0f, zNear, zFar); 
+                        view = glm::lookAt(mz.nodes[curIndex].ligh[tt].pos, mz.nodes[curIndex].ligh[tt].pos + shBF.target[i], shBF.up[i]); 
+                        view = projectionMatrix * view; 
+                        matr4[i] = view; 
+                        ii[i] = "uProjectionMatrix[" + std::to_string(i) + "]";
+                        // binds the matrix to the GPU
+                        glUniformMatrix4fv(glGetUniformLocation(shaderShadowProgram, ii[i].c_str()), 1, GL_FALSE, glm::value_ptr(matr4[i]));
+                    }
+                    glUniform3f(glGetUniformLocation(shaderShadowProgram, "lpos"), mz.nodes[curIndex].ligh[tt].pos.x, mz.nodes[curIndex].ligh[tt].pos.y, mz.nodes[curIndex].ligh[tt].pos.z);
+                    // draws the objects to the lights framebuffer
+                    mz.obj.draw(shaderShadowProgram);
+
+                    for (int i = 0; i < mz.nodes.size(); i++)
+                    {
+                        for (int j = 0; j < mz.nodes[i].fur.size(); j++)
+                        {
+                            mz.nodes[i].fur[j].obj.draw(shaderShadowProgram);
+                        }
+                    }
+                    
+                }
+            
+
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        cam.GFB.bind(true);
+        glUseProgram(shaderProgram);
+        mat4 ma = cam.matrix(float(SCR_WIDTH) / float(SCR_HEIGHT));
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "uProjectionMatrix"), 1, GL_FALSE, glm::value_ptr(ma)); 
+        glUniform3f(glGetUniformLocation(shaderProgram, "camPos"), cam.pos.x, cam.pos.y, cam.pos.z); 
+        mz.obj.draw(shaderProgram); 
+        for (int i = 0; i < mz.nodes.size(); i++)
+        {
+            for (int j = 0; j < mz.nodes[i].fur.size(); j++)
+            {
+                mz.nodes[i].fur[j].obj.draw(shaderProgram);
+            }
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        cam.FB.bind(true);
+        
+        // the lights need to be blended ontop of each other to
+        // combine their brightnes
+        glEnable(GL_BLEND); 
+        glDepthFunc(GL_LEQUAL); 
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendEquation(GL_FUNC_ADD);
+        glBlendFunc(GL_ONE, GL_ONE);
+
+
+        // binds all the information nedded to calculate lights and shadows
+        glUseProgram(cam.shader);
+        glUniform4f(glGetUniformLocation(cam.shader, "textureMatrix"), 0, 0, 1, 1);
+        glUniform3f(glGetUniformLocation(cam.shader, "camPos"), cam.pos.x, cam.pos.y, cam.pos.z);
+        glUniform1i(glGetUniformLocation(cam.shader, "light"), 0);
+        glUniform1i(glGetUniformLocation(cam.shader, "uSamplerS"), 4);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, cam.GFB.ColTex);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, cam.GFB.PosTex);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, cam.GFB.NomTex);
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, cam.GFB.NomFTex);
+
+        for (int curIndex = 0; curIndex < mz.nodes.size(); curIndex++)
+        {
+            for (int tt = 0; tt < mz.nodes[curIndex].ligh.size(); tt++) {
+                // the data specific for a light
+                glUniformMatrix4fv(glGetUniformLocation(cam.shader, "rotcam"), 1, GL_FALSE, value_ptr(cam.rotationMatrix));
+
+                glActiveTexture(GL_TEXTURE4);
+                glBindTexture(GL_TEXTURE_CUBE_MAP, mz.nodes[curIndex].ligh[tt].depthTexPre);
+
+                // the angle  
+                glUniform1f(glGetUniformLocation(cam.shader, "ConeAngle"), 0);
+
+                glUniform3f(glGetUniformLocation(cam.shader, "lightPos"), mz.nodes[curIndex].ligh[tt].pos.x, mz.nodes[curIndex].ligh[tt].pos.y, mz.nodes[curIndex].ligh[tt].pos.z);
+                glUniform3f(glGetUniformLocation(cam.shader, "lightCol"), mz.nodes[curIndex].ligh[tt].col.x, mz.nodes[curIndex].ligh[tt].col.y, mz.nodes[curIndex].ligh[tt].col.z);
+
+                // the range and brightness of the light
+                glUniform2f(glGetUniformLocation(cam.shader, "LightSetings"), LightSetings.x, LightSetings.y);
+
+
+                cam.draw(cam.shader);
+
+            }
+            
+        }
+
+        // adds ambient light for when there are no lights in the scene
+        glUniform1i(glGetUniformLocation(cam.shader, "light"), 1);
+        glUniform1f(glGetUniformLocation(cam.shader, "brightness"), 0.4 * 0.05);
+        cam.draw(cam.shader);
+        glDisable(GL_BLEND);
+
+
+
+
+
+
+
+
+
+
+
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glClearColor(0,0,1,1);
+        glEnable(GL_DEPTH_TEST);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        glViewport(OFF_WIDTH, OFF_HEIGHT, SCR_WIDTH, SCR_HEIGHT);
+        glUseProgram(cam.ScreenShader);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, cam.FB.ColTex);
+        glUniform4f(glGetUniformLocation(cam.ScreenShader, "textureMatrix"), 0,0,1,1);
+        cam.drawScreen();
+        
 
         glfwPollEvents();
         glfwSwapBuffers(window);
@@ -155,7 +339,7 @@ void foo(int Z)
 }
 
 
-int main()
+int main2()
 {
     #pragma region Start
 
@@ -213,7 +397,7 @@ int main()
     } 
     
     
-    mz = Maze(&ligh,c);  
+    mz = Maze(c);  
     cam = camera(glm::vec3(0.0f, 0.2f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f)); 
     
     player = PlayerClass(vec3(0.0f, 0.0f, 0.5f), vec3(0.0f, -3.1415 / 2.0f, 0.0f));
@@ -330,7 +514,7 @@ int main()
 
                 glViewport(0, 0, 500, 500);
 
-                if (UTime > 10) UTime = 0;
+                if (UTime > 11) UTime = 0;
                 float cpt = 0.1f;
                 if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
                 {
@@ -338,7 +522,7 @@ int main()
                     if (length(tourch.pos - cam.pos) < 7.0f) {
 
                         tourch.activate(true);
-                        shBF.bind(true, 0, tourch.depthTex);
+                        shBF.bind(true,tourch.depthTex);
                         glUseProgram(shaderShadowProgram);
                         std::string ii[6];
                         glm::mat4 matr4[6];
@@ -378,73 +562,71 @@ int main()
 
                 }
 
+                for (int t = 0; t < rdi * rdi; t++)
+                {
+                    if (playerIndex + (t % rdi) - (rdi / 2) + (t / rdi - (rdi / 2)) * mz.count >= 0 &&
+                        playerIndex + (t % rdi) - (rdi / 2) + (t / rdi - (rdi / 2)) * mz.count < mz.nodes.size()) {
+                        int curIndex = playerIndex + (t % rdi) - (rdi / 2) + (t / rdi - (rdi / 2)) * mz.count;
+                        for (int tt = 0; tt < mz.nodes[curIndex].ligh.size(); tt++) {
 
 
-                for (int t = 0; t < ligh.size(); t++) {
+                            mz.nodes[curIndex].ligh[tt].activate(true);
 
-                    if (length(ligh[t].pos - cam.pos) < 7.0f) {
-
-                        ligh[t].activate(true);
-
-                        if (ligh[t].active2 || UTime == t % 10) shBF.bind(true, 0, ligh[t].depthTexPre);
-                        else
-                        {
-                            glBindTexture(GL_TEXTURE_CUBE_MAP, ligh[t].depthTexPre);
-                            for (GLuint face = 0; face < 6; ++face) {
-                                glCopyImageSubData(ligh[t].depthTexPre, GL_TEXTURE_CUBE_MAP, 0, 0, 0, face,
-                                    ligh[t].depthTex, GL_TEXTURE_CUBE_MAP, 0, 0, 0, face,
-                                    ligh[t].size, ligh[t].size, 1);
-                            }
-                            shBF.bind(false, 0, ligh[t].depthTex);
-
-                        }
-                        glUseProgram(shaderShadowProgram);
-                        std::string ii[6];
-                        glm::mat4 matr4[6];
-                        for (int i = 0; i < 6; i++)
-                        {
-                            float fov = (0.5f * 3.14159265358979323846f);
-                            float zNear = 0.01f;
-                            float zFar = 100.0f;
-                            glm::mat4 projectionMatrix;
-                            glm::mat4 view;
-                            projectionMatrix = glm::perspective(fov, 1.0f, zNear, zFar);
-                            view = glm::lookAt(ligh[t].pos, ligh[t].pos + shBF.target[i], shBF.up[i]);
-                            view = projectionMatrix * view;
-                            matr4[i] = view;
-                            ii[i] = "uProjectionMatrix[" + std::to_string(i) + "]";
-                            glUniformMatrix4fv(glGetUniformLocation(shaderShadowProgram, ii[i].c_str()), 1, GL_FALSE, glm::value_ptr(matr4[i]));
-                        }
-                        glUniform3f(glGetUniformLocation(shaderShadowProgram, "lpos"), ligh[t].pos.x, ligh[t].pos.y, ligh[t].pos.z);
-                        if (ligh[t].active2 || UTime == t % 50) {
-                            mz.obj.draw(shaderShadowProgram);
-
-                            for (int j = 0; j < rdi * rdi; j++)
+                            if (mz.nodes[curIndex].ligh[tt].active2) shBF.bind(true, mz.nodes[curIndex].ligh[tt].depthTexPre);
+                            else
                             {
-                                if (playerIndex + (j % rdi) - (rdi / 2) + (j / rdi - (rdi / 2)) * mz.count >= 0 &&
-                                    playerIndex + (j % rdi) - (rdi / 2) + (j / rdi - (rdi / 2)) * mz.count < mz.nodes.size()) {
-                                    for (Furniture furn : mz.nodes[playerIndex + (j % rdi) - (rdi / 2) + (j / rdi - (rdi / 2)) * mz.count].fur) {
-                                        furn.obj.draw(shaderShadowProgram);
-                                    }
+                                glBindTexture(GL_TEXTURE_CUBE_MAP, mz.nodes[curIndex].ligh[tt].depthTexPre);
+                                for (GLuint face = 0; face < 6; ++face) {
+                                    glCopyImageSubData(mz.nodes[curIndex].ligh[tt].depthTexPre, GL_TEXTURE_CUBE_MAP, 0, 0, 0, face,
+                                        mz.nodes[curIndex].ligh[tt].depthTex, GL_TEXTURE_CUBE_MAP, 0, 0, 0, face,
+                                        mz.nodes[curIndex].ligh[tt].size, mz.nodes[curIndex].ligh[tt].size, 1);
                                 }
+                                shBF.bind(false,mz.nodes[curIndex].ligh[tt].depthTex);
 
                             }
-                        }
-                        else
-                        {
-                            player.draw(curTime, shaderShadowProgram);
-                            for (int i = 0; i < enmi.size(); i++)if(distance(player.inp->pos,enmi[i].pos)<7.0) enmi[i].draw(deltaTime, shaderShadowProgram);
+                            glUseProgram(shaderShadowProgram);
+                            std::string ii[6];
+                            glm::mat4 matr4[6];
+                            for (int i = 0; i < 6; i++)
+                            {
+                                float fov = (0.5f * 3.14159265358979323846f);
+                                float zNear = 0.01f;
+                                float zFar = 100.0f;
+                                glm::mat4 projectionMatrix;
+                                glm::mat4 view;
+                                projectionMatrix = glm::perspective(fov, 1.0f, zNear, zFar);
+                                view = glm::lookAt(mz.nodes[curIndex].ligh[tt].pos, mz.nodes[curIndex].ligh[tt].pos + shBF.target[i], shBF.up[i]);
+                                view = projectionMatrix * view;
+                                matr4[i] = view;
+                                ii[i] = "uProjectionMatrix[" + std::to_string(i) + "]";
+                                glUniformMatrix4fv(glGetUniformLocation(shaderShadowProgram, ii[i].c_str()), 1, GL_FALSE, glm::value_ptr(matr4[i]));
+                            }
+                            glUniform3f(glGetUniformLocation(shaderShadowProgram, "lpos"), mz.nodes[curIndex].ligh[tt].pos.x, mz.nodes[curIndex].ligh[tt].pos.y, mz.nodes[curIndex].ligh[tt].pos.z);
+                            if (mz.nodes[curIndex].ligh[tt].active2) {
+                                mz.obj.draw(shaderShadowProgram);
+
+                                for (int j = 0; j < rdi * rdi; j++)
+                                {
+                                    if (playerIndex + (j % rdi) - (rdi / 2) + (j / rdi - (rdi / 2)) * mz.count >= 0 &&
+                                        playerIndex + (j % rdi) - (rdi / 2) + (j / rdi - (rdi / 2)) * mz.count < mz.nodes.size()) {
+                                        for (Furniture furn : mz.nodes[playerIndex + (j % rdi) - (rdi / 2) + (j / rdi - (rdi / 2)) * mz.count].fur) {
+                                        if(distance(furn.obj.pos, mz.nodes[curIndex].ligh[tt].pos)<2)
+                                            furn.obj.draw(shaderShadowProgram);
+                                        }
+                                    }
+
+                                }
+                            }
+                            else
+                            {
+                                player.draw(curTime, shaderShadowProgram);
+                                for (int i = 0; i < enmi.size(); i++)if (distance(player.inp->pos, enmi[i].pos) < 7.0) enmi[i].draw(deltaTime, shaderShadowProgram);
+                            }
                         }
                     }
-                    else {
-                        ligh[t].activate(false);
-
-
-                       
-                    }
-
 
                 }
+
 
                 UTime += deltaTime;
                 // cout << std::to_string(nb1) << " " << std::to_string(nb2) << " " << std::to_string(nb3) << endl;
@@ -474,17 +656,22 @@ int main()
 
                 glUseProgram(shaderLightProgram);
                 glUniformMatrix4fv(glGetUniformLocation(shaderLightProgram, "uProjectionMatrix"), 1, GL_FALSE, glm::value_ptr(ma));
-                for (int t = 0; t < ligh.size(); t++) {
-                    if (ligh[t].active)
-                    {
-                        glUniform3f(glGetUniformLocation(shaderLightProgram, "color"), ligh[t].col.x, ligh[t].col.y, ligh[t].col.z);
-                        glUniform1f(glGetUniformLocation(shaderLightProgram, "tim"), (int)(curTime * 10));
-                        ligh[t].obj.rot.y = atan2(ligh[t].obj.pos.x - cam.pos.x, ligh[t].obj.pos.z - cam.pos.z);
-                        ligh[t].obj.draw(shaderLightProgram);
+
+
+                for (int t = 0; t < rdi * rdi; t++)
+                {
+                    if (playerIndex + (t % rdi) - (rdi / 2) + (t / rdi - (rdi / 2)) * mz.count >= 0 &&
+                        playerIndex + (t % rdi) - (rdi / 2) + (t / rdi - (rdi / 2)) * mz.count < mz.nodes.size()) {
+                        int curIndex = playerIndex + (t % rdi) - (rdi / 2) + (t / rdi - (rdi / 2)) * mz.count;
+                        for (int tt = 0; tt < mz.nodes[curIndex].ligh.size(); tt++) {
+                            glUniform3f(glGetUniformLocation(shaderLightProgram, "color"), mz.nodes[curIndex].ligh[tt].col.x, mz.nodes[curIndex].ligh[tt].col.y, mz.nodes[curIndex].ligh[tt].col.z);
+                            glUniform1f(glGetUniformLocation(shaderLightProgram, "tim"), (int)(curTime * 10));
+                            mz.nodes[curIndex].ligh[tt].obj.rot.y = atan2(mz.nodes[curIndex].ligh[tt].obj.pos.x - cam.pos.x, mz.nodes[curIndex].ligh[tt].obj.pos.z - cam.pos.z);
+                            mz.nodes[curIndex].ligh[tt].obj.draw(shaderLightProgram);
+                        }
                     }
                 }
-                    
-                
+
 
                 cam.FB.bind(true);
 
@@ -533,26 +720,29 @@ int main()
 
 
                 }
-                for (int t = 0; t < ligh.size(); t++) {
-
-                    if (ligh[t].active)
-                    {
-                        glUniformMatrix4fv(glGetUniformLocation(cam.shader, "rotcam"), 1, GL_FALSE, value_ptr(cam.rotationMatrix));
-
-                        glActiveTexture(GL_TEXTURE4);
-                        glBindTexture(GL_TEXTURE_CUBE_MAP, ligh[t].depthTex);
-
-                        glUniform1f(glGetUniformLocation(cam.shader, "ConeAngle"), 0);
-                        glUniform3f(glGetUniformLocation(cam.shader, "lightPos"), ligh[t].pos.x, ligh[t].pos.y, ligh[t].pos.z);
-                        glUniform3f(glGetUniformLocation(cam.shader, "lightCol"), ligh[t].col.x, ligh[t].col.y, ligh[t].col.z);
-                        glUniform2f(glGetUniformLocation(cam.shader, "LightSetings"), LightSetings.x + sin(curTime) * 0.1f, LightSetings.y);
 
 
-                        cam.draw(cam.shader);
+                for (int t = 0; t < rdi * rdi; t++)
+                {
+                    if (playerIndex + (t % rdi) - (rdi / 2) + (t / rdi - (rdi / 2)) * mz.count >= 0 &&
+                        playerIndex + (t % rdi) - (rdi / 2) + (t / rdi - (rdi / 2)) * mz.count < mz.nodes.size()) {
+                        int curIndex = playerIndex + (t % rdi) - (rdi / 2) + (t / rdi - (rdi / 2)) * mz.count;
+                        for (int tt = 0; tt < mz.nodes[curIndex].ligh.size(); tt++) {
+                            glUniformMatrix4fv(glGetUniformLocation(cam.shader, "rotcam"), 1, GL_FALSE, value_ptr(cam.rotationMatrix));
 
+                            glActiveTexture(GL_TEXTURE4);
+                            glBindTexture(GL_TEXTURE_CUBE_MAP, mz.nodes[curIndex].ligh[tt].depthTex);
+
+                            glUniform1f(glGetUniformLocation(cam.shader, "ConeAngle"), 0);
+                            glUniform3f(glGetUniformLocation(cam.shader, "lightPos"), mz.nodes[curIndex].ligh[tt].pos.x, mz.nodes[curIndex].ligh[tt].pos.y, mz.nodes[curIndex].ligh[tt].pos.z);
+                            glUniform3f(glGetUniformLocation(cam.shader, "lightCol"), mz.nodes[curIndex].ligh[tt].col.x, mz.nodes[curIndex].ligh[tt].col.y, mz.nodes[curIndex].ligh[tt].col.z);
+                            glUniform2f(glGetUniformLocation(cam.shader, "LightSetings"), LightSetings.x + sin(curTime) * 0.1f, LightSetings.y);
+
+
+                            cam.draw(cam.shader);
+
+                        }
                     }
-
-
                 }
 
 
@@ -581,7 +771,7 @@ int main()
                 glUniform3f(glGetUniformLocation(shaderMazeProgram, "col"), 0.0f, 0.7f, 0.7f);
                 glUniform2f(glGetUniformLocation(shaderMazeProgram, "campos"), player.inp->pos.x / mz.size, player.inp->pos.z / mz.size);
                 glUniform1f(glGetUniformLocation(shaderMazeProgram, "rt"), cam.rot.y);
-                glBindVertexArray(mz.VAO);
+                glBindVertexArray(mz.MapBuffers.VAO);
                 glDrawElements(GL_LINES, mz.MapBuffers.length, GL_UNSIGNED_INT, 0);
                 glBindVertexArray(VAO);
 
@@ -686,6 +876,98 @@ int main()
                 glUniformMatrix4fv(glGetUniformLocation(ShaderDebug, "mtr"), 1, GL_FALSE, glm::value_ptr(ma));
                 glBindVertexArray(VAO);
                 glLineWidth(5);
+
+
+
+                for (int t = 0; t < rdi * rdi; t++)
+                {
+                    if (playerIndex + (t % rdi) - (rdi / 2) + (t / rdi - (rdi / 2)) * mz.count >= 0 &&
+                        playerIndex + (t % rdi) - (rdi / 2) + (t / rdi - (rdi / 2)) * mz.count < mz.nodes.size()) {
+                        int curIndex = playerIndex + (t % rdi) - (rdi / 2) + (t / rdi - (rdi / 2)) * mz.count;
+                        for (int tt = 0; tt < mz.nodes[curIndex].ligh.size(); tt++) {
+                            ray = mz.nodes[curIndex].ligh[tt].pos;
+                            if (distance(ray, player.obj.pos) < LightSetings.x) {
+                             
+                                vec3 DirectionOfRay = -normalize(player.obj.pos - ray);
+                                vec3 startOfRay = player.obj.pos;
+                                vec3 PR2 = ray;
+
+                                for (int j = 0; j < 9; j++)
+                                {
+                                    if (playerIndex + (j % 3) - 1 + (j / 3 - 1) * mz.count >= 0 &&
+                                        playerIndex + (j % 3) - 1 + (j / 3 - 1) * mz.count < mz.nodes.size()) {
+                                        int rp = playerIndex + (j % 3) - 1 + (j / 3 - 1) * mz.count;
+                                        for (int j = 0; j < mz.nodes[rp].fur.size(); j++)
+                                        {
+                                            if (mz.nodes[curIndex].ligh[tt].perch != vec2(rp, j)) {
+
+                                                mat4 modelViewMatrix;
+                                                modelViewMatrix = rotate(modelViewMatrix, mz.nodes[rp].fur[j].obj.rot.z, glm::vec3(0, 0, 1));
+                                                modelViewMatrix = rotate(modelViewMatrix, mz.nodes[rp].fur[j].obj.rot.y, glm::vec3(0, 1, 0));
+                                                modelViewMatrix = rotate(modelViewMatrix, mz.nodes[rp].fur[j].obj.rot.x, glm::vec3(1, 0, 0));
+                                                modelViewMatrix = scale(modelViewMatrix, mz.nodes[rp].fur[j].obj.sca);
+                                                vec3 P[6] = {
+                                                    modelViewMatrix * vec4(1,0,0,1) ,
+                                                    modelViewMatrix * vec4(0,1,0,1) ,
+                                                    modelViewMatrix * vec4(0,0,1,1) ,
+                                                    modelViewMatrix * vec4(-1,0,0,1),
+                                                    modelViewMatrix * vec4(0,-1,0,1),
+                                                    modelViewMatrix * vec4(0,0,-1,1)
+                                                };
+
+                                                bool clip = false;
+                                                for (int i = 0; i < 6; i++)
+                                                {
+
+                                                    //for math
+                                                    vec3 PP1 = (P[i] + P[(i + 1) % 6] + P[(i + 2) % 6]) + mz.nodes[rp].fur[j].obj.pos;
+                                                    vec3 PP2 = (P[i] + P[(i + 1) % 6] - P[(i + 2) % 6]) + mz.nodes[rp].fur[j].obj.pos;
+                                                    vec3 PP3 = (P[i] - P[(i + 1) % 6] - P[(i + 2) % 6]) + mz.nodes[rp].fur[j].obj.pos;
+                                                    vec3 PP4 = (P[i] - P[(i + 1) % 6] + P[(i + 2) % 6]) + mz.nodes[rp].fur[j].obj.pos;
+
+                                                    float t = dot(normalize(P[i]), ((P[i] + mz.nodes[rp].fur[j].obj.pos) - startOfRay)) / dot(normalize(P[i]), DirectionOfRay);
+                                                    vec3 asd = startOfRay + DirectionOfRay * t;
+
+
+                                                    if (dot(normalize(PP1 - PP2), asd) > dot(normalize(PP1 - PP2), PP2) && dot(PP1 - PP2, asd) < dot(PP1 - PP2, PP1) &&
+                                                        dot(normalize(PP1 - PP4), asd) > dot(normalize(PP1 - PP4), PP4) && dot(PP1 - PP4, asd) < dot(PP1 - PP4, PP1) &&
+                                                        dot(normalize(DirectionOfRay), asd) > dot(normalize(DirectionOfRay), startOfRay))
+                                                    {
+
+                                                        glUniform3f(glGetUniformLocation(ShaderDebug, "p2"), asd.x, asd.y, asd.z);
+                                                        glUniform3f(glGetUniformLocation(ShaderDebug, "p1"), asd.x, asd.y + 0.01f, asd.z);
+
+                                                        glUniform3f(glGetUniformLocation(ShaderDebug, "col"), 0, 1, 0);
+                                                        glDrawArrays(GL_LINES, 0, 4);
+
+                                                        if (distance(startOfRay, asd) < distance(startOfRay, PR2))
+                                                        {
+                                                            PR2 = asd;
+
+                                                        }
+                                                    }
+
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                glUniform3f(glGetUniformLocation(ShaderDebug, "p1"), PR2.x, PR2.y, PR2.z);
+                                glUniform3f(glGetUniformLocation(ShaderDebug, "p2"), startOfRay.x, startOfRay.y, startOfRay.z);
+                                glUniform3f(glGetUniformLocation(ShaderDebug, "col"), 1, 0, 0);
+                                if (distance(PR2, ray) < 0.05) glUniform3f(glGetUniformLocation(ShaderDebug, "col"), 0, 1, 0);
+                                glDrawArrays(GL_LINES, 0, 4);
+
+
+                            }
+
+                        }
+                    }
+                }
+
+
+                /*
                 for (int t = 0; t < ligh.size(); t++)
                 {
                     ray = ligh[t].pos;
@@ -764,7 +1046,7 @@ int main()
 
                     }
                 }
-
+                */
             }
             else {
 
@@ -859,7 +1141,7 @@ void processInput(GLFWwindow* window)
     if (!ELocked && glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
     {
         ELocked = true;
-        ligh.push_back(Light(cam.pos));
+        //ligh.push_back(Light(cam.pos));
     }
     else if (glfwGetKey(window, GLFW_KEY_E) != GLFW_PRESS)
     {
@@ -867,7 +1149,7 @@ void processInput(GLFWwindow* window)
     }
     if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
     {
-        ray = ligh[0].pos;
+        //ray = ligh[0].pos;
     }
 
     player.inp->SH = (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS);
