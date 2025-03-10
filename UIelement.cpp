@@ -176,6 +176,7 @@ void UItoggler::draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, 
 	glUniform4f(glGetUniformLocation(ShaderUI, "textureMatrix"), oss.x * scaa.x + poss.x, oss.y * scaa.y + poss.y, caa.x * scaa.x, caa.y * scaa.y);
 	if (isTrue) glUniform4f(glGetUniformLocation(ShaderUI, "backround"), 0.2, 0.2, 0.2, 1);
 
+	glUniform4f(glGetUniformLocation(ShaderUI, "forground"), 0,0,0,1);
 	glBindVertexArray(VAO);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 	drawString(VAO, ShaderUI, vec2(-0.3, 0.0) * vec2(0.7, 0.5) * (sca * sc) + (pos * sc + ps),vec2(0.7,0.5) * (sca * sc), text);
@@ -220,7 +221,12 @@ UImenue::UImenue() {
 	topBar->children.push_back(menueButton);
 	topBar->children.push_back(settingsButton);
 	UIDIV* settingsBox = new UIDIV(vec2(0, -0.1), vec2(0.95f, 0.8), vec4(vec3(0.2), 1.0f), vec4(1.0f));
+	UIDIV* menueBox = new UIDIV(vec2(0, -0.1), vec2(0.95f, 0.8), vec4(vec3(0.2), 1.0f), vec4(1.0f));
 	settingsButton->child = settingsBox;
+	menueButton->child = menueBox;
+	UIslider* gridSizeSlider = new UIslider(vec2(0, 0.75), vec2(0.9, 0.2), vec4(vec3(0.9), 1.0f), vec4(1.0f), "Grid size (only set once)", 0.3);
+	UIslider* enemieSlider = new UIslider(vec2(0, 0.3), vec2(0.9, 0.2), vec4(vec3(0.9), 1.0f), vec4(1.0f), "Enemie count size (only set once)", 0.3);
+	UItoggler* startGameToggl = new UItoggler(vec2(0, -0.05), vec2(0.9, 0.1), vec4(vec3(0.9), 1.0f), vec4(1.0f), "start game     ", false);
 	UIDIV* settingsBar = new UIDIV(vec2(-0.6, 0), vec2(0.35f, 0.9f), vec4(vec3(0.6), 1.0f), vec4(1.0f));
 	UIButton* graphicsButton = new UIButton(vec2(0, 0.85), vec2(0.9f, 0.09f), vec4(vec3(0.85), 1.0f), vec4(1.0f), "graphics");
 	UIButton* dificultyButton = new UIButton(vec2(0, 0.65), vec2(0.9f, 0.09f), vec4(vec3(0.85), 1.0f), vec4(1.0f), "dificulty");
@@ -228,19 +234,28 @@ UImenue::UImenue() {
 	UIDIV* dificultyBox = new UIDIV(vec2(0.375, 0), vec2(0.575f, 0.9), vec4(vec3(0.6), 1.0f), vec4(1.0f));
 	UIslider* brightnessSlider = new UIslider(vec2(0, 0.75), vec2(0.9, 0.2), vec4(vec3(0.9), 1.0f), vec4(1.0f), "brightness", 0.2);
 	UIslider* resSlider = new UIslider(vec2(0, 0.3), vec2(0.9, 0.2), vec4(vec3(0.9), 1.0f), vec4(1.0f), "resolution", 0.8);
-	UItoggler* framelockToggl = new UItoggler(vec2(0, -0.05), vec2(0.9, 0.1), vec4(vec3(0.9), 1.0f), vec4(1.0f), "unlimited frames  ",false);
+	UItoggler* framelockToggl = new UItoggler(vec2(0, -0.05), vec2(0.9, 0.1), vec4(vec3(0.9), 1.0f), vec4(1.0f), "unlimited frames",false);
+	UItoggler* debugToggl = new UItoggler(vec2(0, -0.05), vec2(0.9, 0.1), vec4(vec3(0.9), 1.0f), vec4(1.0f), "debug lines",true);
 	settingsBox->children.push_back(settingsBar);
 	settingsBar->children.push_back(graphicsButton);
 	settingsBar->children.push_back(dificultyButton);
 	graphicsButton->child = graphicsBox;
+	menueBox->children.push_back(gridSizeSlider);
+	menueBox->children.push_back(enemieSlider);
+	menueBox->children.push_back(startGameToggl);
 	graphicsBox->children.push_back(brightnessSlider);
 	graphicsBox->children.push_back(resSlider);
 	dificultyButton->child = dificultyBox;
+	dificultyBox->children.push_back(debugToggl);
 	graphicsBox->children.push_back(framelockToggl);
 	settings = UIsettings();
 	settings.brightness = &brightnessSlider->fraction;
 	settings.resolution = &resSlider->fraction;
 	settings.frameLock = &framelockToggl->isTrue;
+	settings.gridSize = &gridSizeSlider->fraction;
+	settings.enemies = &enemieSlider->fraction;
+	settings.gameStart = &startGameToggl->isTrue;
+	settings.debug = &debugToggl->isTrue;
 }
 
 void UImenue::draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, bool mouseD) {

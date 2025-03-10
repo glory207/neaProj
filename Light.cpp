@@ -7,7 +7,6 @@ Light::Light(glm::vec3 pos) {
 	std::mt19937 gen(rd()); // Mersenne Twister engine
 	std::uniform_real_distribution<float> Rand(0.0f, 1.0f); // Range [0, 1]
 
-
 	size = 500;
 	this->pos = pos;
 	obj = SpObj(pos, rot, glm::vec3(0.09f), initCubeBuffer({9}),27,0);
@@ -19,51 +18,64 @@ Light::Light(glm::vec3 pos) {
 	rotationMatrix = glm::rotate(rotationMatrix, -rot.y, glm::vec3(0, 1, 0));
 	rotationMatrix = glm::rotate(rotationMatrix, -rot.z, glm::vec3(0, 0, 1));
 	active = false;
-}
-void Light::activate(bool act) {
-	active2 = false;
+
+
+}																																				 
+void Light::activate(bool act) {	
+
+	firstActive = false;
 	if(!active && act)
 	{
 
+		// creates 2 textures that folds into cubes so they can record data from every angle
+		// the first one will be used for stationary objects and only be updated once																																			 
 		glGenTextures(1, &depthTexPre);
-
+		// makes it the texture being edited
 		glBindTexture(GL_TEXTURE_CUBE_MAP, depthTexPre);
 		for (int i = 0; i < 6; i++)
 		{
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT, size, size, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+			// gets each of the 6 faces and sets its resolution and format
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT, size, size,
+				0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 		}
+		// the upscaling and downscaling are pixelated 
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		// if the image is sampled out of its bounds the last valid value is used
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-		
-                                                                                                   
-		glGenTextures(1, &depthTex);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, depthTex);
-																															   
-		for (int i = 0; i < 6; i++) {
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT, size, size, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL); 
-		}
-		
 
+		// the second texture for moving objects that update every frame
+		glGenTextures(1, &depthTex);
+		// makes it the texture being edited
 		glBindTexture(GL_TEXTURE_CUBE_MAP, depthTex);
+
+		for (int i = 0; i < 6; i++)
+		{
+			// gets each of the 6 faces and sets its resolution and format
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT, size, size,
+				0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+		}
+		// the upscaling and downscaling are pixelated 
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		// if the image is sampled out of its bounds the last valid value is used
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-																															   
-		active2 = true;
+
+		// stops firstActive from being true next time as active is true 
+		firstActive = true;
 		active = true;
 	}
 	else if (active && !act)
 	{
-		
+		// if nolonger needed the textures are deleted to save memory
 		glDeleteTextures(1, &depthTex);
 		glDeleteTextures(1, &depthTexPre);
+		// the next time its used new textures should be generated
 		active = false;
-		
 	}
 	
 	

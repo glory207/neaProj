@@ -8,7 +8,7 @@ class Light
 public:
 	Light();
 	bool active = false;
-	bool active2 = true;
+	bool firstActive = true;
 	void activate(bool act);
 	GLuint depthTex;
 	GLuint depthTexPre;

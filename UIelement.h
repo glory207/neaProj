@@ -58,7 +58,11 @@ class UIsettings {
 public:
 	float* resolution;
 	float* brightness;
+	float* gridSize;
+	float* enemies;
 	bool* frameLock;
+	bool* gameStart;
+	bool* debug;
 	UIsettings();
 };
 

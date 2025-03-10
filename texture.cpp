@@ -1,7 +1,6 @@
 #include "texture.h"
 // list of the file paths to the images
-std::vector<const char*> texturesNames = {"img/brick.jpg","img/playerAni/walk0001-Sheet.png","img/playerAni/idle0001-Sheet.png",
-    "img/playerAni/crouchWalk0001-Sheet.png",
+std::vector<const char*> texturesNames = {"img/brick.jpg","img/playerAni/walk0001-Sheet.png","img/playerAni/idle0001-Sheet.png","img/playerAni/crouchWalk0001-Sheet.png",
     "img/playerAni/crouchWalkNormal0001-Sheet.png",
     "img/brickN.png",
     "img/playerAni/walkNormal0001-Sheet.png",

@@ -7,7 +7,7 @@ PlayerClass::PlayerClass(){}
 PlayerClass::PlayerClass(vec3 pos, vec3 rot) {
 	inp = new InputObject(pos, rot);
 
-	obj = SpObj(pos, rot, vec3(0.1), initCubeBuffer({ 9}), 6, 9);
+	obj = SpObj(pos, rot, vec3(0.05), initCubeBuffer({ 9}), 6, 9);
 
 
 	movable = new MovableState(inp, nullptr);

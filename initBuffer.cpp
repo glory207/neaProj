@@ -119,7 +119,6 @@ BufferGroup initMazeBuffers(std::vector<glm::vec2> points) {
 
         i += 4;
 
-        return BufferGroup(initB(positions), initB(texturePos), initE(indices), indices.size());
         // using the 2 corners of the map the ceiling is created
 
         positions.push_back(points[points.size() - 1].x);
