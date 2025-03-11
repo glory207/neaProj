@@ -15,7 +15,6 @@ int MovableState::Enter() {
 	return 0;
 }
 int MovableState::update(float deltaTime) {
-	////cout << (*inp).inp.x << " " << inp->inp.y << endl;
 	if (!inp->Grounded && cur != inAir)
 	{
 		cur = inAir;
@@ -39,7 +38,6 @@ int MovableState::update(float deltaTime) {
 	inp->pos.x -= inp->acc.x * deltaTime;
 	return 0;
 }
-void MovableState::Exit() {}
 
 
 IdleState::IdleState(InputObject* inp, MovableState* sender) {
@@ -58,6 +56,7 @@ int IdleState::Enter() {
 	{
 		cur = stood;
 	}
+	inp->resistance = vec3(7);
 	cur->Enter();
 	return 0;
 }
@@ -69,7 +68,6 @@ int IdleState::update(float deltaTime) {
 	cur->update(deltaTime);
 	return 0;
 }
-void IdleState::Exit() {}
 
 IdleStoodState::IdleStoodState(InputObject* inp, IdleState* sender) {
 	this->sender = sender;
@@ -92,7 +90,6 @@ int IdleStoodState::update(float deltaTime) {
 
 	return 0;
 }
-void IdleStoodState::Exit() {}
 
 IdleCrouchState::IdleCrouchState(InputObject* inp, IdleState* sender) {
 	this->sender = sender;
@@ -115,7 +112,6 @@ int IdleCrouchState::update(float deltaTime) {
 
 	return 0;
 }
-void IdleCrouchState::Exit() {}
 
 
 
@@ -131,7 +127,7 @@ MotionState::MotionState(InputObject* inp, MovableState* sender) {
 	cur = walk;
 }
 int MotionState::Enter() {
-	//cout << "MotionState" << endl;
+	inp->resistance = vec3(7);
 	if (length(inp->inp) < 0.05f) {
 		sender->cur = sender->idle;
 		sender->cur->Enter(); return 0;
@@ -153,7 +149,6 @@ int MotionState::update(float deltaTime) {
 	inp->acc.x += normalize(mov).x * deltaTime * inp->speed;
 	return 0;
 }
-void MotionState::Exit() {}
 
 
 WalkState::WalkState(InputObject* inp, MotionState* sender) {
@@ -189,7 +184,6 @@ int WalkState::update(float deltaTime) {
 	}
 	return 0;
 }
-void WalkState::Exit() {}
 
 
 RunState::RunState(InputObject* inp, MotionState* sender) {
@@ -229,7 +223,6 @@ int RunState::update(float deltaTime) {
 	}
 	return 0;
 }
-void RunState::Exit() {}
 
 
 CrawlState::CrawlState(InputObject* inp, MotionState* sender) {
@@ -269,7 +262,6 @@ int CrawlState::update(float deltaTime) {
 	}
 	return 0;
 }
-void CrawlState::Exit() {}
 
 
 
@@ -307,12 +299,6 @@ int InAirState::update(float deltaTime) {
 	cur->update(deltaTime);
 	return 0;
 }
-void InAirState::Exit() {
-	if (inp->inp == vec2(0)) sender->cur = sender->idle;
-	else sender->cur = sender->motion;
-	inp->resistance = vec3(7);
-	sender->cur->Enter();
-}
 
 DiveState::DiveState(InputObject* inp, InAirState* sender) {
 	this->sender = sender;
@@ -343,7 +329,6 @@ int DiveState::update(float deltaTime) {
 	}
 	return 0;
 }
-void DiveState::Exit() {}
 
 
 RollState::RollState(InputObject* inp, InAirState* sender) {
@@ -356,7 +341,8 @@ int RollState::Enter() {
 	inp->acc.y = -0.1f;
 	if (length(inp->acc) < 0.5f)
 	{
-		sender->Exit();
+		sender->sender->cur = sender->sender->idle;
+		sender->sender->cur->Enter();
 		return 0;
 	}
 	else
@@ -387,11 +373,13 @@ int RollState::update(float deltaTime) {
 		inp->resistance.z = 7.0f;
 	}
 	if (inp->animation[4] >= 5.0) {
-		sender->Exit();
+
+		sender->sender->cur = sender->sender->idle;
+		sender->sender->cur->Enter();
+		return 0;
 	}
 	return 0;
 }
-void RollState::Exit() {}
 
 
 FallingState::FallingState(InputObject* inp, InAirState* sender) {
@@ -408,7 +396,6 @@ int FallingState::update(float deltaTime) {
 	
 	return 0;
 }
-void FallingState::Exit() {}
 
 
 

@@ -12,7 +12,7 @@ public:
 
     virtual int Enter();
     virtual int update(float deltaTime);
-    virtual void Exit();
+    
 };
 
 
@@ -27,7 +27,7 @@ public:
 
     virtual int Enter();
     virtual int update(float deltaTime);
-    virtual void Exit();
+    
 };
 
 class IdleStoodState : public StateClass {
@@ -39,7 +39,7 @@ public:
 
     virtual int Enter();
     virtual int update(float deltaTime);
-    virtual void Exit();
+    
 };
 class IdleCrouchState : public StateClass {
 public:
@@ -50,7 +50,7 @@ public:
 
     virtual int Enter();
     virtual int update(float deltaTime);
-    virtual void Exit();
+    
 };
 
 class MotionState : public StateClass {
@@ -65,7 +65,7 @@ public:
 
     virtual int Enter();
     virtual int update(float deltaTime);
-    virtual void Exit();
+    
 };
 
 
@@ -78,7 +78,7 @@ public:
 
     virtual int Enter();
     virtual int update(float deltaTime);
-    virtual void Exit();
+    
 };
 
 class RunState : public StateClass {
@@ -90,7 +90,7 @@ public:
 
     virtual int Enter();
     virtual int update(float deltaTime);
-    virtual void Exit();
+    
 };
 
 class CrawlState : public StateClass {
@@ -102,7 +102,7 @@ public:
 
     virtual int Enter();
     virtual int update(float deltaTime);
-    virtual void Exit();
+    
 };
 
 
@@ -126,7 +126,7 @@ public:
 
     virtual int Enter();
     virtual int update(float deltaTime);
-    virtual void Exit();
+    
 };
 
 class DiveState : public StateClass {
@@ -138,7 +138,7 @@ public:
 
     virtual int Enter();
     virtual int update(float deltaTime);
-    virtual void Exit();
+    
 };
 
 class RollState : public StateClass {
@@ -150,7 +150,7 @@ public:
 
     virtual int Enter();
     virtual int update(float deltaTime);
-    virtual void Exit();
+    
 };
 
 class FallingState : public StateClass {
@@ -162,5 +162,5 @@ public:
 
     virtual int Enter();
     virtual int update(float deltaTime);
-    virtual void Exit();
+    
 };

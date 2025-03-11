@@ -91,48 +91,94 @@ int main2()
   
     glfwSwapInterval(1);
     cam = camera(vec3(0,0.2,-0.5), vec3(-0.2f,-2.356,0));
-    mz = Maze(10);
-    SpObj playerObj = SpObj(vec3(0, 0.01, 0), vec3(0), vec3(0.01), initCubeBuffer({0,1,2,3,4,5}),0,5);
+    cam.updateSize(vec2(SCR_WIDTH, SCR_HEIGHT) * resolution); 
+    mz = Maze(5);
+    SpObj playerObj = SpObj(vec3(0, 0.05, 0), vec3(0), vec3(0.05), initCubeBuffer({0,1,2,3,4,5}),0,5);
     unsigned int shaderProgram = initShader("shaders/def.vert", "shaders/def.geom", "shaders/def.frag");
     unsigned int shaderShadowProgram = initShader("shaders/shadow.vert", "shaders/shadow.geom", "shaders/shadow.frag");
     createShadowFramebufferCube shadowFB = createShadowFramebufferCube(500);
-    float time = 0;
-
+    
+    bool lockMouse = true;
+    double preTime = 0.0;
+    double curTime = 0.0;
+    double timeDif;
+    unsigned int counter = 0;
+    vec3 vel;
     while (!glfwWindowShouldClose(window))
     {
-        float sensitivity = 0.001f;
+        curTime = glfwGetTime();
+        timeDif = curTime - preTime;
+        counter++;
+        if (timeDif >= 0.1) {
+            std::string FPS = std::to_string((int)((1.0 / timeDif) * counter));
+            std::string ms = std::to_string((int)((timeDif / counter) * 1000));
+            std::string title = "EPQ:  " + FPS + "FPS  " + ms + "ms " + std::to_string(curTime) + "curTime";
+            glfwSetWindowTitle(window, title.c_str());
+            preTime = curTime;
+            deltaTime = (float)((1.0 / counter) * timeDif);
 
+            counter = 0;
+        }
 
         // Stores the coordinates of the cursor
         double mouseX;
         double mouseY;
         // Fetches the coordinates of the cursor
         glfwGetCursorPos(window, &mouseX, &mouseY);
+        if (lockMouse) {
+            // Gets the change in the position of the mouse frome the center of the screen
+            // rotates the camera by the difference
+            float sensitivity = 0.001f;
+            cam.rot.x += sensitivity * (float)((SCR_HEIGHT / 2) + OFF_HEIGHT - mouseY);
+            cam.rot.y += sensitivity * (float)((SCR_WIDTH / 2) + OFF_WIDTH - mouseX);
+            
+            // validation stops the camera from rotation 
+            // upside down 
+            if (cam.rot.x > 0.4f)cam.rot.x = 0.4f;
+            if (cam.rot.x < -1.15f)cam.rot.x = -1.15f;
 
-        // Normalizes and shifts the coordinates of the cursor such that they begin in the middle of the screen
-        // and then "transforms" them into degrees 
-        cam.rot.x += sensitivity * (float)((SCR_HEIGHT / 2) + OFF_HEIGHT - mouseY);
-        cam.rot.y += sensitivity * (float)((SCR_WIDTH / 2) + OFF_WIDTH - mouseX);
-        // cout << sensitivity * (float)((SCR_HEIGHT / 2) - mouseY) / SCR_HEIGHT << " " << sensitivity * (float)((SCR_WIDTH / 2) - mouseX) / SCR_WIDTH << endl;
-        playerObj.rot.y = cam.rot.y;
+            playerObj.rot.y = cam.rot.y;
 
-        // Sets mouse cursor to the middle of the screen so that it doesn't end up roaming around
-        glfwSetCursorPos(window, (SCR_WIDTH / 2) + OFF_WIDTH, (SCR_HEIGHT / 2) + OFF_HEIGHT);
+            // Sets mouse cursor back to the center of the screen
+            glfwSetCursorPos(window, (SCR_WIDTH / 2) + OFF_WIDTH, (SCR_HEIGHT / 2) + OFF_HEIGHT);
+        }
+        // the ESCAPE key releases the mouse and clicking the screen locks it back into position
+        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+            lockMouse = true; 
+            glfwSetCursorPos(window, (SCR_WIDTH / 2) + OFF_WIDTH, (SCR_HEIGHT / 2) + OFF_HEIGHT);
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+        }
+        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        {
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            lockMouse = false;
+        }
 
+        // pressing WASD will add to the default state.
+        // If both W and S are pressed, they cancel each other out
+        vec2 inp = vec2(0.0f);
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) inp.y += 1;
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) inp.x += -1;
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) inp.y += -1;
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) inp.x += 1;
 
-        // cameras pos
-        float armL = 0.27f;
-        float armL2 = 0.05f;
-        float armL3 = 1.25;
-       // if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && playerObj.Grounded) {
-       //     armL = 0.15f;
-       //     armL3 = 0.8;
-       //     armL2 = 0.02f;
-       // }
+        // rotates the direction of the input so it corresponds with the direction to the player
+        vec3 move = vec3(inp.x * cos(playerObj.rot.y) - inp.y * sin(playerObj.rot.y),
+            0, -inp.y * cos(playerObj.rot.y) - inp.x * sin(playerObj.rot.y));
+        cout << length(move) << endl;
+        // stops the corner strafing from being faster
+        if(length(move)>1) normalize(move);
+        // updates the velocity which in turn updates the position
+        vel += move * 5.0f * deltaTime;
+        // reduces the velocity by a resistance factor
+        vel -= vel * 6.0f * deltaTime;
+        playerObj.pos += vel * deltaTime;
 
-        cam.pos.x = playerObj.pos.x + sin(cam.rot.y) * armL * cos(cam.rot.x) + cos(cam.rot.y) * armL2;
-        cam.pos.y = playerObj.pos.y + playerObj.sca.y * armL3 - sin(cam.rot.x) * armL;
-        cam.pos.z = playerObj.pos.z + cos(cam.rot.y) * armL * cos(cam.rot.x) - sin(cam.rot.y) * armL2;
+        // offsets the position of the camera to the (right, up, back) of the player
+        vec3 armL = vec3(0.27f, 1.25, 0.05f);
+        cam.pos.x = playerObj.pos.x + sin(cam.rot.y) * armL.x * cos(cam.rot.x) + cos(cam.rot.y) * armL.z;
+        cam.pos.y = playerObj.pos.y + playerObj.sca.y * armL.y - sin(cam.rot.x) * armL.x;
+        cam.pos.z = playerObj.pos.z + cos(cam.rot.y) * armL.x * cos(cam.rot.x) - sin(cam.rot.y) * armL.z;
 
 
         // sets the dimentions of the screen to that of the lights frame buffer
