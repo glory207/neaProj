@@ -74,7 +74,7 @@ public:
     Maze();
     Maze(int c);
     std::vector<glm::vec2> makeLines(int tp,int  sd,int  p0,int  p1,int  p2,int  p3,bool  swch,float thin);
-    bool collide(glm::vec3* poss, glm::vec3* accc, glm::vec2 leway);
+    bool collide(glm::vec3* poss, float leway);
     std::vector<Cell> nodes;
     std::vector<Landmark*> Camps;
     float size;

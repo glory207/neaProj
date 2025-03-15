@@ -15,7 +15,8 @@
 #include <random>
 #include <thread>
 #include <queue>
-
+void doLight(createShadowFramebufferCube* shadowFB, unsigned int shaderShadowProgram, Light* li);
+void doLightNew(createShadowFramebufferCube* shadowFB, unsigned int shaderShadowProgram, Light* li);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 
@@ -23,6 +24,7 @@ unsigned int SCR_WIDTH = 1600;
 unsigned int SCR_HEIGHT = 900;
 unsigned int OFF_WIDTH = 0;
 unsigned int OFF_HEIGHT = 0;
+int playerIndex;
 camera cam;
 Light tourch;
 PlayerClass player;
@@ -40,13 +42,14 @@ float ArmL = 0.27f;
 float ArmL2 = 0.0f;
 float ArmL3 = 1.25;
 float deltaTime = 1.0f;
+double curTime = 0.0;
 float UTime = 0.0f;
 float sceeee = 1.0f;
 Maze mz;
 bool endGame = true;
 vec3 ray;
 vec3 pathend;
-
+SpObj playerObj;
 // Define the random number generator and distribution
 std::random_device rd;  // Seed generator
 std::mt19937 gen(rd()); // Mersenne Twister engine
@@ -56,7 +59,7 @@ GLFWwindow* window;
 
 
 
-int main2()
+int main()
 {
 #pragma region Start
 
@@ -93,14 +96,13 @@ int main2()
     cam = camera(vec3(0,0.2,-0.5), vec3(-0.2f,-2.356,0));
     cam.updateSize(vec2(SCR_WIDTH, SCR_HEIGHT) * resolution); 
     mz = Maze(5);
-    SpObj playerObj = SpObj(vec3(0, 0.05, 0), vec3(0), vec3(0.05), initCubeBuffer({0,1,2,3,4,5}),0,5);
+    playerObj = SpObj(vec3(0, 0.05, 0), vec3(0), vec3(0.05), initCubeBuffer({0,1,2,3,4,5}),0,5);
     unsigned int shaderProgram = initShader("shaders/def.vert", "shaders/def.geom", "shaders/def.frag");
     unsigned int shaderShadowProgram = initShader("shaders/shadow.vert", "shaders/shadow.geom", "shaders/shadow.frag");
     createShadowFramebufferCube shadowFB = createShadowFramebufferCube(500);
     
     bool lockMouse = true;
     double preTime = 0.0;
-    double curTime = 0.0;
     double timeDif;
     unsigned int counter = 0;
     vec3 vel;
@@ -165,14 +167,15 @@ int main2()
         // rotates the direction of the input so it corresponds with the direction to the player
         vec3 move = vec3(inp.x * cos(playerObj.rot.y) - inp.y * sin(playerObj.rot.y),
             0, -inp.y * cos(playerObj.rot.y) - inp.x * sin(playerObj.rot.y));
-        cout << length(move) << endl;
         // stops the corner strafing from being faster
-        if(length(move)>1) normalize(move);
+        if(length(move)>1)move = normalize(move);
         // updates the velocity which in turn updates the position
         vel += move * 5.0f * deltaTime;
         // reduces the velocity by a resistance factor
         vel -= vel * 6.0f * deltaTime;
         playerObj.pos += vel * deltaTime;
+
+        mz.collide(&playerObj.pos,0.064f);
 
         // offsets the position of the camera to the (right, up, back) of the player
         vec3 armL = vec3(0.27f, 1.25, 0.05f);
@@ -181,83 +184,14 @@ int main2()
         cam.pos.z = playerObj.pos.z + cos(cam.rot.y) * armL.x * cos(cam.rot.x) - sin(cam.rot.y) * armL.z;
 
 
-        // sets the dimentions of the screen to that of the lights frame buffer
-        glViewport(0, 0, 500, 500);
-        glUseProgram(shaderShadowProgram);
+
+
         for (int curIndex = 0; curIndex < mz.nodes.size(); curIndex++)
         {
             for (int tt = 0; tt < mz.nodes[curIndex].ligh.size(); tt++) {
-
-                // tells the light it should a texture ready
-                mz.nodes[curIndex].ligh[tt].activate(true);
-
-                // binds the frambufer that gets the closest position of objects from the lights perspective
-                // if its the first time draw to the static objects texture
-                if (mz.nodes[curIndex].ligh[tt].firstActive) shadowFB.bind(true, mz.nodes[curIndex].ligh[tt].depthTexPre);
-                else
-                {
-                    // otherwise coppy the static objects texture to the moving object texture
-                    // then draw the moving objects over it
-                    glBindTexture(GL_TEXTURE_CUBE_MAP, mz.nodes[curIndex].ligh[tt].depthTexPre);
-                    for (GLuint face = 0; face < 6; ++face) {
-                        glCopyImageSubData(mz.nodes[curIndex].ligh[tt].depthTexPre, GL_TEXTURE_CUBE_MAP, 0, 0, 0, face,
-                            mz.nodes[curIndex].ligh[tt].depthTex, GL_TEXTURE_CUBE_MAP, 0, 0, 0, face,
-                            mz.nodes[curIndex].ligh[tt].size, mz.nodes[curIndex].ligh[tt].size, 1);
-                    }
-                    shadowFB.bind(false, mz.nodes[curIndex].ligh[tt].depthTex);
-
-                    mz.nodes[curIndex].ligh[tt].activate(true);
-                }
-
-
-                std::string ii[6];
-                glm::mat4 matr4[6];
-                for (int i = 0; i < 6; i++)
-                {
-                    // gets the matrix that translates obgects into screen space
-                    // there are 6 for each direction (up down left right)
-                    float fov = (0.5f * 3.14159265358979323846f); // half of pi 90 degrees
-                    float zNear = 0.01f;
-                    float zFar = 100.0f;
-                    glm::mat4 projectionMatrix; 
-                    glm::mat4 view; 
-                    projectionMatrix = glm::perspective(fov, 1.0f, zNear, zFar); 
-                    view = glm::lookAt(mz.nodes[curIndex].ligh[tt].pos, mz.nodes[curIndex].ligh[tt].pos + shadowFB.target[i], shadowFB.up[i]); 
-                    view = projectionMatrix * view; 
-                    matr4[i] = view; 
-                    // sets the name of the matrix to uProjectionMatrix[0-5] as they are stored in an array 
-                    ii[i] = "uProjectionMatrix[" + std::to_string(i) + "]";
-                    // binds the matrix to the GPU
-                    glUniformMatrix4fv(glGetUniformLocation(shaderShadowProgram, ii[i].c_str()), 1, GL_FALSE, glm::value_ptr(matr4[i]));
-                }
-                glUniform3f(glGetUniformLocation(shaderShadowProgram, "lpos"),
-                mz.nodes[curIndex].ligh[tt].pos.x, mz.nodes[curIndex].ligh[tt].pos.y, mz.nodes[curIndex].ligh[tt].pos.z);
-
-                // draws the objects to the lights framebuffer
-
-                if (mz.nodes[curIndex].ligh[tt].firstActive) {
-                    // all the static objects
-                    mz.obj.draw(shaderShadowProgram);
-
-                    for (int i = 0; i < mz.nodes.size(); i++)
-                    {
-                        for (int j = 0; j < mz.nodes[i].fur.size(); j++)
-                        {
-                            mz.nodes[i].fur[j].obj.draw(shaderShadowProgram);
-                        }
-                    }
-                }
-                else
-                {
-                    playerObj.draw(shaderShadowProgram);
-                }
+                doLight(&shadowFB, shaderShadowProgram, &mz.nodes[curIndex].ligh[tt]);
             }
         }
-
-
-
-
-
 
 
 
@@ -400,9 +334,179 @@ int main2()
 
 
 
+void doLight(createShadowFramebufferCube* shadowFB, unsigned int shaderShadowProgram, Light* li) {
+
+    // sets the dimentions of the screen to that of the lights frame buffer
+    glViewport(0, 0, 500, 500);
+    glUseProgram(shaderShadowProgram);
+
+    // tells the light it should a texture ready
+    li->activate(true);
+
+    // binds the frambufer that gets the closest position of objects from the lights perspective
+    // if its the first time draw to the static objects texture
+    if (li->firstActive) shadowFB->bind(true, li->depthTexPre);
+    else
+    {
+        // otherwise coppy the static objects texture to the moving object texture
+        // then draw the moving objects over it
+        glBindTexture(GL_TEXTURE_CUBE_MAP, li->depthTexPre);
+        for (GLuint face = 0; face < 6; ++face) {
+            glCopyImageSubData(li->depthTexPre, GL_TEXTURE_CUBE_MAP, 0, 0, 0, face,
+                li->depthTex, GL_TEXTURE_CUBE_MAP, 0, 0, 0, face,
+                li->size, li->size, 1);
+        }
+        shadowFB->bind(false, li->depthTex);
+
+        li->activate(true);
+    }
 
 
+    std::string ii[6];
+    glm::mat4 matr4[6];
+    for (int i = 0; i < 6; i++)
+    {
+        // gets the matrix that translates obgects into screen space
+        // there are 6 for each direction (up down left right)
+        float fov = (0.5f * 3.14159265358979323846f); // half of pi 90 degrees
+        float zNear = 0.01f;
+        float zFar = 100.0f;
+        glm::mat4 projectionMatrix;
+        glm::mat4 view;
+        projectionMatrix = glm::perspective(fov, 1.0f, zNear, zFar);
+        view = glm::lookAt(li->pos, li->pos + shadowFB->target[i], shadowFB->up[i]);
+        view = projectionMatrix * view;
+        matr4[i] = view;
+        // sets the name of the matrix to uProjectionMatrix[0-5] as they are stored in an array 
+        ii[i] = "uProjectionMatrix[" + std::to_string(i) + "]";
+        // binds the matrix to the GPU
+        glUniformMatrix4fv(glGetUniformLocation(shaderShadowProgram, ii[i].c_str()), 1, GL_FALSE, glm::value_ptr(matr4[i]));
+    }
+    glUniform3f(glGetUniformLocation(shaderShadowProgram, "lpos"),
+        li->pos.x, li->pos.y, li->pos.z);
 
+    // draws the objects to the lights framebuffer
+
+    int Index = int((li->pos.x + 1) / mz.size) + int((li->pos.z + 1) / mz.size) * mz.count;
+    int rdi = 3;
+    if (li->firstActive) {
+        // all the static objects
+        mz.obj.draw(shaderShadowProgram);
+
+        for (int t = 0; t < rdi * rdi; t++)
+        {
+            if (Index + (t % rdi) - (rdi / 2) + (t / rdi - (rdi / 2)) * mz.count >= 0 &&
+                Index + (t % rdi) - (rdi / 2) + (t / rdi - (rdi / 2)) * mz.count < mz.nodes.size()) {
+                int curIndex = Index + (t % rdi) - (rdi / 2) + (t / rdi - (rdi / 2)) * mz.count;
+                for (int tt = 0; tt < mz.nodes[curIndex].ligh.size(); tt++) {
+                    mz.nodes[t].fur[tt].obj.draw(shaderShadowProgram);
+                }
+            }
+        }
+    }
+    else
+    {
+        // all the moving objects
+        playerObj.draw(shaderShadowProgram);
+    }
+
+}
+
+
+void doLightNew(createShadowFramebufferCube* shadowFB, unsigned int shaderShadowProgram, Light* li, bool isStatic) {
+    // sets the dimentions of the screen to that of the lights frame buffer
+    glViewport(0, 0, 500, 500);
+    glUseProgram(shaderShadowProgram);
+
+    // tells the light it should a texture ready
+    li->activate(true);
+
+    // binds the frambufer that gets the closest position of objects from the lights perspective
+    // if its the first time draw to the static objects texture
+    if(!isStatic) shadowFB->bind(true, li->depthTex);
+    else if (li->firstActive) shadowFB->bind(true, li->depthTexPre);
+    else
+    {
+        // otherwise coppy the static objects texture to the moving object texture
+        // then draw the moving objects over it
+        glBindTexture(GL_TEXTURE_CUBE_MAP, li->depthTexPre);
+        for (GLuint face = 0; face < 6; ++face) {
+            glCopyImageSubData(li->depthTexPre, GL_TEXTURE_CUBE_MAP, 0, 0, 0, face,
+                li->depthTex, GL_TEXTURE_CUBE_MAP, 0, 0, 0, face,
+                li->size, li->size, 1);
+        }
+        shadowFB->bind(false, li->depthTex);
+
+    }
+
+
+    std::string ii[6];
+    glm::mat4 matr4[6];
+    for (int i = 0; i < 6; i++)
+    {
+        // gets the matrix that translates obgects into screen space
+        // there are 6 for each direction (up down left right)
+        float fov = (0.5f * 3.14159265358979323846f); // half of pi 90 degrees
+        float zNear = 0.01f;
+        float zFar = 100.0f;
+        glm::mat4 projectionMatrix;
+        glm::mat4 view;
+        projectionMatrix = glm::perspective(fov, 1.0f, zNear, zFar);
+        view = glm::lookAt(li->pos, li->pos + shadowFB->target[i], shadowFB->up[i]);
+        view = projectionMatrix * view;
+        matr4[i] = view;
+        // sets the name of the matrix to uProjectionMatrix[0-5] as they are stored in an array 
+        ii[i] = "uProjectionMatrix[" + std::to_string(i) + "]";
+        // binds the matrix to the GPU
+        glUniformMatrix4fv(glGetUniformLocation(shaderShadowProgram, ii[i].c_str()), 1, GL_FALSE, glm::value_ptr(matr4[i]));
+    }
+    glUniform3f(glGetUniformLocation(shaderShadowProgram, "lpos"),
+        li->pos.x, li->pos.y, li->pos.z);
+
+    // draws the objects to the lights framebuffer
+    if (!isStatic) {
+        // all the objects
+        mz.obj.draw(shaderShadowProgram);
+        int rdi = 3;
+        for (int j = 0; j < rdi * rdi; j++)
+        {
+            if (playerIndex + (j % rdi) - (rdi / 2) + (j / rdi - (rdi / 2)) * mz.count >= 0 &&
+                playerIndex + (j % rdi) - (rdi / 2) + (j / rdi - (rdi / 2)) * mz.count < mz.nodes.size()) {
+
+                for (int tt = 0; tt < mz.nodes[playerIndex + (j % rdi) - (rdi / 2) + (j / rdi - (rdi / 2))].ligh.size(); tt++) {
+                    mz.nodes[playerIndex + (j % rdi) - (rdi / 2) + (j / rdi - (rdi / 2))].fur[tt].obj.draw(shaderShadowProgram);
+                }
+            }
+
+        }
+        player.draw(curTime, shaderShadowProgram);
+        for (int i = 0; i < enmi.size(); i++)if (distance(player.inp->pos, enmi[i].pos) < 7.0) enmi[i].draw(deltaTime, shaderShadowProgram);
+    }
+    else if (li->firstActive) {
+        // all the static objects
+        mz.obj.draw(shaderShadowProgram);
+        int rdi = 3;
+        for (int j = 0; j < rdi * rdi; j++)
+        {
+            if (playerIndex + (j % rdi) - (rdi / 2) + (j / rdi - (rdi / 2)) * mz.count >= 0 &&
+                playerIndex + (j % rdi) - (rdi / 2) + (j / rdi - (rdi / 2)) * mz.count < mz.nodes.size()) {
+                
+                for (int tt = 0; tt < mz.nodes[playerIndex + (j % rdi) - (rdi / 2) + (j / rdi - (rdi / 2))].ligh.size(); tt++) {
+                    mz.nodes[playerIndex + (j % rdi) - (rdi / 2) + (j / rdi - (rdi / 2))].fur[tt].obj.draw(shaderShadowProgram);
+                }
+            }
+
+        }
+    }
+    else
+    {
+        // all the moving objects
+        player.draw(curTime, shaderShadowProgram);
+        for (int i = 0; i < enmi.size(); i++)if (distance(player.inp->pos, enmi[i].pos) < 7.0) enmi[i].draw(deltaTime, shaderShadowProgram);
+    }
+
+
+}
 
 
 
@@ -436,7 +540,7 @@ void foo(int Z)
 }
 
 
-int main()
+int main2()
 {
     #pragma region Start
 
@@ -589,7 +693,7 @@ int main()
                     for (int i = 0; i < (int)(*menue.settings.enemies * 100); i++)
                     {
                         enmi.push_back(Enemy(vec3(int(Rand(gen) * mz.count) * mz.size, 0.0f, int(Rand(gen) * mz.count) * mz.size), vec3(0.0f, -3.1415 / 2.0f, 0.0f)));
-                        mz.collide(&enmi[i].pos, nullptr, vec2(0.07f, 0.0f));
+                        mz.collide(&enmi[i].pos, 0.07f);
                         enmi[i].pos.y = 0;
                     }
                     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
@@ -622,7 +726,7 @@ int main()
                 for (int i = 0; i < enmi.size(); i++)enmi[i].update(deltaTime, cam.pos, &mz, &pathfq);
                 vec3 ty = player.inp->acc;
                 vec3 tp = player.inp->pos;
-                player.inp->Grounded = mz.collide(&player.inp->pos, nullptr, vec2(0.075f, 0.0f));
+                player.inp->Grounded = mz.collide(&player.inp->pos, 0.03f);
                 //for (int i = 0; i < enmi.size(); i++)mz.collide(&enmi[i].pos, nullptr, vec2(0.07f, 0.0f));
                 if (pathf.pathP+1 >= pathf.path.size()) {
                     pathf.OnPath = false;
@@ -638,7 +742,7 @@ int main()
                         pathf.pathP ++;
 
                 }
-                int playerIndex = int((player.inp->pos.x + 1) / mz.size) + int((player.inp->pos.z + 1) / mz.size) * mz.count;
+                playerIndex = int((player.inp->pos.x + 1) / mz.size) + int((player.inp->pos.z + 1) / mz.size) * mz.count;
                 glDisable(GL_BLEND);
 
 
@@ -649,110 +753,20 @@ int main()
                 if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
                 {
                     tourch.pos = cam.pos + vec3(0, 0.1, 0);
-                    if (length(tourch.pos - cam.pos) < 7.0f) {
-
-                        tourch.activate(true);
-                        shadowFB.bind(true,tourch.depthTex);
-                        glUseProgram(shaderShadowProgram);
-                        std::string ii[6];
-                        glm::mat4 matr4[6];
-                        for (int i = 0; i < 6; i++)
-                        {
-                            float fov = (0.5f * 3.14159265358979323846f);
-                            float zNear = 0.01f;
-                            float zFar = 100.0f;
-                            glm::mat4 projectionMatrix;
-                            glm::mat4 view;
-                            projectionMatrix = glm::perspective(fov, 1.0f, zNear, zFar);
-                            view = glm::lookAt(tourch.pos, tourch.pos + shadowFB.target[i], shadowFB.up[i]);
-                            view = projectionMatrix * view;
-                            matr4[i] = view;
-                            ii[i] = "uProjectionMatrix[" + std::to_string(i) + "]";
-                            glUniformMatrix4fv(glGetUniformLocation(shaderShadowProgram, ii[i].c_str()), 1, GL_FALSE, glm::value_ptr(matr4[i]));
-                        }
-                        glUniform3f(glGetUniformLocation(shaderShadowProgram, "lpos"), tourch.pos.x, tourch.pos.y, tourch.pos.z);
-                        player.draw(curTime, shaderShadowProgram);
-                        mz.obj.draw(shaderShadowProgram);
-                        for (int j = 0; j < rdi * rdi; j++)
-                        {
-                            if (playerIndex + (j % rdi) - (rdi / 2) + (j / rdi - (rdi / 2)) * mz.count >= 0 &&
-                                playerIndex + (j % rdi) - (rdi / 2) + (j / rdi - (rdi / 2)) * mz.count < mz.nodes.size()) {
-                                for (Furniture furn : mz.nodes[playerIndex + (j % rdi) - (rdi / 2) + (j / rdi - (rdi / 2)) * mz.count].fur) {
-                                    furn.obj.draw(shaderShadowProgram);
-                                }
-                            }
-
-                        }
-
-                    }
-                    else {
-                        tourch.activate(false);
-                    }
+                    doLightNew(&shadowFB,shaderShadowProgram,&tourch,false);
 
 
                 }
 
-                for (int t = 0; t < rdi * rdi; t++)
+                for (int curIndex = 0; curIndex < mz.nodes.size(); curIndex++)
                 {
-                    if (playerIndex + (t % rdi) - (rdi / 2) + (t / rdi - (rdi / 2)) * mz.count >= 0 &&
-                        playerIndex + (t % rdi) - (rdi / 2) + (t / rdi - (rdi / 2)) * mz.count < mz.nodes.size()) {
-                        int curIndex = playerIndex + (t % rdi) - (rdi / 2) + (t / rdi - (rdi / 2)) * mz.count;
-                        for (int tt = 0; tt < mz.nodes[curIndex].ligh.size(); tt++) {
+                    for (int tt = 0; tt < mz.nodes[curIndex].ligh.size(); tt++) {
 
-
-                            mz.nodes[curIndex].ligh[tt].activate(true);
-
-                            if (mz.nodes[curIndex].ligh[tt].firstActive) shadowFB.bind(true, mz.nodes[curIndex].ligh[tt].depthTexPre);
-                            else
-                            {
-                                glBindTexture(GL_TEXTURE_CUBE_MAP, mz.nodes[curIndex].ligh[tt].depthTexPre);
-                                for (GLuint face = 0; face < 6; ++face) {
-                                    glCopyImageSubData(mz.nodes[curIndex].ligh[tt].depthTexPre, GL_TEXTURE_CUBE_MAP, 0, 0, 0, face,
-                                        mz.nodes[curIndex].ligh[tt].depthTex, GL_TEXTURE_CUBE_MAP, 0, 0, 0, face,
-                                        mz.nodes[curIndex].ligh[tt].size, mz.nodes[curIndex].ligh[tt].size, 1);
-                                }
-                                shadowFB.bind(false,mz.nodes[curIndex].ligh[tt].depthTex);
-
-                            }
-                            glUseProgram(shaderShadowProgram);
-                            std::string ii[6];
-                            glm::mat4 matr4[6];
-                            for (int i = 0; i < 6; i++)
-                            {
-                                float fov = (0.5f * 3.14159265358979323846f);
-                                float zNear = 0.01f;
-                                float zFar = 100.0f;
-                                glm::mat4 projectionMatrix;
-                                glm::mat4 view;
-                                projectionMatrix = glm::perspective(fov, 1.0f, zNear, zFar);
-                                view = glm::lookAt(mz.nodes[curIndex].ligh[tt].pos, mz.nodes[curIndex].ligh[tt].pos + shadowFB.target[i], shadowFB.up[i]);
-                                view = projectionMatrix * view;
-                                matr4[i] = view;
-                                ii[i] = "uProjectionMatrix[" + std::to_string(i) + "]";
-                                glUniformMatrix4fv(glGetUniformLocation(shaderShadowProgram, ii[i].c_str()), 1, GL_FALSE, glm::value_ptr(matr4[i]));
-                            }
-                            glUniform3f(glGetUniformLocation(shaderShadowProgram, "lpos"), mz.nodes[curIndex].ligh[tt].pos.x, mz.nodes[curIndex].ligh[tt].pos.y, mz.nodes[curIndex].ligh[tt].pos.z);
-                            if (mz.nodes[curIndex].ligh[tt].firstActive) {
-                                mz.obj.draw(shaderShadowProgram);
-
-                                for (int j = 0; j < rdi * rdi; j++)
-                                {
-                                    if (playerIndex + (j % rdi) - (rdi / 2) + (j / rdi - (rdi / 2)) * mz.count >= 0 &&
-                                        playerIndex + (j % rdi) - (rdi / 2) + (j / rdi - (rdi / 2)) * mz.count < mz.nodes.size()) {
-                                        for (Furniture furn : mz.nodes[playerIndex + (j % rdi) - (rdi / 2) + (j / rdi - (rdi / 2)) * mz.count].fur) {
-                                        if(distance(furn.obj.pos, mz.nodes[curIndex].ligh[tt].pos)<2)
-                                            furn.obj.draw(shaderShadowProgram);
-                                        }
-                                    }
-
-                                }
-                            }
-                            else
-                            {
-                                player.draw(curTime, shaderShadowProgram);
-                                for (int i = 0; i < enmi.size(); i++)if (distance(player.inp->pos, enmi[i].pos) < 7.0) enmi[i].draw(deltaTime, shaderShadowProgram);
-                            }
-                        }
+                       if(distance(mz.nodes[curIndex].ligh[tt].pos,player.inp->pos) < 7.0) doLightNew(&shadowFB, shaderShadowProgram, &mz.nodes[curIndex].ligh[tt], true);
+                       else
+                       {
+                           mz.nodes[curIndex].ligh[tt].activate(false);
+                       }
                     }
 
                 }
@@ -1176,86 +1190,7 @@ int main()
 
                     }
                 }
-                /*
-                for (int t = 0; t < ligh.size(); t++)
-                {
-                    ray = ligh[t].pos;
-                    if (distance(ligh[t].pos,player.obj.pos)<LightSetings.x) {
-                        vec3 DirectionOfRay = -normalize(player.obj.pos - ray);
-                        vec3 startOfRay = player.obj.pos;
-                        vec3 PR2 = ray;
-
-                        for (int j = 0; j < 9; j++)
-                        {
-                            if (playerIndex + (j % 3) - 1 + (j / 3 - 1) * mz.count >= 0 &&
-                                playerIndex + (j % 3) - 1 + (j / 3 - 1) * mz.count < mz.nodes.size()) {
-                                int rp = playerIndex + (j % 3) - 1 + (j / 3 - 1) * mz.count;
-                                for (int j = 0; j < mz.nodes[rp].fur.size(); j++)
-                                {
-                                    if (ligh[t].perch != vec2(rp,j)) {
-
-                                    mat4 modelViewMatrix;
-                                    modelViewMatrix = rotate(modelViewMatrix, mz.nodes[rp].fur[j].obj.rot.z, glm::vec3(0, 0, 1));
-                                    modelViewMatrix = rotate(modelViewMatrix, mz.nodes[rp].fur[j].obj.rot.y, glm::vec3(0, 1, 0));
-                                    modelViewMatrix = rotate(modelViewMatrix, mz.nodes[rp].fur[j].obj.rot.x, glm::vec3(1, 0, 0));
-                                    modelViewMatrix = scale(modelViewMatrix, mz.nodes[rp].fur[j].obj.sca);
-                                    vec3 P[6] = {
-                                        modelViewMatrix * vec4(1,0,0,1) ,
-                                        modelViewMatrix * vec4(0,1,0,1) ,
-                                        modelViewMatrix * vec4(0,0,1,1) ,
-                                        modelViewMatrix * vec4(-1,0,0,1),
-                                        modelViewMatrix * vec4(0,-1,0,1),
-                                        modelViewMatrix * vec4(0,0,-1,1)
-                                    };
-
-                                    bool clip = false;
-                                    for (int i = 0; i < 6; i++)
-                                    {
-
-                                        //for math
-                                        vec3 PP1 = (P[i] + P[(i + 1) % 6] + P[(i + 2) % 6]) + mz.nodes[rp].fur[j].obj.pos;
-                                        vec3 PP2 = (P[i] + P[(i + 1) % 6] - P[(i + 2) % 6]) + mz.nodes[rp].fur[j].obj.pos;
-                                        vec3 PP3 = (P[i] - P[(i + 1) % 6] - P[(i + 2) % 6]) + mz.nodes[rp].fur[j].obj.pos;
-                                        vec3 PP4 = (P[i] - P[(i + 1) % 6] + P[(i + 2) % 6]) + mz.nodes[rp].fur[j].obj.pos;
-
-                                        float t = dot(normalize(P[i]), ((P[i] + mz.nodes[rp].fur[j].obj.pos) - startOfRay)) / dot(normalize(P[i]), DirectionOfRay);
-                                        vec3 asd = startOfRay + DirectionOfRay * t;
-
-
-                                        if (dot(normalize(PP1 - PP2), asd) > dot(normalize(PP1 - PP2), PP2) && dot(PP1 - PP2, asd) < dot(PP1 - PP2, PP1) &&
-                                            dot(normalize(PP1 - PP4), asd) > dot(normalize(PP1 - PP4), PP4) && dot(PP1 - PP4, asd) < dot(PP1 - PP4, PP1) &&
-                                            dot(normalize(DirectionOfRay), asd) > dot(normalize(DirectionOfRay), startOfRay))
-                                        {
-
-                                            glUniform3f(glGetUniformLocation(ShaderDebug, "p2"), asd.x, asd.y, asd.z);
-                                            glUniform3f(glGetUniformLocation(ShaderDebug, "p1"), asd.x, asd.y + 0.01f, asd.z);
-
-                                            glUniform3f(glGetUniformLocation(ShaderDebug, "col"), 0, 1, 0);
-                                            glDrawArrays(GL_LINES, 0, 4);
-
-                                            if (distance(startOfRay, asd) < distance(startOfRay, PR2))
-                                            {
-                                                PR2 = asd;
-
-                                            }
-                                        }
-
-                                    }
-                                }
-                                }
-                            }
-                        }
-
-                       glUniform3f(glGetUniformLocation(ShaderDebug, "p1"), PR2.x, PR2.y, PR2.z);
-                       glUniform3f(glGetUniformLocation(ShaderDebug, "p2"), startOfRay.x, startOfRay.y, startOfRay.z);
-                       glUniform3f(glGetUniformLocation(ShaderDebug, "col"), 1, 0, 0);
-                       if(distance(PR2, ray)<0.05) glUniform3f(glGetUniformLocation(ShaderDebug, "col"), 0, 1, 0);
-                       glDrawArrays(GL_LINES, 0, 4);
-                    
-
-                    }
-                }
-                */
+               
             }
             else {
 
@@ -1275,27 +1210,9 @@ int main()
 
                 glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-                glViewport(OFF_WIDTH, OFF_HEIGHT, SCR_WIDTH, SCR_HEIGHT);
-
-
                 glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
                 glEnable(GL_DEPTH_TEST);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
-
-                glUseProgram(cam.ScreenShader);
-                glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, cam.PFB1.ColTex);
-                glUniform4f(glGetUniformLocation(cam.ScreenShader, "textureMatrix"), 0, 0, 1, 1);
-                cam.drawScreen();
-                glUseProgram(cam.MapShader);
-                glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, cam.MFB.ColTex);
-                glUniform1i(glGetUniformLocation(cam.MapShader, "ColT2"), 0);
-                glUniform4f(glGetUniformLocation(cam.MapShader, "textureMatrix"), 0, 0, 1, 1);
-                glUniform2f(glGetUniformLocation(cam.MapShader, "screen"), SCR_WIDTH, SCR_HEIGHT);
-                cam.drawScreen();
 
                 glViewport(OFF_WIDTH + (SCR_WIDTH - SCR_HEIGHT) / 2, OFF_HEIGHT, SCR_HEIGHT, SCR_HEIGHT);
                 glUseProgram(ShaderUI);

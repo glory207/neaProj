@@ -334,112 +334,107 @@ std::vector<glm::vec2> Maze::makeLines(int tp,int  sd,int  p0,int  p1,int  p2,in
 
 
 float Maze::project(float x, float y, int side, Furniture f) {
-    // get the distance from point xy to the furnitures center parralel to the edge of the furniture
+    // get the distance from point xy to the furnitures center parralel to the side of the furniture
     if (side == 0) return x * cos(f.obj.rot.y) - y * sin(f.obj.rot.y);
-    // uses the other edge
+    // uses the other side
     else  return x * sin(f.obj.rot.y) + y * cos(f.obj.rot.y);
 }
 
-bool Maze::collide(glm::vec3* pos, glm::vec3* acc, glm::vec2 leway) {
-    glm::vec3 temp;
-    if (acc == nullptr) acc = new glm::vec3(0);
+bool Maze::collide(glm::vec3* pos, float leway) {
     // if the object is not in the air
     bool grnd = false;
-    // the minimun distance the object can be away from a wall
-    leway.x /= -size;
+    // scales the player to the maze
+    leway /= -size;
     (*pos) /= size;
     // the node the object is within
     int nd = (int)((*pos).x + 0.5f) + (int)((*pos).z + 0.5f) * count;
-    if (nd >= 0 && nd< count* count)
+    // validates they are within the maze
+    if (nd >= 0 && nd < count * count)
     {
+        
         // if the object is within the walls move it out
-        if (!nodes[nd].sidesIsPath[0] && (int)((*pos).z + 0.5f) - (*pos).z < -(thk + leway.x)) {
-            (*pos).z += (thk + leway.x) + (int)((*pos).z +0.5f) - (*pos).z;
-            (*acc).z *= -1;
-            //std::cout << "00" << std::endl;
+        if (!nodes[nd].sidesIsPath[0] && (int)((*pos).z + 0.5f) - (*pos).z < -(thk + leway)) {
+            (*pos).z += (thk + leway) + (int)((*pos).z + 0.5f) - (*pos).z;
         }
-        if (!nodes[nd].sidesIsPath[1] && (int)((*pos).z +0.5f) - (*pos).z > (thk + leway.x)) {
-            (*pos).z += (int)((*pos).z +0.5f) - (*pos).z - (thk + leway.x);
-            (*acc).z *= -1;
-            //std::cout << "01" << std::endl;
+        if (!nodes[nd].sidesIsPath[1] && (int)((*pos).z + 0.5f) - (*pos).z > (thk + leway)) {
+            (*pos).z += (int)((*pos).z + 0.5f) - (*pos).z - (thk + leway);
         }
 
-        if (!nodes[nd].sidesIsPath[2] && (int)((*pos).x +0.5f) - (*pos).x > (thk + leway.x)) {
-            (*pos).x += (int)((*pos).x +0.5f) - (*pos).x - (thk + leway.x);
-            (*acc).x *= -1;
-
-            //std::cout << "02" << std::endl;
+        if (!nodes[nd].sidesIsPath[2] && (int)((*pos).x + 0.5f) - (*pos).x > (thk + leway)) {
+            (*pos).x += (int)((*pos).x + 0.5f) - (*pos).x - (thk + leway);
         }
-        if (!nodes[nd].sidesIsPath[3] && (int)((*pos).x +0.5f) - (*pos).x < -(thk + leway.x)) {
-            (*pos).x += (int)((*pos).x +0.5f) - (*pos).x + (thk + leway.x);
-            (*acc).x *= -1;
-            //std::cout << "03" << std::endl;
+        if (!nodes[nd].sidesIsPath[3] && (int)((*pos).x + 0.5f) - (*pos).x < -(thk + leway)) {
+            (*pos).x += (int)((*pos).x + 0.5f) - (*pos).x + (thk + leway);
         }
 
         // the 4 corners
-
-        if (nodes[nd].sidesIsPath[1] && (int)((*pos).z +0.5f) - (*pos).z > (thk + leway.x) &&
-            nodes[nd].sidesIsPath[3] && (int)((*pos).x +0.5f) - (*pos).x < -(thk + leway.x) &&
+        if (
+            // the player is standing in the corner
+            nodes[nd].sidesIsPath[1] && (int)((*pos).z + 0.5f) - (*pos).z > (thk + leway) &&
+            nodes[nd].sidesIsPath[3] && (int)((*pos).x + 0.5f) - (*pos).x < -(thk + leway) &&
             (
-                !nodes[(int)((*pos).x +0.5f) + 1.0 + (int)((*pos).z +0.5f - 1.0f) * count].sidesIsPath[0] ||
-                !nodes[(int)((*pos).x +0.5f) + 1.0 + (int)((*pos).z +0.5f - 1.0f) * count].sidesIsPath[2]
-                )
-            ) {
-            if (abs((int)((*pos).z +0.5f) - (*pos).z - (thk + leway.x)) < abs((int)((*pos).x +0.5f) - (*pos).x + (thk + leway.x)))
+                // the two nodes beside it have made a corner
+            !nodes[(int)((*pos).x + 0.5f) + 1.0 + (int)((*pos).z + 0.5f - 1.0f) * count].sidesIsPath[0] ||
+            !nodes[(int)((*pos).x + 0.5f) + 1.0 + (int)((*pos).z + 0.5f - 1.0f) * count].sidesIsPath[2]
+            )
+            ) 
+        {
+            if (abs((int)((*pos).z + 0.5f) - (*pos).z - (thk + leway)) < abs((int)((*pos).x + 0.5f) - (*pos).x + (thk + leway)))
             {
-                (*pos).z += (int)((*pos).z +0.5f) - (*pos).z - (thk + leway.x); (*acc).z *= -1;
+                (*pos).z += (int)((*pos).z + 0.5f) - (*pos).z - (thk + leway);
             }
-            else { (*pos).x += (int)((*pos).x +0.5f) - (*pos).x + (thk + leway.x); (*acc).x *= -1; }
+            else { (*pos).x += (int)((*pos).x + 0.5f) - (*pos).x + (thk + leway);  }
 
         }
 
 
-        if (nodes[nd].sidesIsPath[1] && (int)((*pos).z +0.5f) - (*pos).z > (thk + leway.x) &&
-            nodes[nd].sidesIsPath[2] && (int)((*pos).x +0.5f) - (*pos).x > (thk + leway.x) &&
+        if (nodes[nd].sidesIsPath[1] && (int)((*pos).z + 0.5f) - (*pos).z > (thk + leway) &&
+            nodes[nd].sidesIsPath[2] && (int)((*pos).x + 0.5f) - (*pos).x > (thk + leway) &&
             (
-                !nodes[(int)((*pos).x +0.5f) - 1.0 + (int)((*pos).z +0.5f - 1.0f) * count].sidesIsPath[0] ||
-                !nodes[(int)((*pos).x +0.5f) - 1.0 + (int)((*pos).z +0.5f - 1.0f) * count].sidesIsPath[3]
+                !nodes[(int)((*pos).x + 0.5f) - 1.0 + (int)((*pos).z + 0.5f - 1.0f) * count].sidesIsPath[0] ||
+                !nodes[(int)((*pos).x + 0.5f) - 1.0 + (int)((*pos).z + 0.5f - 1.0f) * count].sidesIsPath[3]
                 )
             ) {
 
-            if (abs((int)((*pos).z +0.5f) - (*pos).z - (thk + leway.x)) < abs((int)((*pos).x +0.5f) - (*pos).x - (thk + leway.x)))
+            if (abs((int)((*pos).z + 0.5f) - (*pos).z - (thk + leway)) < abs((int)((*pos).x + 0.5f) - (*pos).x - (thk + leway)))
             {
-                (*pos).z += (int)((*pos).z +0.5f) - (*pos).z - (thk + leway.x); (*acc).z *= -1;
+                (*pos).z += (int)((*pos).z + 0.5f) - (*pos).z - (thk + leway);
             }
-            else { (*pos).x += (int)((*pos).x +0.5f) - (*pos).x - (thk + leway.x); (*acc).x *= -1; }
+            else { (*pos).x += (int)((*pos).x + 0.5f) - (*pos).x - (thk + leway); }
 
         }
 
 
-        if (nodes[nd].sidesIsPath[0] && (int)((*pos).z +0.5f) - (*pos).z < -(thk + leway.x) &&
-            nodes[nd].sidesIsPath[3] && (int)((*pos).x +0.5f) - (*pos).x < -(thk + leway.x) && (
-                !nodes[(int)((*pos).x +0.5f) + 1.0 + (int)((*pos).z +0.5f + 1.0f) * count].sidesIsPath[1] ||
-                !nodes[(int)((*pos).x +0.5f) + 1.0 + (int)((*pos).z +0.5f + 1.0f) * count].sidesIsPath[2]
+        if (nodes[nd].sidesIsPath[0] && (int)((*pos).z + 0.5f) - (*pos).z < -(thk + leway) &&
+            nodes[nd].sidesIsPath[3] && (int)((*pos).x + 0.5f) - (*pos).x < -(thk + leway) && (
+                !nodes[(int)((*pos).x + 0.5f) + 1.0 + (int)((*pos).z + 0.5f + 1.0f) * count].sidesIsPath[1] ||
+                !nodes[(int)((*pos).x + 0.5f) + 1.0 + (int)((*pos).z + 0.5f + 1.0f) * count].sidesIsPath[2]
                 )
             ) {
 
-            if (abs((thk + leway.x) + (int)((*pos).z +0.5f) - (*pos).z) < abs((int)((*pos).x +0.5f) - (*pos).x + (thk + leway.x)))
+            if (abs((thk + leway) + (int)((*pos).z + 0.5f) - (*pos).z) < abs((int)((*pos).x + 0.5f) - (*pos).x + (thk + leway)))
             {
-                (*pos).z += (thk + leway.x) + (int)((*pos).z +0.5f) - (*pos).z; (*acc).z *= -1;
+                (*pos).z += (thk + leway) + (int)((*pos).z + 0.5f) - (*pos).z;
             }
-            else { (*pos).x += (int)((*pos).x +0.5f) - (*pos).x + (thk + leway.x); (*acc).x *= -1; }
+            else { (*pos).x += (int)((*pos).x + 0.5f) - (*pos).x + (thk + leway);  }
 
         }
 
 
-        if (nodes[nd].sidesIsPath[0] && (int)((*pos).z +0.5f) - (*pos).z<-(thk + leway.x) &&
-            nodes[nd].sidesIsPath[2] && (int)((*pos).x +0.5f) - (*pos).x>(thk + leway.x) && (
-                !nodes[(int)((*pos).x +0.5f) - 1.0 + (int)((*pos).z +0.5f + 1.0f) * count].sidesIsPath[1] ||
-                !nodes[(int)((*pos).x +0.5f) - 1.0 + (int)((*pos).z +0.5f + 1.0f) * count].sidesIsPath[3]
+        if (nodes[nd].sidesIsPath[0] && (int)((*pos).z + 0.5f) - (*pos).z<-(thk + leway) &&
+            nodes[nd].sidesIsPath[2] && (int)((*pos).x + 0.5f) - (*pos).x>(thk + leway) && (
+                !nodes[(int)((*pos).x + 0.5f) - 1.0 + (int)((*pos).z + 0.5f + 1.0f) * count].sidesIsPath[1] ||
+                !nodes[(int)((*pos).x + 0.5f) - 1.0 + (int)((*pos).z + 0.5f + 1.0f) * count].sidesIsPath[3]
                 )
             ) {
-            if (abs((thk + leway.x) + (int)((*pos).z +0.5f) - (*pos).z) < abs((int)((*pos).x +0.5f) - (*pos).x - (thk + leway.x)))
+            if (abs((thk + leway) + (int)((*pos).z + 0.5f) - (*pos).z) < abs((int)((*pos).x + 0.5f) - (*pos).x - (thk + leway)))
             {
-                (*pos).z += (thk + leway.x) + (int)((*pos).z +0.5f) - (*pos).z; (*acc).z *= -1;
+                (*pos).z += (thk + leway) + (int)((*pos).z + 0.5f) - (*pos).z;
             }
-            else { (*pos).x += (int)((*pos).x +0.5f) - (*pos).x - (thk + leway.x); (*acc).x *= -1; }
+            else { (*pos).x += (int)((*pos).x + 0.5f) - (*pos).x - (thk + leway); }
 
         }
+        
     }
     else
     {
@@ -447,14 +442,15 @@ bool Maze::collide(glm::vec3* pos, glm::vec3* acc, glm::vec2 leway) {
         (*pos).x = 0;
         (*pos).z = 0;
     }
-    leway.x *= -size;
-
+    // scale the world
     (*pos) *= size;
 
+    leway *= -size;
 
-    for (Furniture f : nodes[nd].fur) {
+    for (int f = 0; f < nodes[nd].fur.size(); f++) {
         // if close enough to collide with the furniture
-        if (pow((*pos).x - f.obj.pos.x, 2.0) + pow((*pos).z - f.obj.pos.z, 2.0) < max(f.obj.sca.x, f.obj.sca.z) * 2.0)
+        if (pow((*pos).x - nodes[nd].fur[f].obj.pos.x, 2.0) + pow((*pos).z - nodes[nd].fur[f].obj.pos.z, 2.0)
+            < max(nodes[nd].fur[f].obj.sca.x, nodes[nd].fur[f].obj.sca.z) * 2.0)
         {
 
             vec2 Points[] = {
@@ -465,15 +461,17 @@ bool Maze::collide(glm::vec3* pos, glm::vec3* acc, glm::vec2 leway) {
             };
             // gets the position of the 4 points at the base of the furniture
             for (int i = 0; i < 4; i++) {
-                Points[i].x *= f.obj.sca.x ;
-                Points[i].y *= f.obj.sca.z ;
-
-                vec2 PP = vec2(Points[i].x * cos(f.obj.rot.y) + Points[i].y * sin(f.obj.rot.y), -Points[i].x * sin(f.obj.rot.y) + Points[i].y * cos(f.obj.rot.y));
+                // scale
+                Points[i].x *= nodes[nd].fur[f].obj.sca.x;
+                Points[i].y *= nodes[nd].fur[f].obj.sca.z;
+                // rotate
+                vec2 PP = vec2(Points[i].x * cos(nodes[nd].fur[f].obj.rot.y) + Points[i].y * sin(nodes[nd].fur[f].obj.rot.y),
+                    -Points[i].x * sin(nodes[nd].fur[f].obj.rot.y) + Points[i].y * cos(nodes[nd].fur[f].obj.rot.y));
                 Points[i] = PP;
+                // translate
+                Points[i].x += nodes[nd].fur[f].obj.pos.x;
+                Points[i].y += nodes[nd].fur[f].obj.pos.z;
 
-                Points[i].x += f.obj.pos.x;
-                Points[i].y += f.obj.pos.z;
-                
             }
 
             bool inside1 = false;
@@ -482,81 +480,58 @@ bool Maze::collide(glm::vec3* pos, glm::vec3* acc, glm::vec2 leway) {
             float secondDist = 0.0;
 
             // gets the magnitude of how deep within the furniture it is from one side
-            float max = -90000.0;
-            float min = 90000.0;
-            for (int i = 0; i < 4; i++) {
-                float test = project(Points[i].x, Points[i].y, 0,f);
-                if (test > max)max = test;
-                if (test < min)min = test;
-            }
-            float playProj = project((*pos).x, (*pos).z, 0,f);
-            if (playProj + leway.x > min && playProj - leway.x < max) {
+            float max = project(Points[2].x, Points[2].y, 0, nodes[nd].fur[f]);
+            float min = project(Points[1].x, Points[1].y, 0, nodes[nd].fur[f]);
+
+            float playProj = project((*pos).x, (*pos).z, 0, nodes[nd].fur[f]);
+            if (playProj + leway > min && playProj - leway < max) {
                 inside1 = true;
-                if (playProj + leway.x - min > max - playProj - leway.x) firstDist = max - playProj + leway.x;
-                else firstDist = min - playProj - leway.x;
+                if (playProj + leway - min > max - playProj - leway) firstDist = max - playProj + leway;
+                else firstDist = min - playProj - leway;
             }
 
             // gets the magnitude of how deep within the furniture it is from the other side
-            max = -90000.0;
-            min = 90000.0;
-            for (int i = 0; i < 4; i++) {
-                float test = project(Points[i].x, Points[i].y, 1,f);
-                if (test > max)max = test;
-                if (test < min)min = test;
-            }
-            playProj = project((*pos).x, (*pos).z, 1,f);
-            if (playProj + leway.x > min && playProj - leway.x < max) {
+            max = project(Points[0].x, Points[0].y, 1, nodes[nd].fur[f]);
+            min = project(Points[1].x, Points[1].y, 1, nodes[nd].fur[f]);
+
+            playProj = project((*pos).x, (*pos).z, 1, nodes[nd].fur[f]);
+            if (playProj + leway > min && playProj - leway < max) {
                 inside2 = true;
-                if (playProj + leway.x - min > max - playProj - leway.x) secondDist = max - playProj + leway.x;
-                else secondDist = min - playProj - leway.x;
+                if (playProj + leway - min > max - playProj - leway) secondDist = max - playProj + leway;
+                else secondDist = min - playProj - leway;
 
 
             }
+
             // if inside it from both sides and the top then it must be moved out
-            if (inside1 && inside2 && (*pos).y - leway.y < f.obj.pos.y + f.obj.sca.y) {
+            if (inside1 && inside2 && (*pos).y < nodes[nd].fur[f].obj.pos.y + nodes[nd].fur[f].obj.sca.y) {
                 //choses the direction where the least movment nessesery is chosen
-                if (abs(firstDist) > abs(f.obj.sca.y + f.obj.sca.y + leway.y - (*pos).y) && abs(secondDist) > abs(f.obj.sca.y + f.obj.sca.y + leway.y - (*pos).y)) {
-                    (*pos).y = f.obj.pos.y + f.obj.sca.y + leway.y-0.001f;
+                if (abs(firstDist) > abs(nodes[nd].fur[f].obj.sca.y + nodes[nd].fur[f].obj.sca.y - (*pos).y) && abs(secondDist) > abs(nodes[nd].fur[f].obj.sca.y + nodes[nd].fur[f].obj.sca.y - (*pos).y)) {
+                    (*pos).y = nodes[nd].fur[f].obj.pos.y + nodes[nd].fur[f].obj.sca.y - 0.001f;
                     // if standing on top of the furniture its not in the air
                     grnd = true;
-                    if ((*acc).y < 0)  (*acc).y *= -1.0;
                 }
                 else
-                if (abs(firstDist) > abs(secondDist))
-                {
-                    vec3 acct = vec3((*acc).x - 2 * ((*acc).x * (sin(f.obj.rot.y)) + (*acc).z * (cos(f.obj.rot.y))) * (sin(f.obj.rot.y)),
-                        (*acc).y,
-                        (*acc).z - 2 * ((*acc).x * (sin(f.obj.rot.y)) + (*acc).z * (cos(f.obj.rot.y))) * (cos(f.obj.rot.y))
-                    );
-                   
-                    (*acc).x = acct.x;
-                    (*acc).y = acct.y;
-                    (*acc).z = acct.z;
-                    (*pos).x += sin(f.obj.rot.y) * secondDist;
-                    (*pos).z += cos(f.obj.rot.y) * secondDist;
-                }
-                else
-                {
-                    vec3 acct = vec3((*acc).x - 2 * ((*acc).x * (cos(f.obj.rot.y)) + (*acc).z * -(sin(f.obj.rot.y))) * (cos(f.obj.rot.y)),
-                        (*acc).y,
-                        (*acc).z - 2 * ((*acc).x * (cos(f.obj.rot.y)) + (*acc).z * -(sin(f.obj.rot.y))) * -(sin(f.obj.rot.y))
-                    );
-                    (*acc).x = acct.x;
-                    (*acc).y = acct.y;
-                    (*acc).z = acct.z;
-                    (*pos).x += cos(f.obj.rot.y) * firstDist;
-                    (*pos).z += -sin(f.obj.rot.y) * firstDist;
-                }
-                
+                    if (abs(firstDist) > abs(secondDist))
+                    {
+                        (*pos).x += sin(nodes[nd].fur[f].obj.rot.y) * secondDist;
+                        (*pos).z += cos(nodes[nd].fur[f].obj.rot.y) * secondDist;
+                    }
+                    else
+                    {
+                        (*pos).x += cos(nodes[nd].fur[f].obj.rot.y) * firstDist;
+                        (*pos).z += -sin(nodes[nd].fur[f].obj.rot.y) * firstDist;
+                    }
+
             }
-           
+
         }
     }
-    
+
     // if standing on the ground its not in the air
-    if ((*pos).y < leway.y) {
-        (*pos).y = leway.y - 0.001f;;
-        if ( (*acc).y < 0.0f)  (*acc).y *= -1.0f;
+    if ((*pos).y < 0) {
+        (*pos).y = -0.0f;
+
 
         grnd = true;
     }
