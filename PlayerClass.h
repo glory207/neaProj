@@ -17,6 +17,7 @@ public:
     vec2 vel;
     vec3 acc;
     vec2 inp;
+    vec2 lok;
     vec2 dir;
     bool SP;
     bool SH;
@@ -35,6 +36,7 @@ public:
         vel = vec2(0.0, 0.0);
         acc = vec3(0.0, 0.0, 0.0);
         inp = vec2(0, 0);
+        lok = vec2(0, 0);
         dir = vec2(0, 0);
         SP = false;
         SH = false;

@@ -1,5 +1,6 @@
 #include "UIelement.h"
 
+void UIelement::update(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, bool mouseD) {}
 void UIelement::draw(GLuint VAO,GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, bool mouseD) {
 
 	glUniform1i(glGetUniformLocation(ShaderUI, "chr"), chr);
@@ -23,23 +24,36 @@ void UIDIV::draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, bool
 	UIelement::draw(VAO, ShaderUI, ps, sc, mouse, mouseD);
 
 	for (int n = 0; n < children.size(); n ++) {
-		if (dynamic_cast<UIDIV*>(children[n]) != nullptr)(*children[n]).draw(VAO, ShaderUI, pos * sc + ps, sca * sc, mouse, mouseD);
+		children[n]->draw(VAO, ShaderUI, pos * sc + ps, sca * sc, mouse, mouseD);
 		if (dynamic_cast<UIButton*>(children[n]) != nullptr)
 		{
 			UIButton* buton = dynamic_cast<UIButton*>(children[n]);
-			if (mouseD&&
+			if(cur == n && (*buton).child != nullptr)(*buton).child->draw(VAO, ShaderUI, ps, sc, mouse, mouseD);
+		}
+	}
+}
+
+void UIDIV::update(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, bool mouseD) {
+
+	for (int n = 0; n < children.size(); n++) {
+		children[n]->update(VAO, ShaderUI, pos * sc + ps, sca * sc, mouse, mouseD);
+		if (dynamic_cast<UIButton*>(children[n]) != nullptr)
+		{
+			UIButton* buton = dynamic_cast<UIButton*>(children[n]);
+			if (mouseD &&
 				mouse.x > (pos.x * sc.x + ps.x + ((*buton).pos.x * sca.x * sc.x)) - (sca.x * sc.x * (*buton).sca.x) &&
 				mouse.x < (pos.x * sc.x + ps.x + ((*buton).pos.x * sca.x * sc.x)) + (sca.x * sc.x * (*buton).sca.x) &&
 				mouse.y >(pos.y * sc.y + ps.y + ((*buton).pos.y * sca.y * sc.y)) - (sca.y * sc.y * (*buton).sca.y) &&
-				mouse.y < (pos.y * sc.y + ps.y + ((*buton).pos.y * sca.y * sc.y)) + (sca.y * sc.y * (*buton).sca.y) 
-				
+				mouse.y < (pos.y * sc.y + ps.y + ((*buton).pos.y * sca.y * sc.y)) + (sca.y * sc.y * (*buton).sca.y)
+
 				)
 				cur = n;
-			if(cur == n && (*buton).child != nullptr)(*buton).child->draw(VAO, ShaderUI, ps, sc, mouse, mouseD);
+			
+			if (cur == n && (*buton).child != nullptr)(*buton).child->update(VAO, ShaderUI, ps, sc, mouse, mouseD);
 		}
-		(*children[n]).draw(VAO, ShaderUI, pos * sc + ps, sca * sc, mouse, mouseD);
 	}
 }
+
 UIButton::UIButton(vec2 pos, vec2 sca, vec4 back, vec4 four,string txt) {
 	this->pos = pos;
 	this->sca = sca;
@@ -51,12 +65,7 @@ UIButton::UIButton(vec2 pos, vec2 sca, vec4 back, vec4 four,string txt) {
 void UIButton::draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, bool mouseD) {
 	chr = -1;
 
-	bool hover =
-		mouse.x < ((pos.x * sc.x + ps.x) + (sca.x * sc.x)) &&
-		mouse.x >((pos.x * sc.x + ps.x) - (sca.x * sc.x)) &&
-		mouse.y < ((pos.y * sc.y + ps.y) + (sca.y * sc.y)) &&
-		mouse.y >((pos.y * sc.y + ps.y) - (sca.y * sc.y))
-		;
+
 	vec2 pss;
 	vec2 scc = sca * sc;
 	if (hover && mouseD) {
@@ -80,6 +89,16 @@ void UIButton::draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, b
 	drawString(VAO, ShaderUI, pss, scc, text);
 	
 }
+void UIButton::update(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, bool mouseD) {
+	chr = -1;
+
+	hover =
+		mouse.x < ((pos.x * sc.x + ps.x) + (sca.x * sc.x)) &&
+		mouse.x >((pos.x * sc.x + ps.x) - (sca.x * sc.x)) &&
+		mouse.y < ((pos.y * sc.y + ps.y) + (sca.y * sc.y)) &&
+		mouse.y >((pos.y * sc.y + ps.y) - (sca.y * sc.y))
+		;
+}
 
 
 UIslider::UIslider(vec2 pos, vec2 sca, vec4 back, vec4 four, string txt, float frac) {
@@ -94,18 +113,8 @@ UIslider::UIslider(vec2 pos, vec2 sca, vec4 back, vec4 four, string txt, float f
 
 void UIslider::draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, bool mouseD) {
 	chr = -1;
-	bool hover =
-		mouse.x < ((pos.x * sc.x + ps.x) + (sca.x * sc.x)) &&
-		mouse.x >((pos.x * sc.x + ps.x) - (sca.x * sc.x)) &&
-		mouse.y < ((pos.y * sc.y + ps.y) + (sca.y * sc.y)) &&
-		mouse.y >((pos.y * sc.y + ps.y) - (sca.y * sc.y));
 
 	UIelement::draw(VAO, ShaderUI, ps, sc, mouse, mouseD);
-	if (hover && mouseD) {
-		fraction = (mouse.x-((pos.x * sc.x + ps.x) - (sca.x * sc.x)*0.9)) / ((sca.x * sc.x) * 2.0*0.9);
-		if (fraction < 0)fraction = 0;
-		if (fraction > 1)fraction = 1;
-	}
 
 	glUniform1f(glGetUniformLocation(ShaderUI, "corner"), 0.02);
 	glUniform4f(glGetUniformLocation(ShaderUI, "backround"), 1, 1, 0, 1);
@@ -119,6 +128,22 @@ void UIslider::draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, b
 
 	string t = text + " " + to_string(int(fraction * 100)) + "%";
 	drawString(VAO, ShaderUI, vec2(0, 0.75) * vec2(1, 0.5) * (sca * sc) + (pos * sc + ps),vec2(1,0.5) * (sca * sc), t);
+}
+
+void UIslider::update(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, bool mouseD) {
+	chr = -1;
+	hover =
+		mouse.x < ((pos.x * sc.x + ps.x) + (sca.x * sc.x)) &&
+		mouse.x >((pos.x * sc.x + ps.x) - (sca.x * sc.x)) &&
+		mouse.y < ((pos.y * sc.y + ps.y) + (sca.y * sc.y)) &&
+		mouse.y >((pos.y * sc.y + ps.y) - (sca.y * sc.y));
+
+	if (hover && mouseD) {
+		fraction = (mouse.x-((pos.x * sc.x + ps.x) - (sca.x * sc.x)*0.9)) / ((sca.x * sc.x) * 2.0*0.9);
+		if (fraction < 0)fraction = 0;
+		if (fraction > 1)fraction = 1;
+	}
+
 }
 
 UItoggler::UItoggler(vec2 pos, vec2 sca, vec4 back, vec4 four, string txt, bool tr) {
@@ -139,13 +164,6 @@ void UItoggler::draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, 
 	vec2 oss = vec2(0.75,0.0);
 	vec2 caa = vec2(0.15, 0.8);
 
-	bool hover =
-		mouse.x < ((oss.x * scaa.x + poss.x) + (caa.x * scaa.x)) &&
-		mouse.x >((oss.x * scaa.x + poss.x) - (caa.x * scaa.x)) &&
-		mouse.y < ((oss.y * scaa.y + poss.y) + (caa.y * scaa.y)) &&
-		mouse.y >((oss.y * scaa.y + poss.y) - (caa.y * scaa.y));
-	
-
 	if (hover && mouseD) {
 		poss += vec2(0,0.005);
 	}
@@ -154,13 +172,6 @@ void UItoggler::draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, 
 	}
 
 	UIelement::draw(VAO, ShaderUI, ps, sc, mouse, mouseD);
-
-	if (hover && mouseD && isDown) {
-		isTrue = !isTrue;
-	}
-	if (hover && mouseD) isDown = true; 
-	else isDown = false;
-
 
 
 	glUniform1i(glGetUniformLocation(ShaderUI, "chr"), chr); 
@@ -180,6 +191,29 @@ void UItoggler::draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, 
 	glBindVertexArray(VAO);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 	drawString(VAO, ShaderUI, vec2(-0.3, 0.0) * vec2(0.7, 0.5) * (sca * sc) + (pos * sc + ps),vec2(0.7,0.5) * (sca * sc), text);
+}
+
+void UItoggler::update(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, bool mouseD) {
+	chr = -1;
+	vec2 poss = pos * sc + ps;
+	vec2 scaa = sca * sc;
+
+	vec2 oss = vec2(0.75,0.0);
+	vec2 caa = vec2(0.15, 0.8);
+
+	hover =
+		mouse.x < ((oss.x * scaa.x + poss.x) + (caa.x * scaa.x)) &&
+		mouse.x >((oss.x * scaa.x + poss.x) - (caa.x * scaa.x)) &&
+		mouse.y < ((oss.y * scaa.y + poss.y) + (caa.y * scaa.y)) &&
+		mouse.y >((oss.y * scaa.y + poss.y) - (caa.y * scaa.y));
+	
+
+	if ((hover && mouseD) && !isDown) {
+		isTrue = !isTrue;
+	}
+	if (hover && mouseD) isDown = true; 
+	else isDown = false;
+
 }
 
 void drawString(GLuint VAO, GLuint ShaderUI, vec2 pss, vec2 scc,string text) {
@@ -262,7 +296,20 @@ void UImenue::draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, bo
 	UIelement::draw(VAO, ShaderUI, ps, sc, mouse, mouseD);
 
 	for (int n = 0; n < children.size(); n++) {
-		if (dynamic_cast<UIDIV*>(children[n]) != nullptr)(*children[n]).draw(VAO, ShaderUI, pos * sc + ps, sca * sc, mouse, mouseD);
+		children[n]->draw(VAO, ShaderUI, pos * sc + ps, sca * sc, mouse, mouseD);
+		if (dynamic_cast<UIButton*>(children[n]) != nullptr)
+		{
+			UIButton* buton = dynamic_cast<UIButton*>(children[n]);
+			
+			if (cur == n && (*buton).child != nullptr)(*buton).child->draw(VAO, ShaderUI, ps, sc, mouse, mouseD);
+		}
+	}
+}
+
+void UImenue::update(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, bool mouseD) {
+	
+	for (int n = 0; n < children.size(); n++) {
+		children[n]->update(VAO, ShaderUI, pos * sc + ps, sca * sc, mouse, mouseD);
 		if (dynamic_cast<UIButton*>(children[n]) != nullptr)
 		{
 			UIButton* buton = dynamic_cast<UIButton*>(children[n]);
@@ -274,9 +321,8 @@ void UImenue::draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, bo
 
 				)
 				cur = n;
-			if (cur == n && (*buton).child != nullptr)(*buton).child->draw(VAO, ShaderUI, ps, sc, mouse, mouseD);
+			if (cur == n && (*buton).child != nullptr)(*buton).child->update(VAO, ShaderUI, ps, sc, mouse, mouseD);
 		}
-		(*children[n]).draw(VAO, ShaderUI, pos * sc + ps, sca * sc, mouse, mouseD);
 	}
 }
 

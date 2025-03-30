@@ -643,7 +643,7 @@ std::vector<CellGrid*> Maze::getpath(int sx, int sy,int start, int ex, int ey, i
 CellGrid* Maze::adjacentCellGrid(int CurentN[3],int px,int py, std::vector<CellGrid*>* nodesToSearch) {
     bool canAdd = true;
     int addingN[3] = { CurentN[0] + px,CurentN[1] + py,CurentN[2] };
-    // idd the adjacent cell grid is ouside the origional grid its translated to fit onto the adjacent node
+    // add the adjacent cell grid is ouside the origional grid its translated to fit onto the adjacent node
     // but only if there is a path to it
     if (addingN[1] == -1) {
         addingN[1] = 8;

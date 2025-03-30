@@ -21,85 +21,78 @@
 
       float getLight(vec3 posLight,vec3 posFrag,vec3 normal,vec3 normalF, samplerCube uSamplerSs,mat4 rot){
         vec3 dir = (posLight)-posFrag;
-        float difVal = max(dot(normal, normalize(dir)), 0.0);
         float dist = length(dir);
-        
 
+        // only shade if facing the light
+        float difVal = max(dot(normal, normalize(dir)), 0.0);
         
         float shadow = 0.0;
         float bias;
         float  closeD = 0.0;
         float currentD = length(posLight-posFrag);
 
-     closeD = texture(uSamplerSs, -normalize(dir)).r *100.0;
+        // if covered by onother object dont light it
+        closeD = texture(uSamplerSs, -normalize(dir)).r *100.0;
         bias = max(0.005* (1.0-dot(normalF,dir)), 0.005);
         if(currentD <= closeD + bias){ 
            shadow = 1.0;  
         }
         
-        
         if(shadow < 0.5) return 0;
         
-        
-
-
-
-
-       // float a = 10.0;
-       // float b = 0.0;
-       // float Falloff = 1.0 / (a * dist * dist + b * dist + 1.0);
+        // reduces the intencity of the light using a quadratic function
+        // at distance LightSetings.x it will be 0
         float Falloff = 1.0 - pow((dist)/LightSetings.x,2.0) + 0.15;
         if(Falloff<0)Falloff=0;
         difVal *= Falloff;
 
-
+        // gets the intencity of the light within the cone
         float angle = dot(normalize((inverse(rot) * vec4(0,0,1,0)).xyz), normalize(dir));
         float outerCone = ConeAngle;
         float innerCone = ConeAngle * 0.3;
         float difVal2 = clamp((angle + outerCone -1.57)/(outerCone*innerCone), 0.0, 1.0) * difVal;
         
+        // removes the cone if the angle is 0
+        if(ConeAngle == 0) difVal2 *= 0.0;  
+        else  difVal = difVal2;
 
-
-
-  
-      if(ConeAngle == 0) difVal2 *= 0.0;  
-      else  difVal = difVal2;
-        float asd = 4.0;
+        // clams the values of light for a nice visual effect
+        float steps = 4.0;
         if(difVal < 0.05) return 0;
-        difVal = floor((difVal * asd))/asd;
-
+        difVal = floor((difVal * steps))/steps;
         difVal += 0.5;
-        // if(max(dot(normal, normalize(dir)), 0.0) > 0.2) difVal += 1.0 * (1.0- (length(dir) / LightSetings.x));
-         
-         difVal *= difVal * difVal * LightSetings.y; 
-      // else difVal= 0.0;
+        difVal *= difVal * difVal * LightSetings.y; 
        
-           return (difVal);
+        return (difVal);
         }
 
 
 void main() {
-
+// preforms the ambient lighting giving enerything a base glow
     if(light == 1){
-        
-            vec3 color;
-         float difVal = 5.0f; 
-         color = texture(ColT, texPos).xyz * brightness * difVal;
-          fragColor = vec4(color,1.0);
+        vec3 color;
+        float difVal = 5.0f; 
+        color = texture(ColT, texPos).xyz * brightness * difVal;
+        fragColor = vec4(color,1.0);
+        // outputs the exact colors of objects unaffected by light e.g fire
         if(texture(PosT, texPos).xyz == vec3(-1.0)){
             fragColor = vec4((texture(ColT, texPos).xyz)*4,1.0);
         }
+
     }
     else if(light == 0 ){
-    if(texture(PosT, texPos).xyz != vec3(-1.0)){
-     vec3 color = texture(ColT, texPos).xyz * getLight(lightPos,texture(PosT, texPos).xyz+camPos,normalize(texture(NormT, texPos).xyz) * 1.5f,normalize(texture(NormFT, texPos).xyz),uSamplerS,rotcam)
-     //vec3 color = texture(ColT, texPos).xyz * getLight(lightPos,texture(PosT, texPos).xyz,normalize(texture(NormT, texPos).xyz) * 1.5f,normalize(texture(NormFT, texPos).xyz),uSamplerS,rotcam)
-      * normalize(lightCol);
+  // shades the objects that are affected by light
+            if(texture(PosT, texPos).xyz != vec3(-1.0)){
 
-       
-        
-        fragColor = vec4(color,1.0);
-       
+            vec3 color = texture(ColT, texPos).xyz * normalize(lightCol) *
+                         getLight(
+                                 lightPos,
+                                 texture(PosT, texPos).xyz+camPos,
+                                 normalize(texture(NormT, texPos).xyz) * 1.5f,
+                                 normalize(texture(NormFT, texPos).xyz),
+                                 uSamplerS,rotcam);
+
+            fragColor = vec4(color,1.0);
         }
     }
 

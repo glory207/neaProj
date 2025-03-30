@@ -18,6 +18,7 @@
 void doLight(createShadowFramebufferCube* shadowFB, unsigned int shaderShadowProgram, Light* li);
 void doLightNew(createShadowFramebufferCube* shadowFB, unsigned int shaderShadowProgram, Light* li);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void DrawingFunction();
 void processInput(GLFWwindow* window);
 
 unsigned int SCR_WIDTH = 1600;
@@ -55,11 +56,23 @@ std::random_device rd;  // Seed generator
 std::mt19937 gen(rd()); // Mersenne Twister engine
 std::uniform_real_distribution<float> Rand(0.0f, 1.0f); // Range [0, 1]
 GLFWwindow* window;
+UImenue menue;
 
 
+unsigned int VAO;
+unsigned int shaderProgram          ;
+unsigned int shaderLightProgram     ;
+unsigned int shaderShadowProgram    ;
+unsigned int shaderMazeProgram      ;
+unsigned int ShaderPost             ;
+unsigned int ShaderUI               ;
+unsigned int ShaderDebug            ;
+createShadowFramebufferCube shadowFB;
+vec2 mousep;
 
+float sensitivity = 0.001f;
 
-int main()
+int main2()
 {
 #pragma region Start
 
@@ -96,7 +109,7 @@ int main()
     cam = camera(vec3(0,0.2,-0.5), vec3(-0.2f,-2.356,0));
     cam.updateSize(vec2(SCR_WIDTH, SCR_HEIGHT) * resolution); 
     mz = Maze(5);
-    playerObj = SpObj(vec3(0, 0.05, 0), vec3(0), vec3(0.05), initCubeBuffer({0,1,2,3,4,5}),0,5);
+    playerObj = SpObj(vec3(0, 0.051f, 0), vec3(0), vec3(0.05f), initCubeBuffer({0,1,2,3,4,5}),0,5);
     unsigned int shaderProgram = initShader("shaders/def.vert", "shaders/def.geom", "shaders/def.frag");
     unsigned int shaderShadowProgram = initShader("shaders/shadow.vert", "shaders/shadow.geom", "shaders/shadow.frag");
     createShadowFramebufferCube shadowFB = createShadowFramebufferCube(500);
@@ -163,6 +176,21 @@ int main()
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) inp.x += -1;
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) inp.y += -1;
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) inp.x += 1;
+        GLFWgamepadstate state;
+       
+        if (glfwGetGamepadState(GLFW_JOYSTICK_1, &state))
+        {
+            if (state.buttons[GLFW_GAMEPAD_BUTTON_A])
+            {
+                
+            }
+            inp.x += state.axes[GLFW_GAMEPAD_AXIS_LEFT_X];
+            inp.y -= state.axes[GLFW_GAMEPAD_AXIS_LEFT_Y];
+
+            float sensitivity = deltaTime * 3;
+            cam.rot.x -= sensitivity * state.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y];
+            cam.rot.y -= sensitivity * state.axes[GLFW_GAMEPAD_AXIS_RIGHT_X];
+        }
 
         // rotates the direction of the input so it corresponds with the direction to the player
         vec3 move = vec3(inp.x * cos(playerObj.rot.y) - inp.y * sin(playerObj.rot.y),
@@ -267,8 +295,13 @@ int main()
                 // the angle  
                 glUniform1f(glGetUniformLocation(cam.shader, "ConeAngle"), 0);
 
-                glUniform3f(glGetUniformLocation(cam.shader, "lightPos"), mz.nodes[curIndex].ligh[tt].pos.x, mz.nodes[curIndex].ligh[tt].pos.y, mz.nodes[curIndex].ligh[tt].pos.z);
-                glUniform3f(glGetUniformLocation(cam.shader, "lightCol"), mz.nodes[curIndex].ligh[tt].col.x, mz.nodes[curIndex].ligh[tt].col.y, mz.nodes[curIndex].ligh[tt].col.z);
+                glUniform3f(glGetUniformLocation(cam.shader, "lightPos"), mz.nodes[curIndex].ligh[tt].pos.x,
+                                                                          mz.nodes[curIndex].ligh[tt].pos.y,
+                                                                          mz.nodes[curIndex].ligh[tt].pos.z);
+
+                glUniform3f(glGetUniformLocation(cam.shader, "lightCol"), mz.nodes[curIndex].ligh[tt].col.x,
+                                                                          mz.nodes[curIndex].ligh[tt].col.y,
+                                                                          mz.nodes[curIndex].ligh[tt].col.z);
 
                 // the range and brightness of the light
                 glUniform2f(glGetUniformLocation(cam.shader, "LightSetings"), LightSetings.x, LightSetings.y);
@@ -395,14 +428,15 @@ void doLight(createShadowFramebufferCube* shadowFB, unsigned int shaderShadowPro
 
         for (int t = 0; t < rdi * rdi; t++)
         {
-            if (Index + (t % rdi) - (rdi / 2) + (t / rdi - (rdi / 2)) * mz.count >= 0 &&
-                Index + (t % rdi) - (rdi / 2) + (t / rdi - (rdi / 2)) * mz.count < mz.nodes.size()) {
-                int curIndex = Index + (t % rdi) - (rdi / 2) + (t / rdi - (rdi / 2)) * mz.count;
-                for (int tt = 0; tt < mz.nodes[curIndex].ligh.size(); tt++) {
-                    mz.nodes[t].fur[tt].obj.draw(shaderShadowProgram);
+            int curIndex = Index + (t % rdi) - (rdi / 2) + (t / rdi - (rdi / 2)) * mz.count;
+            if (curIndex >= 0 &&
+                curIndex < mz.nodes.size()) {
+                for (int tt = 0; tt < mz.nodes[curIndex].fur.size(); tt++) {
+                    mz.nodes[curIndex].fur[tt].obj.draw(shaderShadowProgram);
                 }
             }
         }
+
     }
     else
     {
@@ -470,11 +504,12 @@ void doLightNew(createShadowFramebufferCube* shadowFB, unsigned int shaderShadow
         int rdi = 3;
         for (int j = 0; j < rdi * rdi; j++)
         {
-            if (playerIndex + (j % rdi) - (rdi / 2) + (j / rdi - (rdi / 2)) * mz.count >= 0 &&
-                playerIndex + (j % rdi) - (rdi / 2) + (j / rdi - (rdi / 2)) * mz.count < mz.nodes.size()) {
+            int curIndex = playerIndex + (j % rdi) - (rdi / 2) + (j / rdi - (rdi / 2)) * mz.count;
+            if (curIndex >= 0 &&
+                curIndex < mz.nodes.size()) {
 
-                for (int tt = 0; tt < mz.nodes[playerIndex + (j % rdi) - (rdi / 2) + (j / rdi - (rdi / 2))].ligh.size(); tt++) {
-                    mz.nodes[playerIndex + (j % rdi) - (rdi / 2) + (j / rdi - (rdi / 2))].fur[tt].obj.draw(shaderShadowProgram);
+                for (int tt = 0; tt < mz.nodes[curIndex].ligh.size(); tt++) {
+                    mz.nodes[curIndex].fur[tt].obj.draw(shaderShadowProgram);
                 }
             }
 
@@ -488,11 +523,12 @@ void doLightNew(createShadowFramebufferCube* shadowFB, unsigned int shaderShadow
         int rdi = 3;
         for (int j = 0; j < rdi * rdi; j++)
         {
-            if (playerIndex + (j % rdi) - (rdi / 2) + (j / rdi - (rdi / 2)) * mz.count >= 0 &&
-                playerIndex + (j % rdi) - (rdi / 2) + (j / rdi - (rdi / 2)) * mz.count < mz.nodes.size()) {
+            int curIndex = playerIndex + (j % rdi) - (rdi / 2) + (j / rdi - (rdi / 2)) * mz.count;
+            if (curIndex >= 0 &&
+                curIndex < mz.nodes.size()) {
                 
-                for (int tt = 0; tt < mz.nodes[playerIndex + (j % rdi) - (rdi / 2) + (j / rdi - (rdi / 2))].ligh.size(); tt++) {
-                    mz.nodes[playerIndex + (j % rdi) - (rdi / 2) + (j / rdi - (rdi / 2))].fur[tt].obj.draw(shaderShadowProgram);
+                for (int tt = 0; tt < mz.nodes[curIndex].ligh.size(); tt++) {
+                    mz.nodes[curIndex].fur[tt].obj.draw(shaderShadowProgram);
                 }
             }
 
@@ -518,10 +554,10 @@ void doLightNew(createShadowFramebufferCube* shadowFB, unsigned int shaderShadow
 
 
 
+bool sdffds = false;
 
 
-
-void foo(int Z)
+void PathFindingFunction(int Z)
 {
     while (!glfwWindowShouldClose(window) && endGame)
     {
@@ -539,8 +575,80 @@ void foo(int Z)
     }
 }
 
+void UpdatingFunction() {
+    if (!*menue.settings.gameStart) {
+        // Stores the coordinates of the cursor
+        double mouseX;
+        double mouseY;
+        // Fetches the coordinates of the cursor
+        glfwGetCursorPos(window, &mouseX, &mouseY);
+        mousep = vec2((mouseX - OFF_WIDTH - (SCR_WIDTH - SCR_HEIGHT) / 2) / SCR_HEIGHT - 0.5, 0.5 - (mouseY - OFF_HEIGHT) / SCR_HEIGHT) * 2.0f;
 
-int main2()
+        menue.update(cam.VAO, ShaderUI, vec2(0), vec2(1), mousep, glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS);
+        
+
+    }
+    else if (MouseLocked) {
+
+
+        playerIndex = int((player.inp->pos.x + 1) / mz.size) + int((player.inp->pos.z + 1) / mz.size) * mz.count;
+
+
+
+        // Normalizes and shifts the coordinates of the cursor such that they begin in the middle of the screen
+        // and then "transforms" them into degrees 
+        cam.rot.x += player.inp->lok.x;
+        cam.rot.y += player.inp->lok.y;
+
+        // cout << sensitivity * (float)((SCR_HEIGHT / 2) - mouseY) / SCR_HEIGHT << " " << sensitivity * (float)((SCR_WIDTH / 2) - mouseX) / SCR_WIDTH << endl;
+        player.inp->rot.y = cam.rot.y;
+
+
+
+        processInput(window);
+        player.update(deltaTime);
+        for (int i = 0; i < enmi.size(); i++)enmi[i].update(deltaTime, cam.pos, &mz, &pathfq);
+        vec3 ty = player.inp->acc;
+        vec3 tp = player.inp->pos;
+        player.inp->Grounded = mz.collide(&player.inp->pos, 0.03f);
+        //for (int i = 0; i < enmi.size(); i++)mz.collide(&enmi[i].pos, nullptr, vec2(0.07f, 0.0f));
+        if (pathf.pathP + 1 >= pathf.path.size()) {
+            pathf.OnPath = false;
+            pathf.pathP = 0;
+        }
+        if (pathf.OnPath) {
+            vec2 psss1 = pathf.path[int(pathf.pathP)]->pos * mz.size;
+            vec2 psss2 = pathf.path[int(pathf.pathP + 1)]->pos * mz.size;
+            // player.inp->pos = vec3(psss1.x, player.inp->pos.y, psss1.y) + ((vec3(psss2.x, player.inp->pos.y, psss2.y)) - vec3(psss1.x, player.inp->pos.y, psss1.y)) * (pathP-int(pathP));
+            // pathP += deltaTime * 3.0f;
+            player.inp->acc += 0.2f * ((player.inp->pos - vec3(psss2.x, player.inp->pos.y, psss2.y)) / distance(psss2, vec2(player.inp->pos.x, player.inp->pos.z)));
+            if (distance(psss1, vec2(player.inp->pos.x, player.inp->pos.z)) > distance(psss2, vec2(player.inp->pos.x, player.inp->pos.z)))
+                pathf.pathP++;
+
+        }
+    }
+    else {
+
+        // Stores the coordinates of the cursor
+        double mouseX;
+        double mouseY;
+        // Fetches the coordinates of the cursor
+        glfwGetCursorPos(window, &mouseX, &mouseY);
+        vec2 mousep = vec2((mouseX - OFF_WIDTH - (SCR_WIDTH - SCR_HEIGHT) / 2) / SCR_HEIGHT - 0.5, 0.5 - (mouseY - OFF_HEIGHT) / SCR_HEIGHT) * 2.0f;
+
+
+        menue.update(cam.VAO, ShaderUI, vec2(0), vec2(1), mousep, glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS);
+        
+        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS && (abs(mousep.x) > 1 || abs(mousep.y) > 1))
+        {
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+            glfwSetCursorPos(window, (SCR_WIDTH / 2) + OFF_WIDTH, (SCR_HEIGHT / 2) + OFF_HEIGHT);
+            MouseLocked = true;
+        }
+    }
+}
+
+int main()
 {
     #pragma region Start
 
@@ -571,14 +679,14 @@ int main2()
     }
 
     GLuint lyrs[6] = { 0,0,0,0,0,0 };
-    unsigned int shaderProgram = initShader("shaders/def.vert", "shaders/def.geom", "shaders/def.frag");
-    unsigned int shaderLightProgram = initShader("shaders/def.vert", "shaders/def.geom", "shaders/light.frag");
-    unsigned int shaderShadowProgram = initShader("shaders/shadow.vert", "shaders/shadow.geom", "shaders/shadow.frag");
-    unsigned int shaderMazeProgram = initShader("shaders/maze.vert", "shaders/maze.geom", "shaders/maze.frag"); 
-    unsigned int ShaderPost = initShader("shaders/cam.vert", "shaders/camPost.frag"); 
-    unsigned int ShaderUI = initShader("shaders/cam.vert", "shaders/UI.frag"); 
-    unsigned int ShaderDebug = initShader("shaders/debug.vert", "shaders/debug.geom", "shaders/maze.frag");
-    createShadowFramebufferCube shadowFB = createShadowFramebufferCube(500);
+    shaderProgram = initShader("shaders/def.vert", "shaders/def.geom", "shaders/def.frag");
+    shaderLightProgram = initShader("shaders/def.vert", "shaders/def.geom", "shaders/light.frag");
+    shaderShadowProgram = initShader("shaders/shadow.vert", "shaders/shadow.geom", "shaders/shadow.frag");
+    shaderMazeProgram = initShader("shaders/maze.vert", "shaders/maze.geom", "shaders/maze.frag"); 
+    ShaderPost = initShader("shaders/cam.vert", "shaders/camPost.frag"); 
+    ShaderUI = initShader("shaders/cam.vert", "shaders/UI.frag"); 
+    ShaderDebug = initShader("shaders/debug.vert", "shaders/debug.geom", "shaders/maze.frag");
+    shadowFB = createShadowFramebufferCube(500);
 
     int rdi = 5;
 
@@ -589,7 +697,7 @@ int main2()
          0.01f, 0.0f,0.0f
     };
 
-    unsigned int VBO, VAO;
+    unsigned int VBO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
@@ -609,7 +717,7 @@ int main2()
     glBindVertexArray(0);
 
     cam = camera(vec3(0),vec3(0));
-    UImenue menue = UImenue();
+    menue = UImenue();
     glDepthFunc(GL_LEQUAL);
 
     
@@ -617,21 +725,20 @@ int main2()
 
     
 
-    float sensitivity = 0.001f;
     double preTime = 0.0;
     double curTime = 0.0;
     double timeDif;
     unsigned int counter = 0;
     cam.updateSize(vec2(SCR_WIDTH, SCR_HEIGHT) * resolution);
-    #pragma endregion
-    #pragma region Update
     tourch = Light(vec3(0));
 
 
 
     SpObj testObj = SpObj(vec3(0), vec3(0), glm::vec3(0.09f), initCubeBuffer({ 9 }), 27, 0);
-    thread th3(foo, 3);
+    thread PathFindingThread(PathFindingFunction, 3);
    
+    #pragma endregion
+    #pragma region Update
     while (!glfwWindowShouldClose(window) && endGame)
     {
 
@@ -650,16 +757,9 @@ int main2()
         }
         if (SCR_WIDTH > 0 && SCR_HEIGHT > 0 && timeDif < 1.0) {
 
+            thread UpdateThread(UpdatingFunction);
+            
             if (!*menue.settings.gameStart) {
-
-                // Stores the coordinates of the cursor
-                double mouseX;
-                double mouseY;
-                // Fetches the coordinates of the cursor
-                glfwGetCursorPos(window, &mouseX, &mouseY);
-                vec2 mousep = vec2((mouseX - OFF_WIDTH - (SCR_WIDTH - SCR_HEIGHT) / 2) / SCR_HEIGHT - 0.5, 0.5 - (mouseY - OFF_HEIGHT) / SCR_HEIGHT) * 2.0f;
-
-
                 glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 
@@ -674,21 +774,12 @@ int main2()
                 GLuint qweewq = texture(30);
                 glBindTexture(GL_TEXTURE_2D, qweewq);
 
+
                 menue.draw(cam.VAO, ShaderUI, vec2(0), vec2(1), mousep, glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS);
 
-                if (*menue.settings.frameLock) {
-                    glfwSwapInterval(0);
-                }
-                else
-                {
-                    glfwSwapInterval(1);
-                }
-                resolution = pow(int((1.0 - *menue.settings.resolution) * 10) + 1, -2.0f);
-                cam.updateSize(vec2(SCR_WIDTH, SCR_HEIGHT) * resolution);
-
+                UpdateThread.join();
                 if (*menue.settings.gameStart)
                 {
-                    
                     mz = Maze((int)(*menue.settings.gridSize * 100));
                     for (int i = 0; i < (int)(*menue.settings.enemies * 100); i++)
                     {
@@ -699,50 +790,13 @@ int main2()
                     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
                     glfwSetCursorPos(window, (SCR_WIDTH / 2) + OFF_WIDTH, (SCR_HEIGHT / 2) + OFF_HEIGHT);
                     MouseLocked = true;
+
+                    cam.updateSize(vec2(SCR_WIDTH, SCR_HEIGHT) * resolution);
                 }
-            }else
-            if (MouseLocked)
+            }
+            else if (MouseLocked)
             {
 
-                // Stores the coordinates of the cursor
-                double mouseX;
-                double mouseY;
-                // Fetches the coordinates of the cursor
-                glfwGetCursorPos(window, &mouseX, &mouseY);
-
-                // Normalizes and shifts the coordinates of the cursor such that they begin in the middle of the screen
-                // and then "transforms" them into degrees 
-                cam.rot.x += sensitivity * (float)((SCR_HEIGHT / 2) + OFF_HEIGHT - mouseY);
-                cam.rot.y += sensitivity * (float)((SCR_WIDTH / 2) + OFF_WIDTH - mouseX);
-                // cout << sensitivity * (float)((SCR_HEIGHT / 2) - mouseY) / SCR_HEIGHT << " " << sensitivity * (float)((SCR_WIDTH / 2) - mouseX) / SCR_WIDTH << endl;
-                player.inp->rot.y = cam.rot.y;
-
-                // Sets mouse cursor to the middle of the screen so that it doesn't end up roaming around
-                glfwSetCursorPos(window, (SCR_WIDTH / 2) + OFF_WIDTH, (SCR_HEIGHT / 2) + OFF_HEIGHT);
-
-
-                processInput(window);
-                player.update(deltaTime);
-                for (int i = 0; i < enmi.size(); i++)enmi[i].update(deltaTime, cam.pos, &mz, &pathfq);
-                vec3 ty = player.inp->acc;
-                vec3 tp = player.inp->pos;
-                player.inp->Grounded = mz.collide(&player.inp->pos, 0.03f);
-                //for (int i = 0; i < enmi.size(); i++)mz.collide(&enmi[i].pos, nullptr, vec2(0.07f, 0.0f));
-                if (pathf.pathP+1 >= pathf.path.size()) {
-                    pathf.OnPath = false;
-                    pathf.pathP = 0;
-                }
-                if (pathf.OnPath) {
-                    vec2 psss1 = pathf.path[int(pathf.pathP)]->pos * mz.size;
-                   vec2 psss2 = pathf.path[int(pathf.pathP+1)]->pos * mz.size;
-                  // player.inp->pos = vec3(psss1.x, player.inp->pos.y, psss1.y) + ((vec3(psss2.x, player.inp->pos.y, psss2.y)) - vec3(psss1.x, player.inp->pos.y, psss1.y)) * (pathP-int(pathP));
-                  // pathP += deltaTime * 3.0f;
-                    player.inp->acc += 0.2f*((player.inp->pos-vec3(psss2.x, player.inp->pos.y, psss2.y)) / distance(psss2, vec2(player.inp->pos.x, player.inp->pos.z)));
-                    if(distance(psss1,vec2(player.inp->pos.x, player.inp->pos.z)) > distance(psss2, vec2(player.inp->pos.x, player.inp->pos.z)))
-                        pathf.pathP ++;
-
-                }
-                playerIndex = int((player.inp->pos.x + 1) / mz.size) + int((player.inp->pos.z + 1) / mz.size) * mz.count;
                 glDisable(GL_BLEND);
 
 
@@ -773,7 +827,7 @@ int main2()
 
 
                 UTime += deltaTime;
-                // cout << std::to_string(nb1) << " " << std::to_string(nb2) << " " << std::to_string(nb3) << endl;
+
                 cam.GFB.bind(true);
                 glUseProgram(shaderProgram);
                 mat4 ma = cam.matrix(float(SCR_WIDTH) / float(SCR_HEIGHT));
@@ -908,8 +962,6 @@ int main2()
                 cam.MFB.bind(true);
                 glUseProgram(shaderMazeProgram);
 
-                if (glfwGetKey(window, GLFW_KEY_KP_7) == GLFW_PRESS)   sceeee *= 1.1f;
-                if (glfwGetKey(window, GLFW_KEY_KP_8) == GLFW_PRESS)   sceeee /= 1.1f;
                 glUniform1f(glGetUniformLocation(shaderMazeProgram, "sc"), sceeee);
                 glUniform1f(glGetUniformLocation(shaderMazeProgram, "sc1"), 1.0);
                 glUniform3f(glGetUniformLocation(shaderMazeProgram, "col"), 0.0f, 0.7f, 0.7f);
@@ -1029,11 +1081,12 @@ int main2()
                             playerIndex + (t % rdi) - (rdi / 2) + (t / rdi - (rdi / 2)) * mz.count < mz.nodes.size()) {
                             int curIndex = playerIndex + (t % rdi) - (rdi / 2) + (t / rdi - (rdi / 2)) * mz.count;
                             for (int tt = 0; tt < mz.nodes[curIndex].ligh.size(); tt++) {
-                                ray = mz.nodes[curIndex].ligh[tt].pos;
-                                if (distance(ray, player.obj.pos) < LightSetings.x) {
+                                ray = player.obj.pos;
+                                vec3 startOfRay = mz.nodes[curIndex].ligh[tt].pos;
+                                if (distance(ray, startOfRay) < LightSetings.x) {
 
-                                    vec3 DirectionOfRay = -normalize(player.obj.pos - ray);
-                                    vec3 startOfRay = player.obj.pos;
+                                    vec3 DirectionOfRay = normalize(ray - startOfRay);
+                                    
                                     vec3 PR2 = ray;
 
                                     for (int j = 0; j < 9; j++)
@@ -1111,11 +1164,12 @@ int main2()
                     }
 
                     for (int tt = 0; tt < enmi.size(); tt++) {
-                        ray = enmi[tt].pos + vec3(0, enmi[tt].obj.sca.y, 0);
-                        if (distance(ray, player.obj.pos) < LightSetings.x) {
+                        ray = player.obj.pos;
+                        vec3 startOfRay = enmi[tt].pos + vec3(0, enmi[tt].obj.sca.y, 0);
+                        if (distance(ray, startOfRay) < LightSetings.x) {
 
-                            vec3 DirectionOfRay = -normalize(player.obj.pos - ray);
-                            vec3 startOfRay = player.obj.pos;
+                            vec3 DirectionOfRay = normalize(ray - startOfRay);
+
                             vec3 PR2 = ray;
 
                             for (int j = 0; j < 9; j++)
@@ -1191,22 +1245,22 @@ int main2()
                     }
                 }
                
-            }
-            else {
+
+                UpdateThread.join();
 
                 // Stores the coordinates of the cursor
                 double mouseX;
                 double mouseY;
                 // Fetches the coordinates of the cursor
                 glfwGetCursorPos(window, &mouseX, &mouseY);
-                vec2 mousep = vec2((mouseX-OFF_WIDTH - (SCR_WIDTH- SCR_HEIGHT)/2)/ SCR_HEIGHT - 0.5,0.5- (mouseY-OFF_HEIGHT) / SCR_HEIGHT)*2.0f;
+                player.inp->lok = vec2(0);
+                player.inp->lok.x += sensitivity * (float)((SCR_HEIGHT / 2) + OFF_HEIGHT - mouseY);
+                player.inp->lok.y += sensitivity * (float)((SCR_WIDTH / 2) + OFF_WIDTH - mouseX);
+                // Sets mouse cursor to the middle of the screen so that it doesn't end up roaming around
+                glfwSetCursorPos(window, (SCR_WIDTH / 2) + OFF_WIDTH, (SCR_HEIGHT / 2) + OFF_HEIGHT);
 
-                if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS && (abs(mousep.x) > 1 || abs(mousep.y) > 1))
-                {
-                    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-                    glfwSetCursorPos(window, (SCR_WIDTH / 2) + OFF_WIDTH, (SCR_HEIGHT / 2) + OFF_HEIGHT);
-                    MouseLocked = true;
-                }
+            }
+            else {
 
                 glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -1218,9 +1272,14 @@ int main2()
                 glUseProgram(ShaderUI);
                 glActiveTexture(GL_TEXTURE0);
                 GLuint qweewq = texture(30);
-                glBindTexture(GL_TEXTURE_2D,qweewq);
+                glBindTexture(GL_TEXTURE_2D, qweewq);
 
-                menue.draw(cam.VAO, ShaderUI,vec2(0),vec2(1), mousep, glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS);
+                menue.draw(cam.VAO, ShaderUI, vec2(0), vec2(1), mousep, glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS);
+
+
+                UpdateThread.join();
+
+                
 
                 if (*menue.settings.frameLock) {
                     glfwSwapInterval(0);
@@ -1229,22 +1288,18 @@ int main2()
                 {
                     glfwSwapInterval(1);
                 }
-                resolution = pow(int((1.0-*menue.settings.resolution) * 10)+1, -2.0f);
-                cam.updateSize(vec2(SCR_WIDTH, SCR_HEIGHT)* resolution);
+                resolution = pow(int((1.0 - *menue.settings.resolution) * 10) + 1, -2.0f);
+                cam.updateSize(vec2(SCR_WIDTH, SCR_HEIGHT) * resolution);
 
-                if (!*menue.settings.gameStart)
-                {
-
-                    endGame = false;
-                }
             }
+
         }
         
 
         glfwPollEvents();
         glfwSwapBuffers(window);
     }
-    th3.join();
+    PathFindingThread.join();
 #pragma endregion
     #pragma region End
 
@@ -1306,7 +1361,9 @@ void processInput(GLFWwindow* window)
         player.inp->inp.x = 1;
 
     }
-   
+
+    if (glfwGetKey(window, GLFW_KEY_KP_7) == GLFW_PRESS)   sceeee *= 1.1f;
+    if (glfwGetKey(window, GLFW_KEY_KP_8) == GLFW_PRESS)   sceeee /= 1.1f;
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)  LightSetings.x += 0.05;
     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)    LightSetings.x += -0.05;
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)    LightSetings.y += 0.05;

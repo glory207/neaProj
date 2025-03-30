@@ -14,9 +14,11 @@ public:
 	vec4 back;
 	vec4 four;
 	int chr;
+	bool hover;
 
 	virtual ~UIelement() {}
 	virtual void draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, bool mouseD);
+	virtual void update(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, bool mouseD);
 };
 class UIDIV:public UIelement
 {
@@ -25,6 +27,7 @@ public:
 	vector<UIelement*> children;
 	int cur = -1;
 	virtual void draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, bool mouseD);
+	virtual void update(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, bool mouseD);
 };
 class UIButton :public UIelement
 {
@@ -33,6 +36,7 @@ public:
 	UIelement* child = nullptr;
 	string text = " ";
 	virtual void draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, bool mouseD);
+	virtual void update(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, bool mouseD);
 };
 class UIslider :public UIelement
 {
@@ -41,6 +45,7 @@ public:
 	string text = " ";
 	UIslider(vec2 pos, vec2 sca, vec4 back, vec4 four, string txt, float frac);
 	virtual void draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, bool mouseD);
+	virtual void update(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, bool mouseD);
 };
 class UItoggler :public UIelement
 {
@@ -50,6 +55,7 @@ public:
 	string text = " ";
 	UItoggler(vec2 pos, vec2 sca, vec4 back, vec4 four, string txt, bool tr);
 	virtual void draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, bool mouseD);
+	virtual void update(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, bool mouseD);
 };
 void drawString(GLuint VAO, GLuint ShaderUI, vec2 pss, vec2 scc, string text);
 
@@ -73,6 +79,7 @@ public:
 	UIsettings settings;
 	int cur = -1;
 	virtual void draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, bool mouseD);
+	virtual void update(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, bool mouseD);
 };
 
 
