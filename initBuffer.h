@@ -4,6 +4,9 @@
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <glm/glm.hpp>
+
+
+
 class BufferGroup
 {
 public:
@@ -19,16 +22,20 @@ public:
     GLuint length;
 };
 
+
 int initB(std::vector<float> pointss);
 int initI(std::vector<glm::mat4> pointss);
 int initE(std::vector<int> pointss);
 BufferGroup initMazeBuffers(std::vector<glm::vec2>  pointss);
 BufferGroup initMaze2DBuffers(std::vector<glm::vec2>  pointss);
-BufferGroup initCubeBuffer(std::vector<int> i);
+BufferGroup initCubeBuffer();
+BufferGroup initSpriteBuffer();
 
 GLuint initIndexBuffer(std::vector<int> i);
 GLuint initPositionBuffer(std::vector<int>i);
 GLuint initTextureBuffer(std::vector<int> i);
+
+
 
 
 

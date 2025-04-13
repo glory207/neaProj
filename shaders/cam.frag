@@ -10,16 +10,17 @@
       uniform vec2 LightSetings;
       uniform vec3 camPos;
       in vec2 texPos;
-      uniform mat4 rotcam;
+      uniform vec3 rotcam;
       uniform vec3 lightPos;
       uniform vec3 lightCol;
       uniform int light;
       uniform int lighC;
       uniform float ConeAngle;
       uniform float brightness;
+      uniform bool gradient;
       
 
-      float getLight(vec3 posLight,vec3 posFrag,vec3 normal,vec3 normalF, samplerCube uSamplerSs,mat4 rot){
+      float getLight(vec3 posLight,vec3 posFrag,vec3 normal,vec3 normalF, samplerCube uSamplerSs){
         vec3 dir = (posLight)-posFrag;
         float dist = length(dir);
 
@@ -47,14 +48,18 @@
         difVal *= Falloff;
 
         // gets the intencity of the light within the cone
-        float angle = dot(normalize((inverse(rot) * vec4(0,0,1,0)).xyz), normalize(dir));
+        float angle = dot(normalize(rotcam), normalize(dir));
         float outerCone = ConeAngle;
         float innerCone = ConeAngle * 0.3;
         float difVal2 = clamp((angle + outerCone -1.57)/(outerCone*innerCone), 0.0, 1.0) * difVal;
         
         // removes the cone if the angle is 0
         if(ConeAngle == 0) difVal2 *= 0.0;  
-        else  difVal = difVal2;
+        else if(!gradient){
+        if(difVal2 > 0) return 1;
+        else return 0;
+        }
+        else difVal = difVal2;
 
         // clams the values of light for a nice visual effect
         float steps = 4.0;
@@ -90,7 +95,7 @@ void main() {
                                  texture(PosT, texPos).xyz+camPos,
                                  normalize(texture(NormT, texPos).xyz) * 1.5f,
                                  normalize(texture(NormFT, texPos).xyz),
-                                 uSamplerS,rotcam);
+                                 uSamplerS);
 
             fragColor = vec4(color,1.0);
         }

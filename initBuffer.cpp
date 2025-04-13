@@ -209,6 +209,7 @@ BufferGroup::BufferGroup(GLuint positions, GLuint texturePos, GLuint indices, GL
     glEnableVertexAttribArray(1);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indices);
 
+   
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
@@ -277,9 +278,29 @@ float textureCoordinatesCube[12][8] = {
 };
 
 
-BufferGroup initCubeBuffer(std::vector<int> sides) {
+bool firstCube = true;
+
+BufferGroup theCube;
+BufferGroup initCubeBuffer() {
     // creates a buffer group
-    return BufferGroup(initPositionBuffer(sides), initTextureBuffer(sides), initIndexBuffer(sides), sides.size() * 6);
+    if (firstCube) {
+        theCube = BufferGroup(initPositionBuffer({0,1,2,3,4,5,6,7,8}), initTextureBuffer({ 0,1,2,3,4,5 ,6,7,8}), initIndexBuffer({ 0,1,2,3,4,5,6,7,8 }), 9 * 6);
+        firstCube = false;
+    }
+    return theCube;
+
+}
+bool firstSprite = true;
+
+BufferGroup theSprite;
+BufferGroup initSpriteBuffer() {
+    // creates a buffer group
+    if (firstSprite) {
+        theSprite = BufferGroup(initPositionBuffer({9}), initTextureBuffer({9 }), initIndexBuffer({ 9 }), 6);
+        firstSprite = false;
+    }
+    return theSprite;
+
 }
 
 GLuint initIndexBuffer(std::vector<int> sides) {

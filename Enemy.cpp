@@ -18,12 +18,13 @@ Enemy::Enemy() {}
 Enemy::Enemy(vec3 pos, vec3 rot) {
 	this->pos = pos;
 	this->rot = rot;
-	obj = SpObj(pos, rot, vec3(0.2), initCubeBuffer({ 9 }), 28,29);
+	obj = SpObj(pos, rot, vec3(0.2), initSpriteBuffer(), 28, 29);
 
 	random_device rd;  // Seed generator
 	mt19937 gen(rd()); // Mersenne Twister engine
 	uniform_real_distribution<float> Rand(0.0f, 1.0f); // Range [0, 1]
 	frame = Rand(gen) * 15;
+	vision = Light(pos + vec3(0,0.2,0));
 }
 void Enemy::update(float deltaTime,vec3 cam,Maze* mz, queue<PathFind*>* pathfq) {
 
@@ -37,7 +38,7 @@ void Enemy::update(float deltaTime,vec3 cam,Maze* mz, queue<PathFind*>* pathfq) 
 			int((pos.x + 1.0f) / mz->size) + int((pos.z + 1.0f) / mz->size) * mz->count),
 			vec3(5, 5, int(Rand(gen) * mz->count * mz->count)), pathfq);
 	}
-	if (pathFinder.pathP + 1 >= pathFinder.path.size()) {
+	if (pathFinder.path.size() == 0 || pathFinder.pathP + 1 >= pathFinder.path.size()) {
 		pathFinder.OnPath = false;
 		pathFinder.pathP = 0;
 	}
@@ -63,6 +64,7 @@ void Enemy::update(float deltaTime,vec3 cam,Maze* mz, queue<PathFind*>* pathfq) 
 	obj.pos = vec3(pos.x, pos.y + obj.sca.y, pos.z);
 	frame += deltaTime * 10;
 	
+	vision.pos = obj.pos + vec3(0,obj.sca.y,0)*1.2f;
 	
 	int dirr = floor(((
 		atan2(pos.x - cam.x, -pos.z + cam.z)
@@ -72,12 +74,12 @@ void Enemy::update(float deltaTime,vec3 cam,Maze* mz, queue<PathFind*>* pathfq) 
 	else dir = 0;
 	obj.textOff = vec4(
 		(int)(frame) % 14,
-		(int)(dir) % 8,
+		dir % 8,
 		1.0 / 14.0,
 		1.0 / 8.0);
 	obj.textOff2 = vec4(
 		(int)(frame) % 14,
-		(int)(dir) % 8,
+		dir % 8,
 		1.0 / 14.0,
 		1.0 / 8.0);
 	obj.rot.y = rot.y;

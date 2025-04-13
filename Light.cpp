@@ -9,7 +9,7 @@ Light::Light(glm::vec3 pos) {
 
 	size = 500;
 	this->pos = pos;
-	obj = SpObj(pos, rot, glm::vec3(0.09f), initCubeBuffer({9}),27,0);
+	obj = SpObj(pos, rot, glm::vec3(0.09f), initSpriteBuffer(),27,0);
 	col = glm::vec3(1,0.5,0.2);
 	obj.pos = pos;
 	obj.rot = rot;

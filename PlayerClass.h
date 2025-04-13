@@ -7,6 +7,21 @@
 #include <iostream>
 using namespace glm;
 using namespace std;
+
+class AnimationClass {
+public:
+    int colour;
+    int normal;
+    int framecount;
+    float fps;
+    float current;
+    int dir;
+    AnimationClass();
+    AnimationClass(int col, int nor,
+        int cnt, float cur, float f);
+    vec4 sprite();
+};
+
 class InputObject
 {
 public:
@@ -14,16 +29,15 @@ public:
     float speed;
     vec3 pos;
     vec3 rot;
-    vec2 vel;
+    vec3 vel;
     vec3 acc;
     vec2 inp;
     vec2 lok;
-    vec2 dir;
     bool SP;
     bool SH;
     bool Grounded;
     bool crouched;
-    std::vector<float> animation;
+    AnimationClass animation;
     vec3 resistance;
     vec2 jump;
     vec3 cam;
@@ -33,16 +47,16 @@ public:
         speed = 0.0;
         pos = poss;
         rot = rott;
-        vel = vec2(0.0, 0.0);
-        acc = vec3(0.0, 0.0, 0.0);
-        inp = vec2(0, 0);
-        lok = vec2(0, 0);
-        dir = vec2(0, 0);
+        vel = vec3(0);
+        acc = vec3(0);
+        inp = vec2(0);
+        lok = vec2(0);
         SP = false;
         SH = false;
         Grounded = true;
         // colour normal framecount current frame;
-        animation = { 0.0f, 0.0f, 0.0f, 20.0f, 0.0f };
+        //animation = { 0.0f, 0.0f, 0.0f, 20.0f, 0.0f };
+        animation =  AnimationClass(0, 0, 0.0f, 20.0f, 0.0f );
 
         resistance = vec3(7.0, 7.0, 7.0);
         jump = vec2(0.0, 0.0);
@@ -56,12 +70,10 @@ public:
 class StateClass
 {
 public:
-
     InputObject* inp;
     StateClass* cur;
     virtual int Enter() = 0;
     virtual int update(float deltaTime) = 0;
-
 };
 
 class PlayerClass
@@ -77,5 +89,19 @@ public:
     StateClass* movable;
     StateClass* cur;
     
+};
+
+
+class PlayerClassOld
+{
+
+public:
+    PlayerClassOld();
+    PlayerClassOld(vec3 pos, vec3 rot);
+    void draw(float time, int shader);
+    void update(float deltaTime);
+    InputObject* inp;
+    SpObj obj;
+
 };
 

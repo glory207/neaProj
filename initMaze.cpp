@@ -245,6 +245,9 @@ Maze::Maze(int c){
 
     MapBuffers = initMaze2DBuffers(lst1);
 }
+void Maze::distroy() {
+
+}
 std::vector<glm::vec2> Maze::makeLines(int tp,int  sd,int  p0,int  p1,int  p2,int  p3,bool  swch,float thin){
       std::vector<glm::vec2> lst;
       // turns the nodes into a list of points
@@ -530,7 +533,7 @@ bool Maze::collide(glm::vec3* pos, float leway) {
 
     // if standing on the ground its not in the air
     if ((*pos).y < 0) {
-        (*pos).y = -0.0f;
+        (*pos).y = -0.001f;
 
 
         grnd = true;

@@ -58,5 +58,5 @@ void SpObj::draw(int programInfo){
 
 
 UIObj::UIObj(glm::vec3 poss, glm::vec3 rott, glm::vec3 scaa) {
-    obj = SpObj(poss, rott, scaa, initCubeBuffer({9}),30,30);
+    obj = SpObj(poss, rott, scaa, initSpriteBuffer(), 30, 30);
 }

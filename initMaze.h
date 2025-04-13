@@ -73,6 +73,7 @@ class Maze
 public:
     Maze();
     Maze(int c);
+    void distroy();
     std::vector<glm::vec2> makeLines(int tp,int  sd,int  p0,int  p1,int  p2,int  p3,bool  swch,float thin);
     bool collide(glm::vec3* poss, float leway);
     std::vector<Cell> nodes;

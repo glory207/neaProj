@@ -260,7 +260,7 @@ Furniture::Furniture(int type, int orientation, int(*grid)[9][9], float size, fl
     pos = vec3(furnPos.x,sca.y, furnPos.y) + ps;
 
     // initialises the object that will be dislpayed on screen
-    obj = SpObj(pos,rot,sca, initCubeBuffer({ 0,1,2,3,4,5, 6,7,8 }),ColorTexture,NormalTexture);
+    obj = SpObj(pos,rot,sca, initCubeBuffer(),ColorTexture,NormalTexture);
     obj.textOff2 = glm::vec4(0.0f, 0.0f, 5.0f, 5.0f);
 }
 

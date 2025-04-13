@@ -37,5 +37,6 @@ public:
     vec3 pos;
     vec3 rot;
     vec3 acc = vec3(0,0,0);
+    Light vision;
 };
 
