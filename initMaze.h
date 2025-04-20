@@ -50,6 +50,7 @@ public:
     int tresure;
     int x;
     int y;
+    bool cage = false;
     bool treasure = false;
     bool connected = false;
     std::vector<Cell*> Conectablednodes;

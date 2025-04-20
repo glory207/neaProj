@@ -25,8 +25,6 @@ public:
     FrameBuffer PFB1;
     FrameBuffer MFB;
     GLuint shader;
-    GLuint ScreenShader;
-    GLuint MapShader;
     GLuint VAO;
 };
 

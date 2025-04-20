@@ -29,7 +29,7 @@ Maze::Maze(int c){
 
     // adds and spreads out the landmarks
     Camps.clear();
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < 6; i++)
     {
         Camps.push_back(new EnCamp(vec2(Rand(gen), Rand(gen)), i));
 
@@ -46,6 +46,36 @@ Maze::Maze(int c){
     {
         nodes.push_back(*new Cell(i, count,thk));
     }
+    //
+    for (Landmark* landm : Camps)
+    {
+        // transforms the landmark from a 0-1 to the worlds scale 
+        int posX = (int)((*landm).Pos.x * count);
+        int posY = (int)((*landm).Pos.y * count);
+        if (dynamic_cast<EnCamp*>(landm) != nullptr)
+        {
+            EnCamp* Camp = dynamic_cast<EnCamp*>(landm);
+
+            for (Landmark* cage : Camp->cages) {
+                int CposX = (int)( (cage->Pos.x * Camp->Size + Camp->Pos.x) * count);
+                int CposY = (int)( (cage->Pos.y * Camp->Size + Camp->Pos.y) * count);
+                
+                nodes[CposX + CposY * count].cage = true;
+                (*cage).Pos.x = CposX/ float(count);
+                (*cage).Pos.y = CposY/ float(count);
+
+            }
+        }
+        // adding a chest to loot spots
+        else if (dynamic_cast<LootSpot*>(landm) != nullptr)
+        {
+            nodes[posX + posY * count].treasure = true;
+        }
+        (*landm).Pos.x = posX / float(count);
+        (*landm).Pos.y = posY / float(count);
+        // places the landmark into the center of its room
+    }
+
     // populates each room with landmarks
     for (int i = 0; i < count * count; i++)
     {
@@ -61,25 +91,16 @@ Maze::Maze(int c){
                 EnCamp* Camp = dynamic_cast<EnCamp*>(landm);
 
                float sze = (*Camp).Size * count;
-              // decreasing the number of walls in encampments
+                // decreasing the number of walls in encampments
                if (glm::distance(vec2(posX, posY), vec2(nodes[i].x, nodes[i].y)) < sze)
                {
                   
-                   nodes[i].prob = 0.7f;
+                   nodes[i].prob = 0.8f;
                }
+
             }
-            // adding a chest to loot spots
-            else if (dynamic_cast<LootSpot*>(landm) != nullptr)
-            {
-                LootSpot* Camp = dynamic_cast<LootSpot*>(landm);
-                if (nodes[i].index == posX + posY * count) {
-                    nodes[i].treasure = true;
-                }
-            }
-            (*landm).Pos.x = posX / float(count);
-            (*landm).Pos.y = posY /float(count);
-            // places the landmark into the center of its room
         }
+
         // connects the adjacent rooms together
         if (i != 0 && i % count != 0)
         {
@@ -172,6 +193,14 @@ Maze::Maze(int c){
             int furrot = floor(Rand(gen) * 4);
             Furniture::canFit(-2, furrot, &grid);
             Furniture ref = Furniture(-2, furrot, &grid, size, thk, ps);
+            nodes[i].fur.push_back(ref);
+        }
+        // add cage
+        if (nodes[i].cage)
+        {
+            int furrot = floor(Rand(gen) * 4);
+            Furniture::canFit(-3, furrot, &grid);
+            Furniture ref = Furniture(-3, furrot, &grid, size, thk, ps);
             nodes[i].fur.push_back(ref);
         }
         for (int j = 0; j < 6; j++) 
@@ -451,6 +480,13 @@ bool Maze::collide(glm::vec3* pos, float leway) {
     leway *= -size;
 
     for (int f = 0; f < nodes[nd].fur.size(); f++) {
+        // the hight of the chair collider is half that of its model
+        // so must be halfed
+        if (nodes[nd].fur[f].ColorTexture == 24) {
+            nodes[nd].fur[f].obj.pos.y *= 0.5f;
+            nodes[nd].fur[f].obj.sca.y *= 0.5f;
+        }
+
         // if close enough to collide with the furniture
         if (pow((*pos).x - nodes[nd].fur[f].obj.pos.x, 2.0) + pow((*pos).z - nodes[nd].fur[f].obj.pos.z, 2.0)
             < max(nodes[nd].fur[f].obj.sca.x, nodes[nd].fur[f].obj.sca.z) * 2.0)
@@ -528,6 +564,12 @@ bool Maze::collide(glm::vec3* pos, float leway) {
 
             }
 
+        }
+
+
+        if (nodes[nd].fur[f].ColorTexture == 24) {
+            nodes[nd].fur[f].obj.pos.y *= 2.0f;
+            nodes[nd].fur[f].obj.sca.y *= 2.0f;
         }
     }
 
@@ -757,7 +799,7 @@ EnCamp::EnCamp(vec2 pos, float size) {
     // Define the random number generator and distribution
     std::random_device rd;  // Seed generator
     std::mt19937 gen(rd()); // Mersenne Twister engine
-    std::uniform_real_distribution<float> Rand(0.0f, 1.0f); // Range [0, 1]
+    std::uniform_real_distribution<float> Rand(0,1); // Range [0, 1]
 
     Pos = pos;
     Size = size * 0.03f + 0.05f;
@@ -765,9 +807,12 @@ EnCamp::EnCamp(vec2 pos, float size) {
     int numOfC = int(size)+1;
     for (int i = 0; i < numOfC; i++)
     {
-        cages.push_back(new Landmark((vec2(Rand(gen), Rand(gen)) - vec2(0.5f)) * 0.5f,0.01f));
+        float ax = Rand(gen);
+        float ay = Rand(gen);
+        cages.push_back(new Landmark(vec2(ax,ay) -0.5f,0.1f));
+
     }
-    Landmark().set(&cages, -0.5f, 0.5f);
+    Landmark().set(&cages, -0.5,0.5);
 
 
 }
@@ -802,22 +847,25 @@ void Landmark::set(std::vector<Landmark*>* marks, float min, float max) {
         {
             for (int j = 0; j < (*marks).size(); j++)
             {
-                if ((*(*marks)[i]).Pos.x + (*(*marks)[i]).Size > 1) (*(*marks)[i]).Pos.x = 1 - (*(*marks)[i]).Size;
-                if ((*(*marks)[i]).Pos.x - (*(*marks)[i]).Size < 0) (*(*marks)[i]).Pos.x = 0 + (*(*marks)[i]).Size;
-                if ((*(*marks)[i]).Pos.y - (*(*marks)[i]).Size < 0) (*(*marks)[i]).Pos.y = 0 + (*(*marks)[i]).Size;
-                if ((*(*marks)[i]).Pos.y + (*(*marks)[i]).Size > 1) (*(*marks)[i]).Pos.y = 1 - (*(*marks)[i]).Size;
+                if ((*(*marks)[i]).Pos.x + (*(*marks)[i]).Size > max) (*(*marks)[i]).Pos.x = max - (*(*marks)[i]).Size;
+                if ((*(*marks)[i]).Pos.x - (*(*marks)[i]).Size < min) (*(*marks)[i]).Pos.x = min + (*(*marks)[i]).Size;
+                if ((*(*marks)[i]).Pos.y - (*(*marks)[i]).Size < min) (*(*marks)[i]).Pos.y = min + (*(*marks)[i]).Size;
+                if ((*(*marks)[i]).Pos.y + (*(*marks)[i]).Size > max) (*(*marks)[i]).Pos.y = max - (*(*marks)[i]).Size;
                 if (j != i)
                 {
                     if (glm::distance((*(*marks)[i]).Pos, (*(*marks)[j]).Pos) < (*(*marks)[i]).Size + (*(*marks)[j]).Size)
                     {
                         vec2 mv = (*(*marks)[i]).Pos - (*(*marks)[j]).Pos;
+                        vec2 mv2 = (*(*marks)[j]).Pos;
+                        vec2 mv3 = (*(*marks)[i]).Pos;
                         mv = glm::normalize(mv) * (glm::distance((*(*marks)[i]).Pos, (*(*marks)[j]).Pos) - ((*(*marks)[i]).Size + (*(*marks)[j]).Size + 0.01f));
-
 
                         (*(*marks)[j]).Pos += mv * 0.5f;
                         (*(*marks)[i]).Pos -= mv * 0.5f;
                         isfixed = false;
+
                     }
+
                 }
 
             }

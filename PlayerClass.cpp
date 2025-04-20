@@ -7,7 +7,7 @@ PlayerClass::PlayerClass(){}
 PlayerClass::PlayerClass(vec3 pos, vec3 rot) {
 	inp = new InputObject(pos, rot);
 
-	obj = SpObj(pos, rot, vec3(0.05), initSpriteBuffer(), 6, 9);
+	inp->obj = SpObj(pos, rot, vec3(0.05), initSpriteBuffer(), 6, 9);
 
 
 	movable = new MovableState(inp, nullptr);
@@ -19,20 +19,20 @@ void PlayerClass::update(float deltaTime) {
 	inp->animation.dir = 0;
 
 
-	obj.pos = vec3(inp->pos.x, inp->pos.y + obj.sca.y, inp->pos.z);
+	inp->obj.pos = vec3(inp->pos.x, inp->pos.y + inp->obj.sca.y, inp->pos.z);
 	inp->animation.current += deltaTime * inp->animation.fps;
 	
 	cur->update(deltaTime);
 
-	obj.rot.y = inp->rot.y;
+	inp->obj.rot.y = inp->rot.y;
 }
 void PlayerClass::draw(float time, int shader) {
 
-	obj.text1 = texture(inp->animation.colour);
-	obj.text2 = texture(inp->animation.normal);
-	obj.textOff = inp->animation.sprite();
-	obj.textOff2 = inp->animation.sprite();
-	obj.draw(shader);
+	inp->obj.text1 = texture(inp->animation.colour);
+	inp->obj.text2 = texture(inp->animation.normal);
+	inp->obj.textOff = inp->animation.sprite();
+	inp->obj.textOff2 = inp->animation.sprite();
+	inp->obj.draw(shader);
 
 }
 AnimationClass::AnimationClass(int col, int nor, int cnt, float cur, float f) {
@@ -96,7 +96,7 @@ void PlayerClassOld::update(float deltaTime) {
 	inp->pos += inp->vel * deltaTime;
 
   	int dir = floor(((
-  		-atan2(inp->pos.x - inp->cam.x, -inp->pos.z + inp->cam.z)
+  		-atan2(inp->pos.x - inp->cam->pos.x, -inp->pos.z + inp->cam->pos.z)
   		+ atan2(-inp->vel.x, inp->vel.z)
   		+ 0.125 * 3.141592) / (0.25 * 3.141592)));
   	if (dir != NULL) inp->animation.dir = dir;

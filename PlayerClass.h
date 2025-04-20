@@ -2,6 +2,7 @@
 #include "object.h"
 #include "initBuffer.h"
 #include "texture.h"
+#include "camera.h"
 #include <vector>
 #include "glm/glm.hpp"
 #include <iostream>
@@ -25,14 +26,16 @@ public:
 class InputObject
 {
 public:
+    SpObj obj;
     int spd;
     float speed;
     vec3 pos;
     vec3 rot;
     vec3 vel;
-    vec3 acc;
     vec2 inp;
     vec2 lok;
+    vec2 whe;
+    bool WH;
     bool SP;
     bool SH;
     bool Grounded;
@@ -40,7 +43,9 @@ public:
     AnimationClass animation;
     vec3 resistance;
     vec2 jump;
-    vec3 cam;
+    camera* cam;
+    vec3 camArm;
+    vec3 camArmTarget;
     InputObject() {};
     InputObject(vec3 poss, vec3 rott) {
         spd = 1;
@@ -48,9 +53,10 @@ public:
         pos = poss;
         rot = rott;
         vel = vec3(0);
-        acc = vec3(0);
         inp = vec2(0);
         lok = vec2(0);
+        whe = vec2(1,0);
+        WH = false;
         SP = false;
         SH = false;
         Grounded = true;
@@ -60,7 +66,7 @@ public:
 
         resistance = vec3(7.0, 7.0, 7.0);
         jump = vec2(0.0, 0.0);
-        cam = vec3(0.0, 0.0, 0.0);
+        camArm = vec3(0.27f,0.0f,1.25);
     }
 };
 
@@ -85,7 +91,6 @@ public:
     void draw(float time, int shader);
     void update(float deltaTime);
     InputObject* inp;
-    SpObj obj;
     StateClass* movable;
     StateClass* cur;
     

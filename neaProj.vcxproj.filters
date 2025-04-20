@@ -574,22 +574,7 @@
     <Image Include="img\cubeTableTexture.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="img\MapOverlay.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="img\marble star.jpg">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="img\scary.jpg">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="img\skin.jpeg">
-      <Filter>Resource Files</Filter>
-    </Image>
     <Image Include="img\SpriteNorm-0000.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="img\why-so-serious.png">
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="img\playerAni\crouch0001-Sheet.png">
@@ -673,6 +658,9 @@
     <Image Include="img\txttt-Sheet.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="img\cage.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\cam.vert" />
@@ -681,7 +669,6 @@
     <None Include="shaders\def.geom" />
     <None Include="shaders\def.vert" />
     <None Include="shaders\light.frag" />
-    <None Include="shaders\map.vert" />
     <None Include="shaders\maze.frag" />
     <None Include="shaders\maze.geom" />
     <None Include="shaders\maze.vert" />
@@ -689,7 +676,6 @@
     <None Include="shaders\shadow.frag" />
     <None Include="shaders\shadow.geom" />
     <None Include="shaders\shadow.vert" />
-    <None Include="shaders\shadowInst.vert" />
     <None Include="include\glm\detail\func_common.inl">
       <Filter>Header Files</Filter>
     </None>
@@ -1024,11 +1010,10 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="shaders\cam.frag" />
-    <None Include="shaders\shadowInst.frag" />
-    <None Include="shaders\shadowInst.geom" />
     <None Include="shaders\UI.frag" />
     <None Include="img\textM.aseprite" />
     <None Include="shaders\debug.vert" />
     <None Include="shaders\debug.geom" />
+    <None Include="shaders\mazeFurn.geom" />
   </ItemGroup>
 </Project>

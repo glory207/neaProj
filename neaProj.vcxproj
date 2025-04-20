@@ -207,12 +207,11 @@
     <Image Include="img\bookshelf.png" />
     <Image Include="img\brick.jpg" />
     <Image Include="img\brickN.png" />
+    <Image Include="img\cage.png" />
     <Image Include="img\chair.png" />
     <Image Include="img\cubeBedTexture.png" />
     <Image Include="img\cubeTableTexture.png" />
     <Image Include="img\flame.png" />
-    <Image Include="img\MapOverlay.png" />
-    <Image Include="img\marble star.jpg" />
     <Image Include="img\M_Walk-Sheet.png" />
     <Image Include="img\M_WalkNormal-Sheet.png" />
     <Image Include="img\Pillar.png" />
@@ -231,14 +230,11 @@
     <Image Include="img\playerAni\walk0001-Sheet.png" />
     <Image Include="img\playerAni\walkNormal0001-Sheet.png" />
     <Image Include="img\roundtable.png" />
-    <Image Include="img\scary.jpg" />
-    <Image Include="img\skin.jpeg" />
     <Image Include="img\SpriteNorm-0000.png" />
     <Image Include="img\testDir.png" />
     <Image Include="img\torch.png" />
     <Image Include="img\treasureCh.png" />
     <Image Include="img\txttt-Sheet.png" />
-    <Image Include="img\why-so-serious.png" />
     <Image Include="img\wood-normal.jpg" />
   </ItemGroup>
   <ItemGroup>
@@ -363,17 +359,14 @@
     <None Include="shaders\def.geom" />
     <None Include="shaders\def.vert" />
     <None Include="shaders\light.frag" />
-    <None Include="shaders\map.vert" />
     <None Include="shaders\maze.frag" />
     <None Include="shaders\maze.geom" />
     <None Include="shaders\maze.vert" />
+    <None Include="shaders\mazeFurn.geom" />
     <None Include="shaders\screen.frag" />
     <None Include="shaders\shadow.frag" />
     <None Include="shaders\shadow.geom" />
     <None Include="shaders\shadow.vert" />
-    <None Include="shaders\shadowInst.frag" />
-    <None Include="shaders\shadowInst.geom" />
-    <None Include="shaders\shadowInst.vert" />
     <None Include="shaders\UI.frag" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

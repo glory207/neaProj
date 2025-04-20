@@ -198,6 +198,17 @@ Furniture::Furniture(int type, int orientation, int(*grid)[9][9], float size, fl
 
         Sectors.push_back(vec2(0, 0));
         break;
+    case -3:
+        //chest
+
+        furnPos = vec2(0, 0);
+        sca = vec3(0.12f, 0.15f, 0.12f);
+        rot = vec3(0.0f, 3.1415f/4.0f, 0.0f);
+
+        ColorTexture = 11;
+
+        Sectors.push_back(vec2(0, 0));
+        break;
     case 7:
         //big bed
 
@@ -324,6 +335,11 @@ bool Furniture::canFit(int type, int orientation, int(*grid)[9][9]) {
         break;
     case -2:
         //chest
+
+        Sectors.push_back(vec2(0, 0));
+        break;
+    case -3:
+        //cage
 
         Sectors.push_back(vec2(0, 0));
         break;

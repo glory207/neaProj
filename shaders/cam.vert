@@ -4,11 +4,11 @@
     
     uniform vec4 textureMatrix;
     out vec2 texPos;
-    out vec4 fragPos;
-    out vec2 fragPos2;
+    out vec2 fragPos;
+    out vec4 cubeTransform;
     void main() {
     texPos = aTexturePosition;
-    fragPos = textureMatrix;
-    fragPos2 = (aVertexPosition * textureMatrix.zw + textureMatrix.xy);
+    cubeTransform = textureMatrix;
+    fragPos = (aVertexPosition * textureMatrix.zw + textureMatrix.xy);
       gl_Position = vec4(aVertexPosition * textureMatrix.zw + textureMatrix.xy,1.0,1.0);
     }

@@ -2,6 +2,7 @@
 #include <vector>
 #include <glad/glad.h>
 #include <glm/glm.hpp>
+#include <glm/gtx/vector_angle.hpp>
 #include <iostream>
 #include <string>
 using namespace std;
@@ -15,40 +16,49 @@ public:
 	vec4 four;
 	int chr;
 	bool hover;
+	bool controlled = false;
+	bool Willcontrol = false;
 	bool active = true;
 	vector<UIelement*> children;
 
+	bool selectable = true;
+	string text = "";
 	int texture = -1;
 	virtual ~UIelement() {}
-	virtual void draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, bool mouseD);
-	virtual void update(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, bool mouseD);
+	virtual void draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, bool mouseD);
+	virtual void update(vec2 ps, vec2 sc, vec2 mouse, bool mouseD);
+	virtual void control(int UpDown, int RightLeft, int InOut, int* level,int depth);
 };
+
 class UIDIV:public UIelement
 {
 public:
-	UIDIV(vec2 sca,vec4 back,vec4 four, bool hrv);
-	int cur = -1;
-	bool HorV = true;
-	virtual void draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, bool mouseD);
-	virtual void update(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, bool mouseD);
+	UIDIV(vec2 sca,vec4 back,vec4 four, int hrv);
+	int cur = 0;
+	int layout = 1;
+	virtual void draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, bool mouseD);
+	virtual void update(vec2 ps, vec2 sc, vec2 mouse, bool mouseD);
+	virtual void control(int UpDown, int RightLeft, int InOut, int* level,int depth);
 };
 class UIButton :public UIelement
 {
 public:
-	UIButton(vec2 sca, vec4 back, vec4 four, string txt);
+	UIButton(vec2 sca, vec4 back, vec4 four, string txt,bool cir);
+	bool selected = false;
+	bool circle = false;
 	UIDIV* child = nullptr;
-	string text = " ";
-	virtual void draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, bool mouseD);
-	virtual void update(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, bool mouseD);
+	virtual void draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, bool mouseD);
+	virtual void update(vec2 ps, vec2 sc, vec2 mouse, bool mouseD);
+	virtual void control(int UpDown, int RightLeft, int InOut, int* level,int depth);
 };
 class UIslider :public UIelement
 {
 public:
 	float fraction = 0.5;
-	string text = " ";
 	UIslider(vec2 sca, vec4 back, vec4 four, string txt, float frac);
-	virtual void draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, bool mouseD);
-	virtual void update(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, bool mouseD);
+	virtual void draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, bool mouseD);
+	virtual void update(vec2 ps, vec2 sc, vec2 mouse, bool mouseD);
+	virtual void control(int UpDown, int RightLeft, int InOut, int* level,int depth);
 };
 class UItoggler :public UIelement
 {
@@ -56,10 +66,10 @@ public:
 	bool big = false;
 	bool isTrue = false;
 	bool isDown = false;
-	string text = " ";
 	UItoggler(vec2 sca, vec4 back, vec4 four, string txt, bool tr,bool bg);
-	virtual void draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, bool mouseD);
-	virtual void update(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, bool mouseD);
+	virtual void draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, bool mouseD);
+	virtual void update(vec2 ps, vec2 sc, vec2 mouse, bool mouseD);
+	virtual void control(int UpDown, int RightLeft, int InOut, int* level,int depth);
 };
 void drawString(GLuint VAO, GLuint ShaderUI, vec2 pss, vec2 scc, string text);
 
@@ -102,9 +112,11 @@ class UImenue :public UIelement {
 public:
 	UImenue(GLuint texT);
 	UIDIV* fullBox;
+	UIDIV* screen;
 	UIsettings settings;
-	virtual void draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, bool mouseD);
-	virtual void update(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, vec2 mouse, bool mouseD);
+	virtual void draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, bool mouseD);
+	virtual void update(vec2 ps, vec2 sc, vec2 mouse, bool mouseD);
+	virtual void control(int UpDown, int RightLeft, int InOut, int* level,int depth);
 };
 
 

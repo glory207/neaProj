@@ -8,7 +8,7 @@ std::vector<const char*> texturesNames = {"img/brick.jpg","img/playerAni/walk000
     "img/playerAni/run0001-Sheet.png",
     "img/playerAni/runNormal0001-Sheet.png",
     "img/MapOverlay.png",
-    "img/scary.jpg",
+    "img/cage.png", // 11
     "img/wood-normal.jpg",//0
     "img/treasureCh.png",//7
     "img/SpriteNorm-0000.png",

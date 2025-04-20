@@ -39,8 +39,7 @@ camera::camera(glm::vec3 pos, glm::vec3 rot){
     glBindVertexArray(0); 
 
     shader = initShader("shaders/cam.vert", "shaders/cam.frag");
-    ScreenShader = initShader("shaders/cam.vert", "shaders/screen.frag");
-    MapShader = initShader("shaders/map.vert", "shaders/screen.frag");
+
 }
 void camera::draw(GLuint shadr) {
     glUniform1i(glGetUniformLocation(shadr, "ColT"), 0);
@@ -57,7 +56,6 @@ void camera::drawScreen() {
 }
 void camera::updateSize(glm::vec2 sz) {
     GFB.set(sz);
-    MFB.set(sz);
     FB.set(sz);
     PFB1.set(sz);
 }

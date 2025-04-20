@@ -10,7 +10,10 @@
     
 out DATA
 {
+    vec3 col;
     float scale;
+    float scale2;
+    mat2 r;
 } data_out;
 
     void main() {
@@ -21,5 +24,19 @@ out DATA
     );
 
     data_out.scale = thk;
-      gl_Position = vec4(rot * (aVertexPosition.xy*sc1 - vec2(campos.y,campos.x))*sc ,0.0,1.0);
+    data_out.scale2 = sc1 * sc;
+    data_out.r = rot;
+
+    
+    if(aVertexPosition.z > 0.01f){
+    data_out.scale *= 6.5f;
+    data_out.scale2 *= 2.5f;
+    data_out.col = vec3(1,1,0);}
+    else if(aVertexPosition.z < -0.01f){
+    data_out.scale *= 6.5f;
+    data_out.scale2 *= 2.5f;
+    data_out.col = vec3(1,1,1);}
+    else data_out.col = vec3(0.5f, 0.3f, 0.2f);
+
+      gl_Position = vec4(rot * (aVertexPosition.xy - vec2(campos.y,campos.x))*sc ,0.0,1.0);
     }

@@ -10,7 +10,7 @@ MovableState::MovableState(InputObject* inp, StateClass* sender) {
 }
 int MovableState::Enter() {
 	
-	cout << "MovableState" << endl;
+	// cout << "MovableState" << endl;
 	cur->Enter();
 	return 0;
 }
@@ -21,23 +21,52 @@ int MovableState::update(float deltaTime) {
 		cur = inAir;
 		cur->Enter();
 	}
+	inp->camArmTarget = vec3(2.57f, 0.25f, 1.55f) * inp->obj.sca.y;
 	// update the base state
 	cur->update(deltaTime);
 
 	// preform logic
+
+
+	if (!inp->WH) {
+
+		inp->cam->rot.x += inp->lok.y;
+		inp->cam->rot.y += inp->lok.x;
+		inp->rot.y = inp->cam->rot.y;
+	}
+	 
+
+	inp->camArm = inp->camArm + (inp->camArmTarget - inp->camArm) * deltaTime * 10.0f;
+
+
+	// validation stops the inp->camera from rotation 
+	// upside down 
+	if (inp->cam->rot.x > 0.4f)inp->cam->rot.x = 0.4f;
+	if (inp->cam->rot.x < -1.15f)inp->cam->rot.x = -1.15f;
+
+	inp->cam->pos.x = inp->pos.x + sin(inp->cam->rot.y) * inp->camArm.x * cos(inp->cam->rot.x) + cos(inp->cam->rot.y) * inp->camArm.y;
+	inp->cam->pos.y = inp->pos.y + inp->camArm.z - sin(inp->cam->rot.x) * inp->camArm.x;
+	inp->cam->pos.z = inp->pos.z + cos(inp->cam->rot.y) * inp->camArm.x * cos(inp->cam->rot.x) - sin(inp->cam->rot.y) * inp->camArm.y;
+
+
+	if (inp->WH && length(inp->lok) > 0.02) {
+		inp->whe = normalize(vec2(-inp->lok.x, inp->lok.y));
+	}
+	inp->lok = vec2(0);
+
 	int dir = floor(((
-		-atan2(inp->pos.x - inp->cam.x, -inp->pos.z + inp->cam.z)
-		+ atan2(inp->acc.x, -inp->acc.z)
+		-atan2(inp->pos.x - inp->cam->pos.x, -inp->pos.z + inp->cam->pos.z)
+		+ atan2(inp->vel.x, -inp->vel.z)
 		+ 0.125 * 3.141592) / (0.25 * 3.141592)));
 	if (dir != NULL) inp->animation.dir = dir;
 
-	inp->acc.z -= inp->acc.z * inp->resistance.z * deltaTime;
-	inp->acc.y -= inp->acc.y * inp->resistance.y * deltaTime;
-	inp->acc.x -= inp->acc.x * inp->resistance.x * deltaTime;
+	inp->vel.z -= inp->vel.z * inp->resistance.z * deltaTime;
+	inp->vel.y -= inp->vel.y * inp->resistance.y * deltaTime;
+	inp->vel.x -= inp->vel.x * inp->resistance.x * deltaTime;
 
-	inp->pos.z -= inp->acc.z * deltaTime;
-	inp->pos.y += inp->acc.y * deltaTime;
-	inp->pos.x -= inp->acc.x * deltaTime;
+	inp->pos.z -= inp->vel.z * deltaTime;
+	inp->pos.y += inp->vel.y * deltaTime;
+	inp->pos.x -= inp->vel.x * deltaTime;
 	return 0;
 }
 
@@ -50,7 +79,7 @@ IdleState::IdleState(InputObject* inp, MovableState* sender) {
 	cur = stood;
 }
 int IdleState::Enter() {
-	cout << "IdleState" << endl;
+	// cout << "IdleState" << endl;
 	if (inp->SP) {
 		cur = crouched;
 	}
@@ -76,7 +105,7 @@ IdleStoodState::IdleStoodState(InputObject* inp, IdleState* sender) {
 	this->inp = inp;
 }
 int IdleStoodState::Enter() {
-	cout << "IdleStoodState" << endl;
+	// cout << "IdleStoodState" << endl;
 	inp->animation = AnimationClass(2,7,7,0,1);
 	inp->animation.colour     = 2;
 	inp->animation.normal     = 7;
@@ -98,7 +127,7 @@ IdleCrouchState::IdleCrouchState(InputObject* inp, IdleState* sender) {
 	this->inp = inp;
 }
 int IdleCrouchState::Enter() {
-	cout << "IdleCrouchState" << endl;
+	// cout << "IdleCrouchState" << endl;
 
 	inp->animation.colour     = 17;
 	inp->animation.normal     = 18;
@@ -107,6 +136,7 @@ int IdleCrouchState::Enter() {
 	return 0;
 }
 int IdleCrouchState::update(float deltaTime) {
+	inp->camArmTarget = vec3(1.37f, 0.25f, 0.95) * inp->obj.sca.y;
 	if (!inp->SP) {
 		sender->cur = sender->stood;
 		sender->cur->Enter(); return 0;
@@ -147,8 +177,8 @@ int MotionState::update(float deltaTime) {
 	vec2 mov = vec2((inp->inp.y * sin(inp->rot.y) - inp->inp.x * cos(inp->rot.y)), (inp->inp.y * cos(inp->rot.y) + inp->inp.x * sin(inp->rot.y)));
 
 
-	inp->acc.z += normalize(mov).y * deltaTime * inp->speed;
-	inp->acc.x += normalize(mov).x * deltaTime * inp->speed;
+	inp->vel.z += normalize(mov).y * deltaTime * inp->speed;
+	inp->vel.x += normalize(mov).x * deltaTime * inp->speed;
 	return 0;
 }
 
@@ -159,7 +189,7 @@ WalkState::WalkState(InputObject* inp, MotionState* sender) {
 }
 
 int WalkState::Enter() {
-	cout << "WalkState" << endl;
+	// cout << "WalkState" << endl;
 	// pre check the state
 	if (inp->SP) {
 		sender->cur = sender->crawl;
@@ -196,7 +226,7 @@ RunState::RunState(InputObject* inp, MotionState* sender) {
 }
 int RunState::Enter() {
 
-	cout << "RunState" << endl;
+	// cout << "RunState" << endl;
 	if (!inp->SH) {
 		sender->cur = sender->walk;
 		sender->cur->Enter();return 0;
@@ -234,8 +264,7 @@ CrawlState::CrawlState(InputObject* inp, MotionState* sender) {
 	this->inp = inp;
 }
 int CrawlState::Enter() {
-
-	cout << "CrawlState" << endl;
+	// cout << "CrawlState" << endl;
 	if (!inp->SP) {
 		sender->cur = sender->walk;
 		sender->cur->Enter();return 0;
@@ -255,6 +284,7 @@ int CrawlState::Enter() {
 
 }
 int CrawlState::update(float deltaTime) {
+	inp->camArmTarget = vec3(1.37f, 0.25f, 0.95) * inp->obj.sca.y;
 	if (!inp->SP) {
 		sender->cur = sender->walk;
 		sender->cur->Enter(); return 0;
@@ -280,7 +310,7 @@ InAirState::InAirState(InputObject* inp, MovableState* sender) {
 	cur = fall;
 }
 int InAirState::Enter() {
-	cout << "InAirState" << endl;
+	// cout << "InAirState" << endl;
 
 	inp->resistance = vec3(1,1,1);
 	if (inp->SH && inp->SP) {
@@ -299,7 +329,7 @@ int InAirState::update(float deltaTime) {
 		cur->Enter();
 		 return 0;
 	}
-	inp->acc.y -= 5.5f * deltaTime;
+	inp->vel.y -= 5.5f * deltaTime;
 	cur->update(deltaTime);
 	return 0;
 }
@@ -310,18 +340,18 @@ DiveState::DiveState(InputObject* inp, InAirState* sender) {
 }
 int DiveState::Enter() {
 
-	cout << "DiveState" << endl;
+	// cout << "DiveState" << endl;
 
 	inp->animation.colour     = 21;
 	inp->animation.normal     = 22;
 	inp->animation.framecount = 8;
 	inp->animation.fps        = 10.0;
 	inp->animation.current = 0.0;
-	inp->acc.y = inp->jump.x;
+	inp->vel.y = inp->jump.x;
 
 	vec2 mov = vec2((inp->inp.y * sin(inp->rot.y) - inp->inp.x * cos(inp->rot.y)), (inp->inp.y * cos(inp->rot.y) + inp->inp.x * sin(inp->rot.y)));
-	inp->acc.x = normalize(mov).x * inp->jump.y;
-	inp->acc.z = normalize(mov).y * inp->jump.y;
+	inp->vel.x = normalize(mov).x * inp->jump.y;
+	inp->vel.z = normalize(mov).y * inp->jump.y;
 	return 0;
 }
 int DiveState::update(float deltaTime) {
@@ -340,10 +370,9 @@ RollState::RollState(InputObject* inp, InAirState* sender) {
 	this->inp = inp;
 }
 int RollState::Enter() {
-
-	cout << "RollState" << endl;
-	inp->acc.y = -0.1f;
-	if (length(inp->acc) < 0.5f)
+	// cout << "RollState" << endl;
+	inp->vel.y = -0.1f;
+	if (length(inp->vel) < 0.5f)
 	{
 		sender->sender->cur = sender->sender->idle;
 		sender->sender->cur->Enter();
@@ -363,10 +392,10 @@ int RollState::Enter() {
 	return 0;
 }
 int RollState::update(float deltaTime) {
-	inp->acc.y = -1.1f;
+	inp->vel.y = -1.1f;
 	vec2 mov = vec2((inp->inp.y * sin(inp->rot.y) - inp->inp.x * cos(inp->rot.y)), (inp->inp.y * cos(inp->rot.y) + inp->inp.x * sin(inp->rot.y)));
 
-	if (dot(mov, vec2(inp->acc.x, inp->acc.z)) > 0.5f)
+	if (dot(mov, vec2(inp->vel.x, inp->vel.z)) > 0.5f)
 	{
 		inp->resistance.x = 1.0f;
 		inp->resistance.z = 1.0f;
@@ -394,7 +423,7 @@ FallingState::FallingState(InputObject* inp, InAirState* sender) {
 }
 int FallingState::Enter() {
 
-	cout << "FallingState" << endl;
+	// cout << "FallingState" << endl;
 
 	return 0;
 }
