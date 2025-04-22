@@ -7,14 +7,11 @@ using namespace glm;
 using namespace std;
 class PathFind
 {
-private:
-    vec3 Startpos;
-    vec3 Endpos;
 public:
     PathFind();
     void FindPath(vec3 startpos, vec3 endpos, queue<PathFind*>* pathfq);
-    vec3 startpos();
-    vec3 endpos();
+    vec3 Startpos;
+    vec3 Endpos;
     float pathP = 0.0;
     bool OnPath = false;
     bool EndPath = false;

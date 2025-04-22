@@ -4,7 +4,6 @@
 #include <glm/vec2.hpp>
 #include <stdlib.h>
 #include "initBuffer.h"
-#include "Furniture.h"
 #include "Light.h"
 #include "object.h"
 #include <iostream>
@@ -26,17 +25,36 @@ class CellGrid {
 public:
     CellGrid();
     CellGrid(vec2 pos, int x, int y, int p);
+    // its index in the first dimension
     int x;
+    // its index in the second dimension
     int y;
+    // the index of the cell its in
     int p;
+    // its position in the world
     vec2 pos;
+    // is there an object in it
+    int obstruction = 0;
+    float hight = 0;
+
+    // is there an object in it
     bool visited = false;
     CellGrid* parent = nullptr;
-    bool obstruction = false;
     bool isPath = false;
     int Holistic = 0;
     int Distance = INFINITY;
-    int DH = INFINITY;
+};
+
+
+class Furniture
+{
+public:
+    Furniture();
+    Furniture(int i, int k, CellGrid(*grid)[9][9], float size, float thk, vec3 ps);
+    SpObj obj;
+    int ColorTexture;
+    int NormalTexture;
+    static bool canFit(int i, int k, CellGrid(*grid)[9][9]);
 };
 
 
@@ -87,8 +105,8 @@ public:
     SpObj obj;
     SpObj obj2;
     float project(float x, float y, int side, Furniture f);
-    CellGrid* adjacentCellGrid(int CurentN[3], int px, int py, std::vector<CellGrid*>* nodesToSearch);
-    std::vector<CellGrid*> getpath(int sx, int sy, int start, int ex, int ey, int end);
+    void adjacentCellGrid(CellGrid* CurentN, int px, int py, std::vector<CellGrid*>* nodesToSearch);
+    std::vector<CellGrid*> getpath(CellGrid* start, CellGrid* end);
 };
 
 

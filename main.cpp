@@ -28,7 +28,6 @@ camera cam;
 Light tourch;
 PlayerClass player;
 PathFind pathf;
-queue<PathFind*> pathfq;
 vector<Enemy> enmi;
 float resolution = 1.0f;
 bool MouseLocked = false;
@@ -194,21 +193,40 @@ void doLightNew(createShadowFramebufferCube* shadowFB, unsigned int shaderShadow
 
 
 
-void PathFindingFunction(int Z)
+queue<PathFind*> pathfq; 
+void PathFindingFunction()
 {
-
     while (!glfwWindowShouldClose(window) && endGame)
     {
         if (!pathfq.empty()) {
 
             PathFind* pt = pathfq.front();
             pathfq.pop();
-            pt->path = mz.getpath(pt->startpos().x, pt->startpos().y, pt->startpos().z, pt->endpos().x, pt->endpos().y, pt->endpos().z
-            );
+
+            // translates the possition to a grid node
+            int start = int((pt->Startpos.x + 1.0f) / mz.size) + int((pt->Startpos.z + 1.0f) / mz.size) * mz.count;
+            int sx = int(9.0 * (pt->Startpos.x / mz.size + mz.thk) / (mz.thk * 2.0)) - 10 * int((pt->Startpos.x + 1.0f) / mz.size);
+            int sy = int(9.0 * (pt->Startpos.z / mz.size + mz.thk) / (mz.thk * 2.0)) - 10 * int((pt->Startpos.z + 1.0f) / mz.size);
+            int end = int((pt->Endpos.x + 1.0f) / mz.size) + int((pt->Endpos.z + 1.0f) / mz.size) * mz.count;
+            int ex = int(9.0 * (pt->Endpos.x / mz.size + mz.thk) / (mz.thk * 2.0)) - 10 * int((pt->Endpos.x + 1.0f) / mz.size);
+            int ey = int(9.0 * (pt->Endpos.z / mz.size + mz.thk) / (mz.thk * 2.0)) - 10 * int((pt->Endpos.z + 1.0f) / mz.size);
+
+            // validation for the starting and ending points
+            if (sx > 8)sx = 8;  if (sy > 8)sy = 8;
+            if (sx < 0)sx = 0;  if (sy < 0)sy = 0;
+            if (ex > 8)ex = 8;  if (ey > 8)ey = 8;
+            if (ex < 0)ex = 0;  if (ey < 0)ey = 0;
+            if (start > mz.nodes.size() - 1)start = mz.nodes.size() - 1;
+            if (start < 0)start = 0;
+            if (end > mz.nodes.size() - 1)end = mz.nodes.size() - 1;
+            if (end < 0)end = 0;
+
+            // get the path
+            pt->path = mz.getpath(&mz.nodes[start].grid[sx][sy],&mz.nodes[end].grid[ex][ey]);
+            // respond the path has been found
             pt->OnPath = true;
             pt->WaitingForPath = false;
             pt->pathP = 0.0f;
-
         }
     }
 }
@@ -288,16 +306,13 @@ void UpdatingFunction() {
     if (glfwGetKey(window, GLFW_KEY_KP_8) == GLFW_PRESS)   mapScale /= 1.1f;
 
     if (glfwGetKey(window, GLFW_KEY_KP_5) == GLFW_PRESS) {
-        pathend = vec3(
-            int(9.0 * (player.inp->pos.x / mz.size + mz.thk) / (mz.thk * 2.0)) - 10 * int((player.inp->pos.x + 1.0f) / mz.size),
-            int(9.0 * (player.inp->pos.z / mz.size + mz.thk) / (mz.thk * 2.0)) - 10 * int((player.inp->pos.z + 1.0f) / mz.size),
-            int((player.inp->pos.x + 1.0f) / mz.size) + int((player.inp->pos.z + 1.0f) / mz.size) * mz.count);
+        pathend = player.inp->pos;
+
     }
-    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) pathend = vec3(5, 5, int(Rand(gen) * mz.count * mz.count));
+    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) pathend = vec3((Rand(gen) * mz.size * mz.count),0, (Rand(gen) * mz.size * mz.count));
     if (glfwGetKey(window, GLFW_KEY_KP_6) == GLFW_PRESS) {
-        pathf.FindPath(vec3(int(9.0 * (player.inp->pos.x / mz.size + mz.thk) / (mz.thk * 2.0)) - 10 * int((player.inp->pos.x + 1.0f) / mz.size),
-            int(9.0 * (player.inp->pos.z / mz.size + mz.thk) / (mz.thk * 2.0)) - 10 * int((player.inp->pos.z + 1.0f) / mz.size),
-            int((player.inp->pos.x + 1.0f) / mz.size) + int((player.inp->pos.z + 1.0f) / mz.size) * mz.count),
+        pathf.EndPath = true;
+        pathf.FindPath(player.inp->pos,
             pathend, &pathfq);
     }
 
@@ -322,17 +337,22 @@ void UpdatingFunction() {
     if (pathf.OnPath) {
         vec2 psss1 = pathf.path[int(pathf.pathP)]->pos * mz.size;
         vec2 psss2 = pathf.path[int(pathf.pathP + 1)]->pos * mz.size;
-        // player.inp->pos = vec3(psss1.x, player.inp->pos.y, psss1.y) + ((vec3(psss2.x, player.inp->pos.y, psss2.y)) - vec3(psss1.x, player.inp->pos.y, psss1.y)) * (pathP-int(pathP));
-        // pathP += deltaTime * 3.0f;
-        player.inp->vel += 0.2f * ((player.inp->pos - vec3(psss2.x, player.inp->pos.y, psss2.y)) / distance(psss2, vec2(player.inp->pos.x, player.inp->pos.z)));
-        if (distance(psss1, vec2(player.inp->pos.x, player.inp->pos.z)) > distance(psss2, vec2(player.inp->pos.x, player.inp->pos.z)))
-            pathf.pathP++;
-
+        //player.inp->pos = vec3(psss1.x, player.inp->pos.y, psss1.y) + ((vec3(psss2.x, player.inp->pos.y, psss2.y)) - vec3(psss1.x, player.inp->pos.y, psss1.y)) * (pathP-int(pathP));
+        //pathP += deltaTime * 3.0f;
+        player.inp->vel += 0.1f * ((player.inp->pos - vec3(psss2.x, player.inp->pos.y, psss2.y)) / distance(psss2, vec2(player.inp->pos.x, player.inp->pos.z)));
+        if (pathf.path[pathf.pathP + 1]->obstruction > 3 && player.inp->pos.y < pathf.path[pathf.pathP + 1]->hight * mz.size) {
+            cout << "sad" << endl;
+            player.inp->Grounded = true;
+            player.inp->pos.y += 1.0f * deltaTime; 
+            if (player.inp->pos.y > pathf.path[pathf.pathP + 1]->hight * mz.size)player.inp->pos.y = pathf.path[pathf.pathP + 1]->hight * mz.size;
+        }
+        if (distance(psss1, vec2(player.inp->pos.x, player.inp->pos.z)) > distance(psss2, vec2(player.inp->pos.x, player.inp->pos.z)))pathf.pathP++;
+        //if (int(pathf.pathP) > 0 && distance(psss1, vec2(player.inp->pos.x, player.inp->pos.z)) > distance(pathf.path[int(pathf.pathP - 1)]->pos * mz.size, vec2(player.inp->pos.x, player.inp->pos.z)))pathf.pathP++;
+   
     }
 }
 
 void processInput(GLFWwindow* window) {
-
     bool up     = glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS;
     bool down   = glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS;
     bool left   = glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS;
@@ -353,22 +373,32 @@ void processInput(GLFWwindow* window) {
 
     }
 
-
+    // the out key or controller button is pressed
     if (out) {
+        // if its the first time set it to 1
+        // if not set it to 2
         if (inout > 0)inout = 2;
         else {
-            inout = 1;  lev--;
+            inout = 1;  lev--; // if its the first time 
+            // decrease level
         }
-    }
+    }// the in key or controller button is pressed
     else if (in) {
+        // if its the first time set it to -1
+        // if not set it to -2
         if (inout < 0)inout = -2;
         else {
-            inout = -1; lev++;
+            inout = -1; lev++;// if its the first time 
+            // increase level
         }
     }
     else {
+        // when nothing is pressed it should be 0
         inout = 0;
     }
+    // validation
+    if (lev < 0) lev = 0;
+    
     if (up) {
         if (updown > 0)updown = 2;
         else {
@@ -394,7 +424,6 @@ void processInput(GLFWwindow* window) {
             leftright = 0;
         }
 
-    if (lev < 0) lev = 0;
 }
 
 void drawMap(bool center) {
@@ -412,34 +441,45 @@ void drawMap(bool center) {
     else glUniform1f(glGetUniformLocation(shaderMazeProgram, "sc"), mapScale);
 
     glUniform1f(glGetUniformLocation(shaderMazeProgram, "sc1"), 1.0);
-    glUniform2f(glGetUniformLocation(shaderMazeProgram, "campos"), plPos.x / mz.size, plPos.z / mz.size);
+    glUniform3f(glGetUniformLocation(shaderMazeProgram, "campos"), plPos.x / mz.size, plPos.z / mz.size,0);
 
     if (center)glUniform1f(glGetUniformLocation(shaderMazeProgram, "rt"), 0);
     else glUniform1f(glGetUniformLocation(shaderMazeProgram, "rt"), cam.rot.y);
 
     glBindVertexArray(mz.MapBuffers.VAO);
     glDrawElements(GL_LINES, mz.MapBuffers.length, GL_UNSIGNED_INT, 0);
-    glBindVertexArray(VAO);
 
 
-    glUseProgram(shaderMazeFurnProgram);
-
-    glUniform1f(glGetUniformLocation(shaderMazeFurnProgram, "sc"), mapScale);
-    glUniform1f(glGetUniformLocation(shaderMazeFurnProgram, "rt"), cam.rot.y);
-
-    glUniform1f(glGetUniformLocation(shaderMazeFurnProgram, "sc1"), 0.02f);
-    glUniform1f(glGetUniformLocation(shaderMazeFurnProgram, "thk"), 0.0075f * mapScale);
-    glUniform2f(glGetUniformLocation(shaderMazeFurnProgram, "campos"), 0, 0);
-    glDrawArrays(GL_POINTS, 0, 1);
 
 
-    if (false && !center){
+    if (!center){
+
+        glUseProgram(shaderMazeFurnProgram);
+
+
         glUniform1f(glGetUniformLocation(shaderMazeFurnProgram, "sc1"), 0.05f);
 
         glBindVertexArray(FurnVAO);
 
-        glUniform2f(glGetUniformLocation(shaderMazeFurnProgram, "campos"), plPos.x / mz.size, plPos.z / mz.size);
+        glUniform3f(glGetUniformLocation(shaderMazeFurnProgram, "campos"), plPos.x / mz.size, plPos.z / mz.size,0);
         glDrawArrays(GL_POINTS, 0, FurnCount);
+
+
+        glBindVertexArray(VAO);
+
+        glUniform1f(glGetUniformLocation(shaderMazeFurnProgram, "sc"), mapScale);
+        glUniform1f(glGetUniformLocation(shaderMazeFurnProgram, "rt"), cam.rot.y);
+
+        glUniform1f(glGetUniformLocation(shaderMazeFurnProgram, "sc1"), 0.02f);
+        glUniform1f(glGetUniformLocation(shaderMazeFurnProgram, "thk"), 0.0075f * mapScale);
+        glUniform3f(glGetUniformLocation(shaderMazeFurnProgram, "campos"), 0, 0, 50);
+        glDrawArrays(GL_POINTS, 0, 1);
+
+        for (int i = 0; i < pathf.path.size(); i++)
+        {
+            glUniform3f(glGetUniformLocation(shaderMazeFurnProgram, "campos"), -pathf.path[i]->pos.x + plPos.x / mz.size, -pathf.path[i]->pos.y + plPos.z / mz.size, 50);
+            glDrawArrays(GL_POINTS, 0, 1);
+        }
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -583,7 +623,7 @@ int main()
 
                 processInput(window);
 
-                menue.fullBox->children[0]->control(updown,leftright,inout,&lev,0);
+                menue.fullBox->children[0]->control(updown,leftright,inout,&lev,0,deltaTime);
                 glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
                 glEnable(GL_DEPTH_TEST);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -597,6 +637,16 @@ int main()
 
                 menue.draw(cam.VAO, ShaderUI, vec2(0), vec2(1),
                     glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS);
+
+                if (*menue.settings.frameLock) {
+                    glfwSwapInterval(0);
+                }
+                else
+                {
+                    glfwSwapInterval(1);
+                }
+                resolution = pow(int((1.0 - *menue.settings.resolution) * 10) + 1, -2.0f);
+                cam.updateSize(vec2(SCR_WIDTH, SCR_HEIGHT) * resolution);
 
                 if (*menue.settings.generate) {
                     *menue.settings.generate = false;
@@ -613,7 +663,7 @@ int main()
                            else if (mz.nodes[i].treasure) typ = 5;
 
                            for (int j = 0; j < 9 * 9; j++) {
-                               if (mz.nodes[i].grid[j % 9][j / 9].obstruction) {
+                               if (mz.nodes[i].grid[j % 9][j / 9].obstruction > 1) {
                                    vertices.push_back(mz.nodes[i].grid[j % 9][j / 9].pos.y);
                                    vertices.push_back(mz.nodes[i].grid[j % 9][j / 9].pos.x);
                                    if(j==40)vertices.push_back(typ);
@@ -656,7 +706,7 @@ int main()
                     player.inp->pos = vec3(mz.count * mz.size * 0.5f,0.1f, mz.count * mz.size * 0.5f);
                     dynamic_cast<UIDIV*>(menue.fullBox->children[0])->cur = 2;
 
-                    PathFindingThread = thread(PathFindingFunction, 3);
+                    PathFindingThread = thread(PathFindingFunction);
 
                     enmi.clear();
                    // for (int i = 0; i < (int)(*menue.settings.enemies * 100); i++)
@@ -1127,7 +1177,7 @@ int main()
 
                 processInput(window);
 
-                menue.fullBox->children[0]->control(updown, leftright, inout, &lev, 0);
+                menue.fullBox->children[0]->control(updown, leftright, inout, &lev, 0,deltaTime);
 
                 glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
                 glEnable(GL_DEPTH_TEST);
@@ -1155,7 +1205,6 @@ int main()
                 }
                 if (*menue.settings.quitToMain)
                 {
-
                     lev = 0;
                     endGame = false;
 

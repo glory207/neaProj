@@ -12,8 +12,6 @@ void PathFind::FindPath(vec3 startpos, vec3 endpos, queue<PathFind*>* pathfq) {
 	pathfq->push(this);
 	}
 }
-vec3 PathFind::startpos() { return Startpos; }
-vec3 PathFind::endpos() { return Endpos; }
 Enemy::Enemy() {}
 Enemy::Enemy(vec3 pos, vec3 rot) {
 	this->pos = pos;
@@ -33,10 +31,8 @@ void Enemy::update(float deltaTime,vec3 cam,Maze* mz, queue<PathFind*>* pathfq) 
 		random_device rd;  // Seed generator
 		mt19937 gen(rd()); // Mersenne Twister engine
 		uniform_real_distribution<float> Rand(0.0f, 1.0f); // Range [0, 1]
-		pathFinder.FindPath(vec3(int(9.0 * (pos.x / mz->size + mz->thk) / (mz->thk * 2.0)) - 10 * int((pos.x + 1.0f) / mz->size),
-			int(9.0 * (pos.z / mz->size + mz->thk) / (mz->thk * 2.0)) - 10 * int((pos.z + 1.0f) / mz->size),
-			int((pos.x + 1.0f) / mz->size) + int((pos.z + 1.0f) / mz->size) * mz->count),
-			vec3(5, 5, int(Rand(gen) * mz->count * mz->count)), pathfq);
+
+		pathFinder.FindPath(pos,vec3(Rand(gen) * mz->count * mz->size,0, Rand(gen) * mz->count * mz->size), pathfq); 
 	}
 	if (pathFinder.path.size() == 0 || pathFinder.pathP + 1 >= pathFinder.path.size()) {
 		pathFinder.OnPath = false;

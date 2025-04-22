@@ -5,6 +5,7 @@
 #include <glm/vec3.hpp>
 #include <glm/glm.hpp>
 
+using namespace glm;
 
 
 class BufferGroup

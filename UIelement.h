@@ -16,18 +16,23 @@ public:
 	vec4 four;
 	int chr;
 	bool hover;
+	// Dpad input controls
+	// its values
 	bool controlled = false;
+	// if the depth is increased
+	// it will be controlled
 	bool Willcontrol = false;
+	// it is allowed to be controlled
+	bool selectable = true;
 	bool active = true;
 	vector<UIelement*> children;
 
-	bool selectable = true;
 	string text = "";
 	int texture = -1;
 	virtual ~UIelement() {}
 	virtual void draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, bool mouseD);
 	virtual void update(vec2 ps, vec2 sc, vec2 mouse, bool mouseD);
-	virtual void control(int UpDown, int RightLeft, int InOut, int* level,int depth);
+	virtual void control(int UpDown, int RightLeft, int InOut, int* level,int depth, float deltatime);
 };
 
 class UIDIV:public UIelement
@@ -38,7 +43,7 @@ public:
 	int layout = 1;
 	virtual void draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, bool mouseD);
 	virtual void update(vec2 ps, vec2 sc, vec2 mouse, bool mouseD);
-	virtual void control(int UpDown, int RightLeft, int InOut, int* level,int depth);
+	virtual void control(int UpDown, int RightLeft, int InOut, int* level,int depth, float deltatime);
 };
 class UIButton :public UIelement
 {
@@ -49,7 +54,7 @@ public:
 	UIDIV* child = nullptr;
 	virtual void draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, bool mouseD);
 	virtual void update(vec2 ps, vec2 sc, vec2 mouse, bool mouseD);
-	virtual void control(int UpDown, int RightLeft, int InOut, int* level,int depth);
+	virtual void control(int UpDown, int RightLeft, int InOut, int* level,int depth, float deltatime);
 };
 class UIslider :public UIelement
 {
@@ -58,7 +63,7 @@ public:
 	UIslider(vec2 sca, vec4 back, vec4 four, string txt, float frac);
 	virtual void draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, bool mouseD);
 	virtual void update(vec2 ps, vec2 sc, vec2 mouse, bool mouseD);
-	virtual void control(int UpDown, int RightLeft, int InOut, int* level,int depth);
+	virtual void control(int UpDown, int RightLeft, int InOut, int* level,int depth, float deltatime);
 };
 class UItoggler :public UIelement
 {
@@ -69,7 +74,7 @@ public:
 	UItoggler(vec2 sca, vec4 back, vec4 four, string txt, bool tr,bool bg);
 	virtual void draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, bool mouseD);
 	virtual void update(vec2 ps, vec2 sc, vec2 mouse, bool mouseD);
-	virtual void control(int UpDown, int RightLeft, int InOut, int* level,int depth);
+	virtual void control(int UpDown, int RightLeft, int InOut, int* level,int depth, float deltatime);
 };
 void drawString(GLuint VAO, GLuint ShaderUI, vec2 pss, vec2 scc, string text);
 
@@ -116,7 +121,7 @@ public:
 	UIsettings settings;
 	virtual void draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, bool mouseD);
 	virtual void update(vec2 ps, vec2 sc, vec2 mouse, bool mouseD);
-	virtual void control(int UpDown, int RightLeft, int InOut, int* level,int depth);
+	virtual void control(int UpDown, int RightLeft, int InOut, int* level,int depth, float deltatime);
 };
 
 

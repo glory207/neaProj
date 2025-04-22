@@ -30,7 +30,7 @@ void UIelement::draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, bool mouseD)
 	glBindVertexArray(VAO);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
-void UIelement::control(int UpDown, int RightLeft, int InOut, int* level,int depth) {}
+void UIelement::control(int UpDown, int RightLeft, int InOut, int* level,int depth, float deltatime) {}
 
 UIDIV::UIDIV(vec2 sca, vec4 back, vec4 four,int hrv) {
 	this->pos = pos;
@@ -107,38 +107,33 @@ void UIDIV::update(vec2 ps, vec2 sc, vec2 mouse, bool mouseD) {
 		}
 	}
 }
-void UIDIV::control(int UpDown, int RightLeft, int InOut, int* level,int depth) {
+void UIDIV::control(int UpDown, int RightLeft, int InOut, int* level,int depth, float deltatime) {
 	if ((*level) == depth && children.size() > 0 && selectable) {
 		controlled = true;
+		// the selected UI should be the next one
 		if ((layout == 1 && UpDown == -1) || (layout == 0 && RightLeft == 1)) {
 			int newC = cur + 1;
+			// skip all inactive UI
 			while (newC < children.size() && !children[newC]->active) {
 				if (!children[newC]->active) newC++;
 			}
 			if (newC < children.size()) cur = newC;
 		}
+		// the selected UI should be the previouse one
 		if ((layout == 1 && UpDown == 1) || (layout == 0 && RightLeft == -1)) {
 			int newC = cur - 1;
+			// skip all inactive UI
 			while (newC >= 0 && !children[newC]->active) {
 				if (!children[newC]->active) newC--;
 			}
 			if (newC >= 0) cur = newC;
 		}
-		if (cur < children.size() && cur >= 0) {
-
-			children[cur]->Willcontrol = true;
-		}
-	}
+		children[cur]->Willcontrol = true;
+	}// validation
 	else if (cur < children.size() && cur >= 0) {
-
-		
-		if (selectable) {
-			children[cur]->control(UpDown,RightLeft,InOut,level, depth + 1);
-		}
-		else
-		{
-			children[0]->control(UpDown, RightLeft, InOut, level, depth);
-		}
+		if (selectable) children[cur]->control(UpDown, RightLeft, InOut, level, depth + 1, deltatime);
+		// should be skipped
+		else children[0]->control(UpDown, RightLeft, InOut, level, depth,deltatime);
 	}
 	else {
 		(*level) = depth;
@@ -196,9 +191,9 @@ void UIButton::update(vec2 ps, vec2 sc, vec2 mouse, bool mouseD) {
 		mouse.y >((pos.y * sc.y + ps.y) - (sca.y * sc.y))
 		;
 }
-void UIButton::control(int UpDown, int RightLeft, int InOut, int* level,int depth) {
+void UIButton::control(int UpDown, int RightLeft, int InOut, int* level,int depth, float deltatime) {
 	
-	if(child != nullptr)child->control(UpDown, RightLeft, InOut, level, depth);
+	if(child != nullptr)child->control(UpDown, RightLeft, InOut, level, depth,deltatime);
 }
 
 UIslider::UIslider(vec2 sca, vec4 back, vec4 four, string txt, float frac) {
@@ -244,16 +239,19 @@ void UIslider::update(vec2 ps, vec2 sc, vec2 mouse, bool mouseD) {
 
 	if (hover && mouseD) {
 		fraction = (mouse.x-((pos.x * sc.x + ps.x) - (sca.x * sc.x)*0.9)) / ((sca.x * sc.x) * 2.0*0.9);
-		if (fraction < 0)fraction = 0;
-		if (fraction > 1)fraction = 1;
 	}
 
+	if (fraction < 0)fraction = 0;
+	if (fraction > 1)fraction = 1;
 }
-void UIslider::control(int UpDown, int RightLeft, int InOut, int* level,int depth) {
+void UIslider::control(int UpDown, int RightLeft, int InOut, int* level,int depth, float deltatime) {
 	if ((*level) == depth) {
 		controlled = true;
 		hover = true;
-		fraction += RightLeft * 0.01f;
+		fraction += RightLeft * 0.6f * deltatime;
+		// validation
+		if (fraction < 0)fraction = 0;
+		if (fraction > 1)fraction = 1;
 	}
 	else {
 		(*level) = depth;
@@ -362,7 +360,7 @@ void UItoggler::update(vec2 ps, vec2 sc, vec2 mouse, bool mouseD) {
 	else isDown = false;
 
 }
-void UItoggler::control(int UpDown, int RightLeft, int InOut, int* level,int depth) {
+void UItoggler::control(int UpDown, int RightLeft, int InOut, int* level,int depth, float deltatime) {
 	if ((*level) == depth) {
 		hover = true;
 		controlled = true;
@@ -600,7 +598,7 @@ void UImenue::draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, bool mouseD) {
 void UImenue::update(vec2 ps, vec2 sc, vec2 mouse, bool mouseD) {
 	fullBox->update(pos * sc + ps, sca * sc, mouse, mouseD);
 }
-void UImenue::control(int UpDown, int RightLeft, int InOut, int* level,int depth) {}
+void UImenue::control(int UpDown, int RightLeft, int InOut, int* level,int depth, float deltatime) {}
 
 void drawString(GLuint VAO, GLuint ShaderUI, vec2 pss, vec2 scc,string text) {
 	vec2 positionOfChar = vec2(0);

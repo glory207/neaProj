@@ -168,39 +168,38 @@ Maze::Maze(int c){
 
     for (int i = 0; i < nodes.size(); i++) {
         nodes[i].set();
+
+
+
         // the position of the node that the furniture will be relative to
         vec3 ps = vec3((i % count) * size, 0.001, (i / count) * size);
         // creates an empty room
-        int grid[9][9] = {
-            {0,0,0,0,0,0,0,0,0},
-            {0,0,0,0,0,0,0,0,0},
-            {0,0,0,0,0,0,0,0,0},
-            {0,0,0,0,0,0,0,0,0},
-            {0,0,0,0,0,0,0,0,0},
-            {0,0,0,0,0,0,0,0,0},
-            {0,0,0,0,0,0,0,0,0},
-            {0,0,0,0,0,0,0,0,0},
-            {0,0,0,0,0,0,0,0,0}
-        };
+
+        for (int j = 0; j < 9 * 9; j++)
+        {
+            // creats the grid used for path finding and sets the obstructions
+            nodes[i].grid[j % 9][j / 9] = CellGrid(nodes[i].pnt(0, 0) + vec2((j % 9) - 4, (j / 9) - 4) * vec2(thk * 0.222f), j % 9, j / 9, i);
+        }
+
         // blocks the path for objects but not path finding
-        if (nodes[i].sidesIsPath[0]) grid[4][8] = 1;
-        if (nodes[i].sidesIsPath[1]) grid[4][0] = 1;
-        if (nodes[i].sidesIsPath[2]) grid[0][4] = 1;
-        if (nodes[i].sidesIsPath[3]) grid[8][4] = 1;
+        if (nodes[i].sidesIsPath[0]) nodes[i].grid[4][8].obstruction = 1;
+        if (nodes[i].sidesIsPath[1]) nodes[i].grid[4][0].obstruction = 1;
+        if (nodes[i].sidesIsPath[2]) nodes[i].grid[0][4].obstruction = 1;
+        if (nodes[i].sidesIsPath[3]) nodes[i].grid[8][4].obstruction = 1;
         // add treasure chests
         if (nodes[i].treasure)
         {
             int furrot = floor(Rand(gen) * 4);
-            Furniture::canFit(-2, furrot, &grid);
-            Furniture ref = Furniture(-2, furrot, &grid, size, thk, ps);
+            Furniture::canFit(-2, furrot, &nodes[i].grid);
+            Furniture ref = Furniture(-2, furrot, &nodes[i].grid, size, thk, ps);
             nodes[i].fur.push_back(ref);
         }
         // add cage
         if (nodes[i].cage)
         {
             int furrot = floor(Rand(gen) * 4);
-            Furniture::canFit(-3, furrot, &grid);
-            Furniture ref = Furniture(-3, furrot, &grid, size, thk, ps);
+            Furniture::canFit(-3, furrot, &nodes[i].grid);
+            Furniture ref = Furniture(-3, furrot, &nodes[i].grid, size, thk, ps);
             nodes[i].fur.push_back(ref);
         }
         for (int j = 0; j < 6; j++) 
@@ -209,9 +208,9 @@ Maze::Maze(int c){
             int furType = floor(Rand(gen) * 8);
             int furRot = floor(Rand(gen) * 4);
             
-            if(Furniture::canFit(furType, furRot,&grid))
+            if(Furniture::canFit(furType, furRot,&nodes[i].grid))
             {
-                Furniture ref = Furniture(furType, furRot, &grid, size, thk, ps);
+                Furniture ref = Furniture(furType, furRot, &nodes[i].grid, size, thk, ps);
                 
                 nodes[i].fur.push_back(ref);
                 // adds a light to go with the tourch
@@ -223,12 +222,6 @@ Maze::Maze(int c){
                }
                
             }
-        }
-        for (int j = 0; j < 9*9; j++)
-        {
-            // creats the grid used for path finding and sets the obstructions
-            nodes[i].grid[j % 9][j / 9] = CellGrid(nodes[i].pnt(0, 0) + vec2((j % 9) - 4,(j / 9) - 4) * vec2(thk * 0.222f), j % 9, j / 9, i);
-            if (grid[j % 9][j / 9] >= 2)nodes[i].grid[j % 9][j / 9].obstruction = true;
         }
 
     }
@@ -585,42 +578,24 @@ bool Maze::collide(glm::vec3* pos, float leway) {
 }
 
 
-std::vector<CellGrid*> Maze::getpath(int sx, int sy,int start, int ex, int ey, int end) {
-    std::random_device rd;  // Seed generator
-    std::mt19937 gen(rd()); // Mersenne Twister engine
-    std::uniform_real_distribution<float> Rand(0.0f, 1.0f); // Range [0, 1]
+std::vector<CellGrid*> Maze::getpath(CellGrid* start, CellGrid* end) {
 
-    // validation for the starting and ending points
-    if (sx > 8)sx = 8;
-    if (sy > 8)sy = 8;
-    if (sx < 0)sx = 0;
-    if (sy < 0)sy = 0;
-    if (ex > 8)ex = 8;
-    if (ey > 8)ey = 8;
-    if (ex < 0)ex = 0;
-    if (ey < 0)ey = 0;
-    if (start > nodes.size() - 1)start = nodes.size() - 1;
-    if (start < 0)start = 0;
-    if (end > nodes.size() - 1)end = nodes.size() - 1;
-    if (end < 0)end = 0;
-    std::vector<CellGrid*> path;
     for (int i = 0; i < nodes.size(); i++)
     {
         // clears the parent node and distance values for a new search
-        nodes[i].setSearch(&nodes[start].grid[sx][sy]);
+        nodes[i].setSearch(start);
     }
     bool found = false;
-    // the room x and y position and the nodes index
-    int CurentN[3] = { ex,ey,end };
+    CellGrid* CurentN = end;
     std::vector<CellGrid*> nodesToSearch;
+    std::vector<CellGrid*> path; 
     while (!found)
     {
-        if (CurentN[0] == sx && CurentN[1] == sy && CurentN[2] == start) {
-            CellGrid* cur = &nodes[CurentN[2]].grid[CurentN[0]][CurentN[1]];
+        if (CurentN == start) {
+            CellGrid* cur = CurentN;
             // bactrack through the nodes parents to get the path
             while (cur != nullptr)
             {
-
                 path.push_back(cur);
                 cur = cur->parent;
             }
@@ -629,43 +604,17 @@ std::vector<CellGrid*> Maze::getpath(int sx, int sy,int start, int ex, int ey, i
         }
         else
         {
-            nodes[CurentN[2]].grid[CurentN[0]][CurentN[1]].visited = true;
+            CurentN->visited = true;
             // removes the current node as it has been searched
-            std::vector<CellGrid*>::iterator it = std::find(nodesToSearch.begin(), nodesToSearch.end(), &nodes[CurentN[2]].grid[CurentN[0]][CurentN[1]]);
-            if (it != nodesToSearch.end())
-            {
-                nodesToSearch.erase(it);
-            }
+            if (!nodesToSearch.empty()) nodesToSearch.pop_back();
+
             // if the adjacent cell grid is not obstructed ts should be added to the list
-            CellGrid* adjacent;
-            adjacent = adjacentCellGrid(CurentN,-1,0,&nodesToSearch);
-            if (adjacent != nullptr) {
-                if (!adjacent->obstruction || adjacent == &nodes[start].grid[4][4] || adjacent == &nodes[end].grid[4][4]) {
-                    nodesToSearch.push_back(adjacent);
-                }
+            adjacentCellGrid(CurentN, 1, 0, &nodesToSearch);
+            adjacentCellGrid(CurentN, 0, 1, &nodesToSearch);
+            adjacentCellGrid(CurentN, -1, 0, &nodesToSearch);
+            adjacentCellGrid(CurentN, 0, -1, &nodesToSearch);
 
-            }
-            adjacent = adjacentCellGrid(CurentN,1,0,&nodesToSearch);
-            if (adjacent != nullptr) {
-                if (!adjacent->obstruction || adjacent == &nodes[start].grid[4][4] || adjacent == &nodes[end].grid[4][4]) {
-                    nodesToSearch.push_back(adjacent);
-                }
 
-            }
-            adjacent = adjacentCellGrid(CurentN,0,1,&nodesToSearch);
-            if (adjacent != nullptr) {
-                if (!adjacent->obstruction || adjacent == &nodes[start].grid[4][4] || adjacent == &nodes[end].grid[4][4]) {
-                    nodesToSearch.push_back(adjacent);
-                }
-
-            }
-            adjacent = adjacentCellGrid(CurentN,0,-1,&nodesToSearch);
-            if (adjacent != nullptr) {
-                if (!adjacent->obstruction || adjacent == &nodes[start].grid[4][4] || adjacent == &nodes[end].grid[4][4]) {
-                    nodesToSearch.push_back(adjacent);
-                }
-
-            }
             // sorts based of the distance traveled plus holistic
             std::sort(nodesToSearch.begin(), nodesToSearch.end(), order);
             if (nodesToSearch.size() == 0) {
@@ -675,9 +624,7 @@ std::vector<CellGrid*> Maze::getpath(int sx, int sy,int start, int ex, int ey, i
             else
             {
                 // makes the smallest the nexted to be searched
-                CurentN[0] = nodesToSearch[0]->x;
-                CurentN[1] = nodesToSearch[0]->y;
-                CurentN[2] = nodesToSearch[0]->p;
+                CurentN = nodesToSearch.back();
             }
         }
     }
@@ -685,48 +632,55 @@ std::vector<CellGrid*> Maze::getpath(int sx, int sy,int start, int ex, int ey, i
     return path;
 }
 
-CellGrid* Maze::adjacentCellGrid(int CurentN[3],int px,int py, std::vector<CellGrid*>* nodesToSearch) {
+void Maze::adjacentCellGrid(CellGrid* CurentN,int px,int py, std::vector<CellGrid*>* nodesToSearch) {
     bool canAdd = true;
-    int addingN[3] = { CurentN[0] + px,CurentN[1] + py,CurentN[2] };
+    int addingN[3] = { CurentN->x + px,CurentN->y + py,CurentN->p };
     // add the adjacent cell grid is ouside the origional grid its translated to fit onto the adjacent node
     // but only if there is a path to it
     if (addingN[1] == -1) {
         addingN[1] = 8;
         addingN[2] -= count;
-        if (!nodes[CurentN[2]].sidesIsPath[1]) canAdd = false;
+        if (!nodes[CurentN->p].sidesIsPath[1]) canAdd = false;
     }
     if (addingN[1] == 9) {
         addingN[1] = 0;
         addingN[2] += count;
-        if (!nodes[CurentN[2]].sidesIsPath[0]) canAdd = false;
+        if (!nodes[CurentN->p].sidesIsPath[0]) canAdd = false;
     }
     if (addingN[0] == -1) {
         addingN[0] = 8;
         addingN[2] -= 1;
-        if (!nodes[CurentN[2]].sidesIsPath[2]) canAdd = false;
+        if (!nodes[CurentN->p].sidesIsPath[2]) canAdd = false;
     }
     if (addingN[0] == 9) {
         addingN[0] = 0;
         addingN[2] += 1;
-        if (!nodes[CurentN[2]].sidesIsPath[3]) canAdd = false;
+        if (!nodes[CurentN->p].sidesIsPath[3]) canAdd = false;
     }
     // the cell grid is within the map and valid
-    if (canAdd && addingN[2] >= 0 && addingN[2] < nodes.size() && !nodes[addingN[2]].grid[addingN[0]][addingN[1]].visited) {
-        nodes[addingN[2]].grid[addingN[0]][addingN[1]].parent = &nodes[CurentN[2]].grid[CurentN[0]][CurentN[1]];
-        nodes[addingN[2]].grid[addingN[0]][addingN[1]].Distance = nodes[CurentN[2]].grid[CurentN[0]][CurentN[1]].Distance + 1;
+    if (canAdd && addingN[2] >= 0 && addingN[2] < nodes.size() &&
+        !nodes[addingN[2]].grid[addingN[0]][addingN[1]].visited) {
+
+        // sets the parent of the added cellgrid to the current one
+        nodes[addingN[2]].grid[addingN[0]][addingN[1]].parent = CurentN;
+        // increments the distance traveled by one
+        nodes[addingN[2]].grid[addingN[0]][addingN[1]].Distance =
+            CurentN->Distance + CurentN->obstruction + 1;
+
         // so long as its not allready inside nodesToSearch it will be added to it
-        std::vector<CellGrid*>::iterator it2 = std::find((*nodesToSearch).begin(), (*nodesToSearch).end(), &nodes[addingN[2]].grid[addingN[0]][addingN[1]]);
+        std::vector<CellGrid*>::iterator it2 = std::find((*nodesToSearch).begin(), 
+            (*nodesToSearch).end(), &nodes[addingN[2]].grid[addingN[0]][addingN[1]]);
         if (it2 == (*nodesToSearch).end())
         {
-            return &nodes[addingN[2]].grid[addingN[0]][addingN[1]];
+            nodesToSearch->push_back(&nodes[addingN[2]].grid[addingN[0]][addingN[1]]);
         }
     }
-    return nullptr;
+
 }
 
 bool order(CellGrid* a, CellGrid* b) {
     // orders the nodesToSearch by the distance traveled plus holistic
-    return a->Distance+a->Holistic < b->Distance + b->Holistic;
+    return a->Distance+a->Holistic > b->Distance + b->Holistic;
 }
 
 
@@ -787,9 +741,9 @@ void Cell::setSearch(CellGrid* start) {
         grid[i % 9][i / 9].visited = false;
         grid[i % 9][i / 9].parent = nullptr;
         grid[i % 9][i / 9].isPath = false;
-        grid[i % 9][i / 9].Holistic = abs(start->pos.x - grid[i % 9][i / 9].pos.x) + abs(start->pos.y - grid[i % 9][i / 9].pos.y);
+        grid[i % 9][i / 9].Holistic = abs(start->pos.x - grid[i % 9][i / 9].pos.x) 
+            + abs(start->pos.y - grid[i % 9][i / 9].pos.y);
         grid[i % 9][i / 9].Distance = INFINITY;
-        grid[i % 9][i / 9].DH = INFINITY;
     }
 }
 
@@ -880,3 +834,314 @@ Landmark::Landmark(vec2 P, float S) {
 }
 
 Landmark::Landmark() {}
+
+
+vec2 rott(vec2 v, float r)
+{
+    // rotates a vector v by angle r in radians
+    return vec2(v.x * cos(r) + v.y * sin(r), -v.x * sin(r) + v.y * cos(r));
+}
+
+Furniture::Furniture(int type, int orientation, CellGrid(*grid)[9][9], float size, float thk, vec3 ps) {
+
+    vec3 pos;
+    vec3 sca;
+    vec3 rot;
+    int height = 20;
+    ColorTexture = 2;
+    NormalTexture = 12;
+
+    vec2 furnPos;
+    std::vector<vec2> Sectors;
+
+    // gets the Furniture data based off its type
+    switch (type)
+    {
+    case 0:
+        //table
+        furnPos = vec2(-1, -1);
+        sca = vec3(0.25f, 0.08f, 0.25f);
+        rot = vec3(0.0f);
+        ColorTexture = 15;
+        height = 20;
+
+        Sectors.push_back(vec2(-4, -4));
+        Sectors.push_back(vec2(-3, -4));
+        Sectors.push_back(vec2(-2, -4));
+
+        Sectors.push_back(vec2(-4, -3));
+        Sectors.push_back(vec2(-3, -3));
+        Sectors.push_back(vec2(-2, -3));
+
+        Sectors.push_back(vec2(-4, -2));
+        Sectors.push_back(vec2(-3, -2));
+        Sectors.push_back(vec2(-2, -2));
+        break;
+    case 1:
+        //pillar
+
+        furnPos = vec2(0, 0);
+        sca = vec3(0.2f, 0.5f, 0.2f);
+        rot = vec3(0.0f, 3.1415f / 4.0f, 0.0f);
+        ColorTexture = 26;
+        height = 100;
+
+        Sectors.push_back(vec2(0, 0));
+        Sectors.push_back(vec2(-1, 0));
+        Sectors.push_back(vec2(0, -1));
+        Sectors.push_back(vec2(1, 0));
+        Sectors.push_back(vec2(0, 1));
+        break;
+    case 2:
+        //turned bookshelf
+
+        furnPos = vec2(-1, -1);
+        sca = vec3(0.4f, 0.4f, 0.075f);
+        rot = vec3(0.0f, -3.1415f * 3 / 4.0f, 0.0f);
+        ColorTexture = 25;
+        height = 100;
+
+        Sectors.push_back(vec2(-4, -2));
+        Sectors.push_back(vec2(-3, -2));
+        Sectors.push_back(vec2(-3, -3));
+        Sectors.push_back(vec2(-2, -3));
+        Sectors.push_back(vec2(-2, -4));
+        break;
+    case 3:
+        //straight bookshelf
+
+        furnPos = vec2(-1, 0);
+        sca = vec3(0.7f, 0.5f, 0.075f);
+        rot = vec3(0.0f, -3.1415f / 2.0f, 0.0f);
+        ColorTexture = 25;
+        height = 100;
+
+        Sectors.push_back(vec2(-4, -3));
+        Sectors.push_back(vec2(-4, -2));
+        Sectors.push_back(vec2(-4, -1));
+        Sectors.push_back(vec2(-4, 0));
+        Sectors.push_back(vec2(-4, 1));
+        Sectors.push_back(vec2(-4, 2));
+        Sectors.push_back(vec2(-4, 3));
+        break;
+    case 4:
+        //tourch
+
+        furnPos = vec2(-0.7f, 0);
+        sca = vec3(0.07f, 0.2f, 0.07f);
+        rot = vec3(0.0f);
+        ColorTexture = 23;
+        height = 20;
+
+        Sectors.push_back(vec2(-3, 0));
+
+        break;
+    case 5:
+        //chair
+
+        furnPos = vec2(-1, 0);
+        sca = vec3(0.11f, 0.15f, 0.11f);
+        rot = vec3(0.0f, -3.1415f / 2.0f, 0.0f);
+        ColorTexture = 24;
+        height = 20;
+
+        Sectors.push_back(vec2(-4, 0));
+        break;
+    case -2:
+        //chest
+
+        furnPos = vec2(0, 0);
+        sca = vec3(0.13f, 0.07f, 0.07f);
+        rot = vec3(0.0f);
+        ColorTexture = 13;
+        height = 20;
+
+        Sectors.push_back(vec2(0, 0));
+        break;
+    case -3:
+        //cage
+
+        furnPos = vec2(0, 0);
+        sca = vec3(0.12f, 0.15f, 0.12f);
+        rot = vec3(0.0f, 3.1415f / 4.0f, 0.0f);
+        ColorTexture = 11;
+        height = 20;
+
+        Sectors.push_back(vec2(0, 0));
+        break;
+    case 7:
+        //big bed
+
+        furnPos = vec2(-1, -1);
+        sca = vec3(0.18f, 0.09f, 0.4f);
+        rot = vec3(0.0f, 3.1415f, 0.0f);
+        ColorTexture = 16;
+        height = 20;
+
+        Sectors.push_back(vec2(-4, -4));
+        Sectors.push_back(vec2(-3, -4));
+        Sectors.push_back(vec2(-4, -3));
+        Sectors.push_back(vec2(-3, -3));
+        Sectors.push_back(vec2(-4, -2));
+        Sectors.push_back(vec2(-3, -2));
+        Sectors.push_back(vec2(-4, -1));
+        Sectors.push_back(vec2(-3, -1));
+
+
+        break;
+    case 8:
+        //small bed
+
+        furnPos = vec2(-1, 0);
+        sca = vec3(0.12f, 0.07f, 0.25f);
+        rot = vec3(0.0f, -3.1415f / 2.0f, 0.0f);
+        ColorTexture = 16;
+        height = 20;
+
+        Sectors.push_back(vec2(-4, 0));
+        Sectors.push_back(vec2(-3, 0));
+        Sectors.push_back(vec2(-2, 0));
+        break;
+    default:
+
+        break;
+    }
+
+    for (int j = 0; j < Sectors.size(); j++)
+    {
+        // rotates the sector
+        Sectors[j] = vec2(Sectors[j].x * cos((3.1415f / 2.0f) * orientation) + Sectors[j].y * sin((3.1415f / 2.0f) * orientation),
+            -Sectors[j].x * sin((3.1415f / 2.0f) * orientation) + Sectors[j].y * cos((3.1415f / 2.0f) * orientation));
+
+        // fills the space
+        (*grid)[(int)round(Sectors[j].x + 4)][(int)round(Sectors[j].y + 4)].obstruction = height;
+        (*grid)[(int)round(Sectors[j].x + 4)][(int)round(Sectors[j].y + 4)].hight = sca.y + 0.01;
+    }
+
+    // rotates the object
+    furnPos = vec2(furnPos.x * cos((3.1415f / 2.0f) * orientation) + furnPos.y * sin((3.1415f / 2.0f) * orientation),
+        -furnPos.x * sin((3.1415f / 2.0f) * orientation) + furnPos.y * cos((3.1415f / 2.0f) * orientation));
+
+    rot.y += (3.1415f / 2.0f) * orientation;
+    // scales the object
+    sca *= size * thk;
+    // the distance that must be shifted to be within the cell
+    vec2 width = vec2(
+        max(abs(rott(vec2(-1, 1) * vec2(sca.x, sca.z), rot.y).x), abs(rott(vec2(-1, -1) * vec2(sca.x, sca.z), rot.y).x)),
+        max(abs(rott(vec2(-1, -1) * vec2(sca.x, sca.z), rot.y).y), abs(rott(vec2(1, -1) * vec2(sca.x, sca.z), rot.y).y))) + vec2(size * 0.02f, size * 0.02f);
+    furnPos = (vec2(size * thk) - width) * furnPos;
+    pos = vec3(furnPos.x, sca.y, furnPos.y) + ps;
+
+    // initialises the object that will be dislpayed on screen
+    obj = SpObj(pos, rot, sca, initCubeBuffer(), ColorTexture, NormalTexture);
+    obj.textOff2 = glm::vec4(0.0f, 0.0f, 5.0f, 5.0f);
+}
+
+bool Furniture::canFit(int type, int orientation, CellGrid(*grid)[9][9]) {
+
+    std::vector<vec2> Sectors;
+    switch (type)
+    {
+    case 0:
+        //table
+        Sectors.push_back(vec2(-4, -4));
+        Sectors.push_back(vec2(-3, -4));
+        Sectors.push_back(vec2(-2, -4));
+
+        Sectors.push_back(vec2(-4, -3));
+        Sectors.push_back(vec2(-3, -3));
+        Sectors.push_back(vec2(-2, -3));
+
+        Sectors.push_back(vec2(-4, -2));
+        Sectors.push_back(vec2(-3, -2));
+        Sectors.push_back(vec2(-2, -2));
+        break;
+    case 1:
+        //pillar
+        Sectors.push_back(vec2(0, 0));
+        Sectors.push_back(vec2(-1, 0));
+        Sectors.push_back(vec2(0, -1));
+        Sectors.push_back(vec2(1, 0));
+        Sectors.push_back(vec2(0, 1));
+        break;
+    case 2:
+        //turned bookshelf
+        Sectors.push_back(vec2(-4, -2));
+        Sectors.push_back(vec2(-3, -2));
+        Sectors.push_back(vec2(-3, -3));
+        Sectors.push_back(vec2(-2, -3));
+        Sectors.push_back(vec2(-2, -4));
+        break;
+    case 3:
+        //straight bookshelf
+        Sectors.push_back(vec2(-4, -3));
+        Sectors.push_back(vec2(-4, -2));
+        Sectors.push_back(vec2(-4, -1));
+        Sectors.push_back(vec2(-4, 0));
+        Sectors.push_back(vec2(-4, 1));
+        Sectors.push_back(vec2(-4, 2));
+        Sectors.push_back(vec2(-4, 3));
+        break;
+    case 4:
+        //tourch
+
+        Sectors.push_back(vec2(-3, 0));
+
+        break;
+    case 5:
+        //chair
+
+        Sectors.push_back(vec2(-4, 0));
+        break;
+    case -2:
+        //chest
+
+        Sectors.push_back(vec2(0, 0));
+        break;
+    case -3:
+        //cage
+
+        Sectors.push_back(vec2(0, 0));
+        break;
+    case 7:
+        //big bed
+
+        Sectors.push_back(vec2(-4, -4));
+        Sectors.push_back(vec2(-3, -4));
+        Sectors.push_back(vec2(-4, -3));
+        Sectors.push_back(vec2(-3, -3));
+        Sectors.push_back(vec2(-4, -2));
+        Sectors.push_back(vec2(-3, -2));
+        Sectors.push_back(vec2(-4, -1));
+        Sectors.push_back(vec2(-3, -1));
+
+        break;
+    case 8:
+        //small bed
+        Sectors.push_back(vec2(-4, 0));
+        Sectors.push_back(vec2(-3, 0));
+        Sectors.push_back(vec2(-2, 0));
+        break;
+    default:
+        return false;
+
+        break;
+    }
+    bool fit = true;
+    for (int j = 0; j < Sectors.size(); j++)
+    {
+        // rotates the sector
+        Sectors[j] = vec2(Sectors[j].x * cos((3.1415f / 2.0f) * orientation) + Sectors[j].y * sin((3.1415f / 2.0f) * orientation),
+            -Sectors[j].x * sin((3.1415f / 2.0f) * orientation) + Sectors[j].y * cos((3.1415f / 2.0f) * orientation));
+
+        if ((*grid)[(int)round(Sectors[j].x + 4)][(int)round(Sectors[j].y + 4)].obstruction >= 1)
+        {
+            // the space is taken
+            fit = false;
+            break;
+        }
+    }
+    return fit;
+}
+Furniture::Furniture() {
+}
