@@ -663,10 +663,12 @@ void Maze::adjacentCellGrid(CellGrid* CurentN,int px,int py, std::vector<CellGri
 
         // sets the parent of the added cellgrid to the current one
         nodes[addingN[2]].grid[addingN[0]][addingN[1]].parent = CurentN;
+
         // increments the distance traveled by one
         nodes[addingN[2]].grid[addingN[0]][addingN[1]].Distance =
-            CurentN->Distance + CurentN->obstruction + 1;
-
+            CurentN->Distance + (nodes[addingN[2]].grid[addingN[0]][addingN[1]].obstruction - CurentN->obstruction) + 1;
+                                // adds the difference in height levels to the distance traveled
+                       
         // so long as its not allready inside nodesToSearch it will be added to it
         std::vector<CellGrid*>::iterator it2 = std::find((*nodesToSearch).begin(), 
             (*nodesToSearch).end(), &nodes[addingN[2]].grid[addingN[0]][addingN[1]]);

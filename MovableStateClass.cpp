@@ -92,6 +92,7 @@ int IdleState::Enter() {
 	return 0;
 }
 int IdleState::update(float deltaTime) {
+	// cout << "IdleState" << endl;
 	if (length(inp->inp) > 0.05f){
 		sender->cur = sender->motion;
 		sender->cur->Enter(); return 0;
@@ -136,6 +137,7 @@ int IdleCrouchState::Enter() {
 	return 0;
 }
 int IdleCrouchState::update(float deltaTime) {
+	// cout << "IdleCrouchState" << endl;
 	inp->camArmTarget = vec3(1.37f, 0.25f, 0.95) * inp->obj.sca.y;
 	if (!inp->SP) {
 		sender->cur = sender->stood;
@@ -169,6 +171,7 @@ int MotionState::Enter() {
 	return 0;
 }
 int MotionState::update(float deltaTime) {
+	// cout << "MotionState" << endl;
 	if (length(inp->inp) < 0.05f) {
 		sender->cur = sender->idle;
 		sender->cur->Enter(); return 0;
@@ -208,6 +211,7 @@ int WalkState::Enter() {
 	return 0;
 }
 int WalkState::update(float deltaTime) {
+	// cout << "WalkState" << endl;
 	if (inp->SP) {
 		sender->cur = sender->crawl;
 		sender->cur->Enter(); return 0;
@@ -284,6 +288,7 @@ int CrawlState::Enter() {
 
 }
 int CrawlState::update(float deltaTime) {
+	// cout << "CrawlState" << endl;
 	inp->camArmTarget = vec3(1.37f, 0.25f, 0.95) * inp->obj.sca.y;
 	if (!inp->SP) {
 		sender->cur = sender->walk;

@@ -476,9 +476,12 @@ UImenue::UImenue(GLuint teT) {
 	UIDIV* graphicsBox = new UIDIV(vec2(0.575f, 0.9), col1, vec4(1.0f), 1);
 	graphicsButton->child = graphicsBox;
 	settingsBox->children.push_back(graphicsBox);
-	//				brightness
-	UIslider* brightnessSlider = new UIslider(vec2(0.9, 0.2), col2, vec4(1.0f), "brightness", 0.2);
-	graphicsBox->children.push_back(brightnessSlider);
+	//				ambient brightness
+	UIslider* abrightnessSlider = new UIslider(vec2(0.9, 0.2), col2, vec4(1.0f), "ambient brightness", 0.2);
+	graphicsBox->children.push_back(abrightnessSlider);
+	//				tourch brightness
+	UIslider* tbrightnessSlider = new UIslider(vec2(0.9, 0.2), col2, vec4(1.0f), "tourch brightness", 0.2);
+	graphicsBox->children.push_back(tbrightnessSlider);
 	//				resolution
 	UIslider* resolutionSlider = new UIslider(vec2(0.9, 0.2), col2, vec4(1.0f), "resolution", 1);
 	graphicsBox->children.push_back(resolutionSlider);
@@ -531,7 +534,8 @@ UImenue::UImenue(GLuint teT) {
 	// settings
 	//		graphics
 	settings.resolution = &resolutionSlider->fraction;
-	settings.brightness = &brightnessSlider->fraction;
+	settings.ambientBrightness = &abrightnessSlider->fraction;
+	settings.tourchBrightness = &tbrightnessSlider->fraction;
 	settings.frameLock = &frameLimitToggl->isTrue;
 	//		audio
 	settings.masterVolume = &masterVolumeSlider->fraction;

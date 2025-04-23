@@ -35,7 +35,7 @@ bool ELocked = false;
 bool erere = false;
 int adee = 1;
 float adeee = 0;
-vec2 LightSetings = vec2(1.1,0.25);
+vec2 LightSetings = vec2(1.1,1.5);
 float deltaTime = 1.0f;
 double curTime = 0.0;
 float mapScale = 1.0f;
@@ -330,24 +330,26 @@ void UpdatingFunction() {
 
     player.inp->Grounded = mz.collide(&player.inp->pos, 0.03f);
 
+    // when the end of the path is reached reset the path finder
     if (pathf.pathP + 1 >= pathf.path.size()) {
         pathf.OnPath = false;
         pathf.pathP = 0;
     }
-    if (pathf.OnPath) {
-        vec2 psss1 = pathf.path[int(pathf.pathP)]->pos * mz.size;
-        vec2 psss2 = pathf.path[int(pathf.pathP + 1)]->pos * mz.size;
-        //player.inp->pos = vec3(psss1.x, player.inp->pos.y, psss1.y) + ((vec3(psss2.x, player.inp->pos.y, psss2.y)) - vec3(psss1.x, player.inp->pos.y, psss1.y)) * (pathP-int(pathP));
-        //pathP += deltaTime * 3.0f;
-        player.inp->vel += 0.1f * ((player.inp->pos - vec3(psss2.x, player.inp->pos.y, psss2.y)) / distance(psss2, vec2(player.inp->pos.x, player.inp->pos.z)));
-        if (pathf.path[pathf.pathP + 1]->obstruction > 3 && player.inp->pos.y < pathf.path[pathf.pathP + 1]->hight * mz.size) {
-            cout << "sad" << endl;
-            player.inp->Grounded = true;
-            player.inp->pos.y += 1.0f * deltaTime; 
-            if (player.inp->pos.y > pathf.path[pathf.pathP + 1]->hight * mz.size)player.inp->pos.y = pathf.path[pathf.pathP + 1]->hight * mz.size;
-        }
-        if (distance(psss1, vec2(player.inp->pos.x, player.inp->pos.z)) > distance(psss2, vec2(player.inp->pos.x, player.inp->pos.z)))pathf.pathP++;
-        //if (int(pathf.pathP) > 0 && distance(psss1, vec2(player.inp->pos.x, player.inp->pos.z)) > distance(pathf.path[int(pathf.pathP - 1)]->pos * mz.size, vec2(player.inp->pos.x, player.inp->pos.z)))pathf.pathP++;
+    if (pathf.OnPath) {   
+        // the cell grid the player is on
+        vec2 psss1 = pathf.path[int(pathf.pathP)]->pos * mz.size;  
+        // the cell grid the player is moving towards
+        vec2 psss2 = pathf.path[int(pathf.pathP + 1)]->pos * mz.size;  
+        // accelerate towardes the next point
+        player.inp->vel += 0.1f * ((player.inp->pos - vec3(psss2.x, player.inp->pos.y, psss2.y)) / distance(psss2, vec2(player.inp->pos.x, player.inp->pos.z)));     
+        // set the players hight to the cell grid hight
+        if (pathf.path[pathf.pathP + 1]->obstruction > 3 && player.inp->pos.y < pathf.path[pathf.pathP + 1]->hight * mz.size) {                                                                                                                                                   
+            player.inp->Grounded = true;                                                                                                                                 
+            player.inp->pos.y += 1.0f * deltaTime;                                                                                                                       
+            if (player.inp->pos.y > pathf.path[pathf.pathP + 1]->hight * mz.size)player.inp->pos.y = pathf.path[pathf.pathP + 1]->hight * mz.size;                       
+        }      
+        // when closer to the next point than the current point make it the new current point
+        if (distance(psss1, vec2(player.inp->pos.x, player.inp->pos.z)) > distance(psss2, vec2(player.inp->pos.x, player.inp->pos.z)))pathf.pathP++;                     
    
     }
 }
@@ -475,9 +477,10 @@ void drawMap(bool center) {
         glUniform3f(glGetUniformLocation(shaderMazeFurnProgram, "campos"), 0, 0, 50);
         glDrawArrays(GL_POINTS, 0, 1);
 
-        for (int i = 0; i < pathf.path.size(); i++)
+        glUniform1f(glGetUniformLocation(shaderMazeFurnProgram, "sc1"), 0.1f);
+        for (int i = 0; i < enmi.size(); i++)
         {
-            glUniform3f(glGetUniformLocation(shaderMazeFurnProgram, "campos"), -pathf.path[i]->pos.x + plPos.x / mz.size, -pathf.path[i]->pos.y + plPos.z / mz.size, 50);
+            glUniform3f(glGetUniformLocation(shaderMazeFurnProgram, "campos"), ( - enmi[i].pos.x + plPos.x) / mz.size, ( - enmi[i].pos.z + plPos.z) / mz.size, 50);
             glDrawArrays(GL_POINTS, 0, 1);
         }
     }
@@ -552,7 +555,7 @@ int main()
     glBindVertexArray(0);
 
     cam = camera(vec3(0),vec3(0));
-    menue = UImenue(texture(30));
+    menue = UImenue(texture(28));
     glDepthFunc(GL_LEQUAL);
 
     
@@ -654,7 +657,6 @@ int main()
                     mz = Maze((int)(*menue.settings.gridSize * 100));
 
                     {
-
                         vector<float> vertices;
                         FurnCount = 0;
                        for (int i = 0; i < mz.nodes.size(); i++) {
@@ -707,14 +709,13 @@ int main()
                     dynamic_cast<UIDIV*>(menue.fullBox->children[0])->cur = 2;
 
                     PathFindingThread = thread(PathFindingFunction);
-
+                    // removes the old enemies
                     enmi.clear();
-                   // for (int i = 0; i < (int)(*menue.settings.enemies * 100); i++)
-                   // {
-                   //     enmi.push_back(Enemy(vec3(int(Rand(gen) * mz.count) * mz.size, 0.0f, int(Rand(gen) * mz.count) * mz.size), vec3(0.0f, -3.1415 / 2.0f, 0.0f)));
-                   //     mz.collide(&enmi[i].pos, 0.07f);
-                   //     enmi[i].pos.y = 0;
-                   // }
+                    // adds the new ones
+                    for (int i = 0; i < (int)(*menue.settings.enemies * 100.0f); i++)
+                    {
+                        enmi.push_back(Enemy(vec3(int(Rand(gen) * mz.count) * mz.size, 0.0f, int(Rand(gen) * mz.count) * mz.size), vec3(0.0f, -3.1415 / 2.0f, 0.0f)));
+                    }
                     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
                     glfwSetCursorPos(window, (SCR_WIDTH / 2) + OFF_WIDTH, (SCR_HEIGHT / 2) + OFF_HEIGHT);
                     MouseLocked = true;
@@ -798,6 +799,7 @@ int main()
                 glUseProgram(shaderLightProgram);
                 glUniformMatrix4fv(glGetUniformLocation(shaderLightProgram, "uProjectionMatrix"), 1, GL_FALSE, glm::value_ptr(ma));
 
+                glUniform1f(glGetUniformLocation(shaderLightProgram, "tim"), (int)(curTime * 10));
 
                 for (int t = 0; t < rdi * rdi; t++)
                 {
@@ -806,11 +808,15 @@ int main()
                         int curIndex = playerIndex + (t % rdi) - (rdi / 2) + (t / rdi - (rdi / 2)) * mz.count;
                         for (int tt = 0; tt < mz.nodes[curIndex].ligh.size(); tt++) {
                             glUniform3f(glGetUniformLocation(shaderLightProgram, "color"), mz.nodes[curIndex].ligh[tt].col.x, mz.nodes[curIndex].ligh[tt].col.y, mz.nodes[curIndex].ligh[tt].col.z);
-                            glUniform1f(glGetUniformLocation(shaderLightProgram, "tim"), (int)(curTime * 10));
                             mz.nodes[curIndex].ligh[tt].obj.rot.y = atan2(mz.nodes[curIndex].ligh[tt].obj.pos.x - cam.pos.x, mz.nodes[curIndex].ligh[tt].obj.pos.z - cam.pos.z);
                             mz.nodes[curIndex].ligh[tt].obj.draw(shaderLightProgram);
                         }
                     }
+                }
+                for (int i = 0; i < enmi.size(); i++)if (distance(player.inp->pos, enmi[i].pos) < 7.0) {
+                    glUniform3f(glGetUniformLocation(shaderLightProgram, "color"), enmi[i].vision.col.x, enmi[i].vision.col.y, enmi[i].vision.col.z);
+                    enmi[i].vision.obj.pos = enmi[i].vision.pos;
+                    enmi[i].vision.obj.draw(shaderLightProgram);
                 }
 
 #pragma endregion
@@ -832,7 +838,6 @@ int main()
                 glUniform3f(glGetUniformLocation(cam.shader, "camPos"), cam.pos.x, cam.pos.y, cam.pos.z);
                 glUniform1i(glGetUniformLocation(cam.shader, "light"), 0);
                 glUniform1i(glGetUniformLocation(cam.shader, "uSamplerS"), 4);
-                glUniform1i(glGetUniformLocation(cam.shader, "gradient"), 1);
                 glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, cam.GFB.ColTex);
                 glActiveTexture(GL_TEXTURE1);
@@ -842,25 +847,6 @@ int main()
                 glActiveTexture(GL_TEXTURE3);
                 glBindTexture(GL_TEXTURE_2D, cam.GFB.NomFTex);
 
-               // if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
-               // {
-               //     {
-               //         glm::vec4 rotated = inverse(cam.rotationMatrix) * vec4(0.0f, 0.0f, 1.0f, 1.0f);
-               //         glUniform3f(glGetUniformLocation(cam.shader, "rotcam"), rotated.x, rotated.y, rotated.z);
-               //         glActiveTexture(GL_TEXTURE4);
-               //         glBindTexture(GL_TEXTURE_CUBE_MAP, tourch.depthTex);
-               //         glUniform1f(glGetUniformLocation(cam.shader, "ConeAngle"), 0.68);
-               //         glUniform3f(glGetUniformLocation(cam.shader, "lightPos"), tourch.pos.x, tourch.pos.y, tourch.pos.z);
-               //         glUniform3f(glGetUniformLocation(cam.shader, "lightCol"), 1.0, 1.0, 1.0);
-               //         glUniform2f(glGetUniformLocation(cam.shader, "LightSetings"), 20.0, 0.3f);
-               //
-               //
-               //         cam.draw(cam.shader);
-               //
-               //     }
-               //
-               //
-               // }
 
                 for (int t = 0; t < rdi * rdi; t++)
                 {
@@ -876,7 +862,7 @@ int main()
                             glUniform1f(glGetUniformLocation(cam.shader, "ConeAngle"), 0);
                             glUniform3f(glGetUniformLocation(cam.shader, "lightPos"), mz.nodes[curIndex].ligh[tt].pos.x, mz.nodes[curIndex].ligh[tt].pos.y, mz.nodes[curIndex].ligh[tt].pos.z);
                             glUniform3f(glGetUniformLocation(cam.shader, "lightCol"), mz.nodes[curIndex].ligh[tt].col.x, mz.nodes[curIndex].ligh[tt].col.y, mz.nodes[curIndex].ligh[tt].col.z);
-                            glUniform2f(glGetUniformLocation(cam.shader, "LightSetings"), LightSetings.x + sin(curTime) * 0.1f, LightSetings.y);
+                            glUniform2f(glGetUniformLocation(cam.shader, "LightSetings"), LightSetings.x + sin(curTime) * 0.1f, LightSetings.y * *menue.settings.tourchBrightness);
 
 
                             cam.draw(cam.shader);
@@ -885,21 +871,24 @@ int main()
                     }
                 }
 
-                glUniform1i(glGetUniformLocation(cam.shader, "gradient"), 0);
 
                 for (int i = 0; i < enmi.size(); i++)
                 {
                     if (enmi[i].vision.active) {
-                        glm::vec4 rotated = vec4(enmi[i].acc.x, 0.3f, enmi[i].acc.z, 1.0f);
-                        glUniform3f(glGetUniformLocation(cam.shader, "rotcam"), rotated.x, rotated.y, rotated.z);
-
                         glActiveTexture(GL_TEXTURE4);
+                        // shadow map
                         glBindTexture(GL_TEXTURE_CUBE_MAP, enmi[i].vision.depthTex);
 
+                        // the direction of the vision cone
+                        glm::vec4 rotated = vec4(enmi[i].look, 1.0f);
+                        glUniform3f(glGetUniformLocation(cam.shader, "rotcam"), rotated.x, rotated.y, rotated.z);
+
+                        // limits the ememys vision cone to 0.7 radians
                         glUniform1f(glGetUniformLocation(cam.shader, "ConeAngle"), 0.7);
                         glUniform3f(glGetUniformLocation(cam.shader, "lightPos"), enmi[i].vision.pos.x, enmi[i].vision.pos.y, enmi[i].vision.pos.z);
-                        glUniform3f(glGetUniformLocation(cam.shader, "lightCol"), 1.0, 0.0, 0.0);
-                        glUniform2f(glGetUniformLocation(cam.shader, "LightSetings"), 10.0, 1.3f);
+                        glUniform3f(glGetUniformLocation(cam.shader, "lightCol"), enmi[i].vision.col.x, enmi[i].vision.col.y, enmi[i].vision.col.z);
+                        // the distance of vision and brightness of the cone
+                        glUniform2f(glGetUniformLocation(cam.shader, "LightSetings"), 1.75, 5.0 * *menue.settings.tourchBrightness);
 
 
                         cam.draw(cam.shader);
@@ -909,7 +898,7 @@ int main()
 
 
                 glUniform1i(glGetUniformLocation(cam.shader, "light"), 1);
-                glUniform1f(glGetUniformLocation(cam.shader, "brightness"), *menue.settings.brightness * 0.05);
+                glUniform1f(glGetUniformLocation(cam.shader, "brightness"), *menue.settings.ambientBrightness * 0.05);
                 cam.draw(cam.shader);
                 glDisable(GL_BLEND);
 
@@ -964,7 +953,7 @@ int main()
 
                 if (*menue.settings.debug)
                 {
-                    for (int t = 0; t < rdi * rdi; t++)
+                    for (int t = 0; t < rdi * rdi * 0; t++)
                     {
                         if (playerIndex + (t % rdi) - (rdi / 2) + (t / rdi - (rdi / 2)) * mz.count >= 0 &&
                             playerIndex + (t % rdi) - (rdi / 2) + (t / rdi - (rdi / 2)) * mz.count < mz.nodes.size()) {
@@ -976,7 +965,7 @@ int main()
 
                                     vec3 DirectionOfRay = normalize(ray - startOfRay);
 
-                                    vec3 PR2 = ray;
+                                    vec3 rayPoint = ray;
 
                                     for (int j = 0; j < 9; j++)
                                     {
@@ -1026,9 +1015,9 @@ int main()
                                                             glUniform3f(glGetUniformLocation(ShaderDebug, "col"), 0, 1, 0);
                                                             glDrawArrays(GL_LINES, 0, 4);
 
-                                                            if (distance(startOfRay, asd) < distance(startOfRay, PR2))
+                                                            if (distance(startOfRay, asd) < distance(startOfRay, rayPoint))
                                                             {
-                                                                PR2 = asd;
+                                                                rayPoint = asd;
 
                                                             }
                                                         }
@@ -1039,10 +1028,10 @@ int main()
                                         }
                                     }
 
-                                    glUniform3f(glGetUniformLocation(ShaderDebug, "p1"), PR2.x, PR2.y, PR2.z);
+                                    glUniform3f(glGetUniformLocation(ShaderDebug, "p1"), rayPoint.x, rayPoint.y, rayPoint.z);
                                     glUniform3f(glGetUniformLocation(ShaderDebug, "p2"), startOfRay.x, startOfRay.y, startOfRay.z);
                                     glUniform3f(glGetUniformLocation(ShaderDebug, "col"), 1, 0, 0);
-                                    if (distance(PR2, ray) < 0.05) glUniform3f(glGetUniformLocation(ShaderDebug, "col"), 0, 1, 0);
+                                    if (distance(rayPoint, ray) < 0.05) glUniform3f(glGetUniformLocation(ShaderDebug, "col"), 0, 1, 0);
                                     glDrawArrays(GL_LINES, 0, 4);
 
 
@@ -1055,12 +1044,35 @@ int main()
                     for (int tt = 0; tt < enmi.size(); tt++) {
                         vec3 ray = player.inp->obj.pos;
                         vec3 startOfRay = enmi[tt].pos + vec3(0, enmi[tt].obj.sca.y, 0);
-                        if (distance(ray, startOfRay) < LightSetings.x) {
+                        if (distance(ray, startOfRay) < 1.75) {
 
                             vec3 DirectionOfRay = normalize(ray - startOfRay);
+                            // where the ray intersects with an object
+                            vec3 rayPoint = ray;
 
-                            vec3 PR2 = ray;
+                            glUniform3f(glGetUniformLocation(ShaderDebug, "p1"), rayPoint.x, rayPoint.y, rayPoint.z); 
+                            glUniform3f(glGetUniformLocation(ShaderDebug, "p2"), startOfRay.x, startOfRay.y, startOfRay.z); 
 
+                            // within the vision cone
+                            if (angle(DirectionOfRay, -enmi[tt].look) < 0.35) { 
+                                glUniform3f(glGetUniformLocation(ShaderDebug, "col"), 0, 1, 0); 
+                            }
+                            // in front of the enemy
+                            else if (angle(DirectionOfRay, -enmi[tt].look) < 1.57) 
+                            {
+                                glUniform3f(glGetUniformLocation(ShaderDebug, "col"), 0, 0, 1); 
+                            }
+                            else
+                            {
+                                glUniform3f(glGetUniformLocation(ShaderDebug, "col"), 1, 0, 0); 
+                            }
+                            glDrawArrays(GL_LINES, 0, 4); 
+
+/*
+                            
+                            
+                            bool clip = false;
+                            
                             for (int j = 0; j < 9; j++)
                             {
                                 if (playerIndex + (j % 3) - 1 + (j / 3 - 1) * mz.count >= 0 &&
@@ -1068,65 +1080,60 @@ int main()
                                     int rp = playerIndex + (j % 3) - 1 + (j / 3 - 1) * mz.count;
                                     for (int j = 0; j < mz.nodes[rp].fur.size(); j++)
                                     {
+
+
+                                        mat4 modelViewMatrix;
+                                        modelViewMatrix = rotate(modelViewMatrix, mz.nodes[rp].fur[j].obj.rot.z, glm::vec3(0, 0, 1));
+                                        modelViewMatrix = rotate(modelViewMatrix, mz.nodes[rp].fur[j].obj.rot.y, glm::vec3(0, 1, 0));
+                                        modelViewMatrix = rotate(modelViewMatrix, mz.nodes[rp].fur[j].obj.rot.x, glm::vec3(1, 0, 0));
+                                        modelViewMatrix = scale(modelViewMatrix, mz.nodes[rp].fur[j].obj.sca);
+                                        vec3 P[6] = {
+                                            modelViewMatrix * vec4(1,0,0,1) ,
+                                            modelViewMatrix * vec4(0,1,0,1) ,
+                                            modelViewMatrix * vec4(0,0,1,1) ,
+                                            modelViewMatrix * vec4(-1,0,0,1),
+                                            modelViewMatrix * vec4(0,-1,0,1),
+                                            modelViewMatrix * vec4(0,0,-1,1)
+                                        };
+
+                                        for (int i = 0; i < 6; i++)
                                         {
 
-                                            mat4 modelViewMatrix;
-                                            modelViewMatrix = rotate(modelViewMatrix, mz.nodes[rp].fur[j].obj.rot.z, glm::vec3(0, 0, 1));
-                                            modelViewMatrix = rotate(modelViewMatrix, mz.nodes[rp].fur[j].obj.rot.y, glm::vec3(0, 1, 0));
-                                            modelViewMatrix = rotate(modelViewMatrix, mz.nodes[rp].fur[j].obj.rot.x, glm::vec3(1, 0, 0));
-                                            modelViewMatrix = scale(modelViewMatrix, mz.nodes[rp].fur[j].obj.sca);
-                                            vec3 P[6] = {
-                                                modelViewMatrix * vec4(1,0,0,1) ,
-                                                modelViewMatrix * vec4(0,1,0,1) ,
-                                                modelViewMatrix * vec4(0,0,1,1) ,
-                                                modelViewMatrix * vec4(-1,0,0,1),
-                                                modelViewMatrix * vec4(0,-1,0,1),
-                                                modelViewMatrix * vec4(0,0,-1,1)
-                                            };
+                                            //for math
+                                            vec3 PP1 = (P[i] + P[(i + 1) % 6] + P[(i + 2) % 6]) + mz.nodes[rp].fur[j].obj.pos;
+                                            vec3 PP2 = (P[i] + P[(i + 1) % 6] - P[(i + 2) % 6]) + mz.nodes[rp].fur[j].obj.pos;
+                                            vec3 PP3 = (P[i] - P[(i + 1) % 6] - P[(i + 2) % 6]) + mz.nodes[rp].fur[j].obj.pos;
+                                            vec3 PP4 = (P[i] - P[(i + 1) % 6] + P[(i + 2) % 6]) + mz.nodes[rp].fur[j].obj.pos;
 
-                                            bool clip = false;
-                                            for (int i = 0; i < 6; i++)
+                                            float t = dot(normalize(P[i]), P[i] + mz.nodes[rp].fur[j].obj.pos - startOfRay) / dot(normalize(P[i]), DirectionOfRay);
+                                            vec3 asd = startOfRay + DirectionOfRay * t;
+
+
+                                            if (dot(normalize(PP1 - PP2), asd) > dot(normalize(PP1 - PP2), PP2) && dot(PP1 - PP2, asd) < dot(PP1 - PP2, PP1) &&
+                                                dot(normalize(PP1 - PP4), asd) > dot(normalize(PP1 - PP4), PP4) && dot(PP1 - PP4, asd) < dot(PP1 - PP4, PP1) &&
+                                                dot(normalize(DirectionOfRay), asd) > dot(normalize(DirectionOfRay), startOfRay))
                                             {
+                                                clip = true;
+                                                glUniform3f(glGetUniformLocation(ShaderDebug, "p2"), asd.x, asd.y, asd.z);
+                                                glUniform3f(glGetUniformLocation(ShaderDebug, "p1"), asd.x, asd.y + 0.01f, asd.z);
 
-                                                //for math
-                                                vec3 PP1 = (P[i] + P[(i + 1) % 6] + P[(i + 2) % 6]) + mz.nodes[rp].fur[j].obj.pos;
-                                                vec3 PP2 = (P[i] + P[(i + 1) % 6] - P[(i + 2) % 6]) + mz.nodes[rp].fur[j].obj.pos;
-                                                vec3 PP3 = (P[i] - P[(i + 1) % 6] - P[(i + 2) % 6]) + mz.nodes[rp].fur[j].obj.pos;
-                                                vec3 PP4 = (P[i] - P[(i + 1) % 6] + P[(i + 2) % 6]) + mz.nodes[rp].fur[j].obj.pos;
+                                                glUniform3f(glGetUniformLocation(ShaderDebug, "col"), 0, 1, 0);
+                                                glDrawArrays(GL_LINES, 0, 4);
 
-                                                float t = dot(normalize(P[i]), P[i] + mz.nodes[rp].fur[j].obj.pos - startOfRay) / dot(normalize(P[i]), DirectionOfRay);
-                                                vec3 asd = startOfRay + DirectionOfRay * t;
-
-
-                                                if (dot(normalize(PP1 - PP2), asd) > dot(normalize(PP1 - PP2), PP2) && dot(PP1 - PP2, asd) < dot(PP1 - PP2, PP1) &&
-                                                    dot(normalize(PP1 - PP4), asd) > dot(normalize(PP1 - PP4), PP4) && dot(PP1 - PP4, asd) < dot(PP1 - PP4, PP1) &&
-                                                    dot(normalize(DirectionOfRay), asd) > dot(normalize(DirectionOfRay), startOfRay))
+                                                if (distance(startOfRay, asd) < distance(startOfRay, rayPoint))
                                                 {
+                                                    rayPoint = asd;
 
-                                                    glUniform3f(glGetUniformLocation(ShaderDebug, "p2"), asd.x, asd.y, asd.z);
-                                                    glUniform3f(glGetUniformLocation(ShaderDebug, "p1"), asd.x, asd.y + 0.01f, asd.z);
-
-                                                    glUniform3f(glGetUniformLocation(ShaderDebug, "col"), 0, 1, 0);
-                                                    glDrawArrays(GL_LINES, 0, 4);
-
-                                                    if (distance(startOfRay, asd) < distance(startOfRay, PR2))
-                                                    {
-                                                        PR2 = asd;
-
-                                                    }
                                                 }
-
                                             }
+
+
                                         }
                                     }
                                 }
                             }
-
-                            glUniform3f(glGetUniformLocation(ShaderDebug, "p1"), PR2.x, PR2.y, PR2.z);
-                            glUniform3f(glGetUniformLocation(ShaderDebug, "p2"), startOfRay.x, startOfRay.y, startOfRay.z);
-                            glUniform3f(glGetUniformLocation(ShaderDebug, "col"), 1, 0, 0);
-                            if (distance(PR2, ray) < 0.05) glUniform3f(glGetUniformLocation(ShaderDebug, "col"), 0, 1, 0);
-                            glDrawArrays(GL_LINES, 0, 4);
+                            
+                            */
 
 
                         }

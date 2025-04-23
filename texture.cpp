@@ -25,9 +25,16 @@ std::vector<const char*> texturesNames = {"img/brick.jpg","img/playerAni/walk000
     "img/bookshelf.png",//5
     "img/Pillar.png",//6,
     "img/flame.png",
-    "img/M_Walk-Sheet.png",
-    "img/M_WalkNormal-Sheet.png",
     "img/txttt-Sheet.png",
+    "img/enemyAni/M_drain0001-Sheet.png",
+    "img/enemyAni/M_drainNormal0001-Sheet.png",
+    "img/enemyAni/M_Idle0001-Sheet.png",
+    "img/enemyAni/M_IdleNormal0001-Sheet.png",
+    "img/enemyAni/M_Run0001-Sheet.png",
+    "img/enemyAni/M_RunNormal0001-Sheet.png",
+    "img/enemyAni/M_walk0001-Sheet.png",
+    "img/enemyAni/M_walkNormal0001-Sheet.png",
+    "img/eyes.png",
 };
 
 bool first = true;

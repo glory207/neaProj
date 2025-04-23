@@ -84,7 +84,8 @@ public:
 	// settings
 	//		graphics
 	float* resolution;
-	float* brightness;
+	float* ambientBrightness;
+	float* tourchBrightness;
 	bool* frameLock;
 	bool* close;
 	//		audio

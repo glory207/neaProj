@@ -1,27 +1,9 @@
 #pragma once
 #include "object.h"
 #include "initBuffer.h"
-#include "texture.h"
 #include "camera.h"
 #include <vector>
-#include "glm/glm.hpp"
-#include <iostream>
-using namespace glm;
-using namespace std;
-
-class AnimationClass {
-public:
-    int colour;
-    int normal;
-    int framecount;
-    float fps;
-    float current;
-    int dir;
-    AnimationClass();
-    AnimationClass(int col, int nor,
-        int cnt, float cur, float f);
-    vec4 sprite();
-};
+#include "animation.h"
 
 class InputObject
 {
@@ -60,8 +42,6 @@ public:
         SP = false;
         SH = false;
         Grounded = true;
-        // colour normal framecount current frame;
-        //animation = { 0.0f, 0.0f, 0.0f, 20.0f, 0.0f };
         animation =  AnimationClass(0, 0, 0.0f, 20.0f, 0.0f );
 
         resistance = vec3(7.0, 7.0, 7.0);

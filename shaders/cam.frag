@@ -26,7 +26,7 @@
 
         // only shade if facing the light
         float difVal = max(dot(normal, normalize(dir)), 0.0);
-        
+
         float shadow = 0.0;
         float bias;
         float  closeD = 0.0;
@@ -54,11 +54,7 @@
         float difVal2 = clamp((angle + outerCone -1.57)/(outerCone*innerCone), 0.0, 1.0) * difVal;
         
         // removes the cone if the angle is 0
-        if(ConeAngle == 0) difVal2 *= 0.0;  
-        else if(!gradient){
-        if(difVal2 > 0) return 1;
-        else return 0;
-        }
+        if(ConeAngle == 0) difVal2 *= 0.0; 
         else difVal = difVal2;
 
         // clams the values of light for a nice visual effect
@@ -66,7 +62,7 @@
         if(difVal < 0.05) return 0;
         difVal = floor((difVal * steps))/steps;
         difVal += 0.5;
-        difVal *= difVal * difVal * LightSetings.y; 
+        difVal = difVal * difVal * difVal * LightSetings.y; 
        
         return (difVal);
         }
@@ -76,7 +72,7 @@ void main() {
 // preforms the ambient lighting giving enerything a base glow
     if(light == 1){
         vec3 color;
-        float difVal = 5.0f; 
+        float difVal = 8.0f; 
         color = texture(ColT, texPos).xyz * brightness * difVal;
         fragColor = vec4(color,1.0);
         // outputs the exact colors of objects unaffected by light e.g fire
@@ -89,7 +85,7 @@ void main() {
   // shades the objects that are affected by light
             if(texture(PosT, texPos).xyz != vec3(-1.0)){
 
-            vec3 color = texture(ColT, texPos).xyz * normalize(lightCol) *
+            vec3 color = texture(ColT, texPos).xyz * lightCol *
                          getLight(
                                  lightPos,
                                  texture(PosT, texPos).xyz+camPos,
