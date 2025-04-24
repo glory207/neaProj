@@ -112,6 +112,7 @@ int IdleStoodState::Enter() {
 	inp->animation.normal     = 7;
 	inp->animation.framecount = 7;
 	inp->animation.fps        = 7.0;
+	inp->visible = 1;
 	return 0;
 }
 int IdleStoodState::update(float deltaTime) {
@@ -129,11 +130,12 @@ IdleCrouchState::IdleCrouchState(InputObject* inp, IdleState* sender) {
 }
 int IdleCrouchState::Enter() {
 	// cout << "IdleCrouchState" << endl;
-
 	inp->animation.colour     = 17;
 	inp->animation.normal     = 18;
 	inp->animation.framecount = 15;
 	inp->animation.fps        = 4.0;
+	// how visible the state makes you
+	inp->visible = 0.5f;
 	return 0;
 }
 int IdleCrouchState::update(float deltaTime) {
@@ -208,6 +210,7 @@ int WalkState::Enter() {
 	inp->animation.framecount = 10;
 	inp->animation.fps        = 8.0;
 	inp->speed = 3.0;
+	inp->visible = 2;
 	return 0;
 }
 int WalkState::update(float deltaTime) {
@@ -246,6 +249,7 @@ int RunState::Enter() {
 	inp->animation.fps        = 10.0;
 	inp->speed = 6.0;
 	inp->jump = vec2(1.6,2.0);
+	inp->visible = 3;
 	return 0;
 }
 int RunState::update(float deltaTime) {
@@ -284,6 +288,7 @@ int CrawlState::Enter() {
 	inp->animation.fps        = 7.0;
 	inp->speed = 1.0;
 	inp->jump = vec2(0.7f, 1.5f);
+	inp->visible = 0.5f;
 	return 0;
 
 }
@@ -326,6 +331,7 @@ int InAirState::Enter() {
 		cur = fall;
 	}
 	cur->Enter();
+	inp->visible = 2;
 	return 0;
 }
 int InAirState::update(float deltaTime) {

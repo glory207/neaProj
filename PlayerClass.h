@@ -8,9 +8,11 @@
 class InputObject
 {
 public:
+    bool grabed = false;
     SpObj obj;
     int spd;
     float speed;
+    float visible = 1;
     vec3 pos;
     vec3 rot;
     vec3 vel;
@@ -76,17 +78,4 @@ public:
     
 };
 
-
-class PlayerClassOld
-{
-
-public:
-    PlayerClassOld();
-    PlayerClassOld(vec3 pos, vec3 rot);
-    void draw(float time, int shader);
-    void update(float deltaTime);
-    InputObject* inp;
-    SpObj obj;
-
-};
 

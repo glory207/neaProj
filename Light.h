@@ -14,7 +14,7 @@ public:
 	GLuint depthTexPre;
 	GLuint64 handle;
 	glm::mat4 rotationMatrix;
-	glm::vec2 perch = glm::vec2(-1);
+	int perch[2] = {-1,-1};
 	int size;
 	Light(glm::vec3 pos);
 	void update(float deltaTime);

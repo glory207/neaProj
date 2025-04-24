@@ -216,8 +216,11 @@ Maze::Maze(int c){
                 // adds a light to go with the tourch
                if(furType == 4)
                {
-                   Light l = Light(vec3(ref.obj.pos.x, ref.obj.pos.y + ref.obj.sca.y, ref.obj.pos.z));
-                   l.perch = vec2(i, nodes[i].fur.size()-1);
+                   Light l = Light(vec3(ref.obj.pos.x, 
+                       ref.obj.pos.y + ref.obj.sca.y, ref.obj.pos.z));
+                   // pointer the the object its inside
+                   l.perch[0] = i;
+                   l.perch[1] = nodes[i].fur.size() - 1;
                    nodes[i].ligh.push_back(l);
                }
                
@@ -459,111 +462,111 @@ bool Maze::collide(glm::vec3* pos, float leway) {
             else { (*pos).x += (int)((*pos).x + 0.5f) - (*pos).x - (thk + leway); }
 
         }
-        
+
+        // scale the world
+        (*pos) *= size;
+
+        leway *= -size;
+
+        for (int f = 0; f < nodes[nd].fur.size(); f++) {
+            // the hight of the chair collider is half that of its model
+            // so must be halfed
+            if (nodes[nd].fur[f].ColorTexture == 24) {
+                nodes[nd].fur[f].obj.pos.y *= 0.5f;
+                nodes[nd].fur[f].obj.sca.y *= 0.5f;
+            }
+
+            // if close enough to collide with the furniture
+            if (pow((*pos).x - nodes[nd].fur[f].obj.pos.x, 2.0) + pow((*pos).z - nodes[nd].fur[f].obj.pos.z, 2.0)
+                < max(nodes[nd].fur[f].obj.sca.x, nodes[nd].fur[f].obj.sca.z) * 2.0)
+            {
+
+                vec2 Points[] = {
+                        vec2(-1, 1),
+                        vec2(-1, -1),
+                        vec2(1, -1),
+                        vec2(1, 1),
+                };
+                // gets the position of the 4 points at the base of the furniture
+                for (int i = 0; i < 4; i++) {
+                    // scale
+                    Points[i].x *= nodes[nd].fur[f].obj.sca.x;
+                    Points[i].y *= nodes[nd].fur[f].obj.sca.z;
+                    // rotate
+                    vec2 PP = vec2(Points[i].x * cos(nodes[nd].fur[f].obj.rot.y) + Points[i].y * sin(nodes[nd].fur[f].obj.rot.y),
+                        -Points[i].x * sin(nodes[nd].fur[f].obj.rot.y) + Points[i].y * cos(nodes[nd].fur[f].obj.rot.y));
+                    Points[i] = PP;
+                    // translate
+                    Points[i].x += nodes[nd].fur[f].obj.pos.x;
+                    Points[i].y += nodes[nd].fur[f].obj.pos.z;
+
+                }
+
+                bool inside1 = false;
+                bool inside2 = false;
+                float firstDist = 0.0;
+                float secondDist = 0.0;
+
+                // gets the magnitude of how deep within the furniture it is from one side
+                float max = project(Points[2].x, Points[2].y, 0, nodes[nd].fur[f]);
+                float min = project(Points[1].x, Points[1].y, 0, nodes[nd].fur[f]);
+
+                float playProj = project((*pos).x, (*pos).z, 0, nodes[nd].fur[f]);
+                if (playProj + leway > min && playProj - leway < max) {
+                    inside1 = true;
+                    if (playProj + leway - min > max - playProj - leway) firstDist = max - playProj + leway;
+                    else firstDist = min - playProj - leway;
+                }
+
+                // gets the magnitude of how deep within the furniture it is from the other side
+                max = project(Points[0].x, Points[0].y, 1, nodes[nd].fur[f]);
+                min = project(Points[1].x, Points[1].y, 1, nodes[nd].fur[f]);
+
+                playProj = project((*pos).x, (*pos).z, 1, nodes[nd].fur[f]);
+                if (playProj + leway > min && playProj - leway < max) {
+                    inside2 = true;
+                    if (playProj + leway - min > max - playProj - leway) secondDist = max - playProj + leway;
+                    else secondDist = min - playProj - leway;
+
+
+                }
+
+                // if inside it from both sides and the top then it must be moved out
+                if (inside1 && inside2 && (*pos).y < nodes[nd].fur[f].obj.pos.y + nodes[nd].fur[f].obj.sca.y) {
+                    //choses the direction where the least movment nessesery is chosen
+                    if (abs(firstDist) > abs(nodes[nd].fur[f].obj.sca.y + nodes[nd].fur[f].obj.sca.y - (*pos).y) && abs(secondDist) > abs(nodes[nd].fur[f].obj.sca.y + nodes[nd].fur[f].obj.sca.y - (*pos).y)) {
+                        (*pos).y = nodes[nd].fur[f].obj.pos.y + nodes[nd].fur[f].obj.sca.y - 0.001f;
+                        // if standing on top of the furniture its not in the air
+                        grnd = true;
+                    }
+                    else
+                        if (abs(firstDist) > abs(secondDist))
+                        {
+                            (*pos).x += sin(nodes[nd].fur[f].obj.rot.y) * secondDist;
+                            (*pos).z += cos(nodes[nd].fur[f].obj.rot.y) * secondDist;
+                        }
+                        else
+                        {
+                            (*pos).x += cos(nodes[nd].fur[f].obj.rot.y) * firstDist;
+                            (*pos).z += -sin(nodes[nd].fur[f].obj.rot.y) * firstDist;
+                        }
+
+                }
+
+            }
+
+
+            if (nodes[nd].fur[f].ColorTexture == 24) {
+                nodes[nd].fur[f].obj.pos.y *= 2.0f;
+                nodes[nd].fur[f].obj.sca.y *= 2.0f;
+            }
+        }
     }
     else
     {
         //if outside the boundries of the game return them 
         (*pos).x = 0;
         (*pos).z = 0;
-    }
-    // scale the world
-    (*pos) *= size;
-
-    leway *= -size;
-
-    for (int f = 0; f < nodes[nd].fur.size(); f++) {
-        // the hight of the chair collider is half that of its model
-        // so must be halfed
-        if (nodes[nd].fur[f].ColorTexture == 24) {
-            nodes[nd].fur[f].obj.pos.y *= 0.5f;
-            nodes[nd].fur[f].obj.sca.y *= 0.5f;
-        }
-
-        // if close enough to collide with the furniture
-        if (pow((*pos).x - nodes[nd].fur[f].obj.pos.x, 2.0) + pow((*pos).z - nodes[nd].fur[f].obj.pos.z, 2.0)
-            < max(nodes[nd].fur[f].obj.sca.x, nodes[nd].fur[f].obj.sca.z) * 2.0)
-        {
-
-            vec2 Points[] = {
-                    vec2(-1, 1),
-                    vec2(-1, -1),
-                    vec2(1, -1),
-                    vec2(1, 1),
-            };
-            // gets the position of the 4 points at the base of the furniture
-            for (int i = 0; i < 4; i++) {
-                // scale
-                Points[i].x *= nodes[nd].fur[f].obj.sca.x;
-                Points[i].y *= nodes[nd].fur[f].obj.sca.z;
-                // rotate
-                vec2 PP = vec2(Points[i].x * cos(nodes[nd].fur[f].obj.rot.y) + Points[i].y * sin(nodes[nd].fur[f].obj.rot.y),
-                    -Points[i].x * sin(nodes[nd].fur[f].obj.rot.y) + Points[i].y * cos(nodes[nd].fur[f].obj.rot.y));
-                Points[i] = PP;
-                // translate
-                Points[i].x += nodes[nd].fur[f].obj.pos.x;
-                Points[i].y += nodes[nd].fur[f].obj.pos.z;
-
-            }
-
-            bool inside1 = false;
-            bool inside2 = false;
-            float firstDist = 0.0;
-            float secondDist = 0.0;
-
-            // gets the magnitude of how deep within the furniture it is from one side
-            float max = project(Points[2].x, Points[2].y, 0, nodes[nd].fur[f]);
-            float min = project(Points[1].x, Points[1].y, 0, nodes[nd].fur[f]);
-
-            float playProj = project((*pos).x, (*pos).z, 0, nodes[nd].fur[f]);
-            if (playProj + leway > min && playProj - leway < max) {
-                inside1 = true;
-                if (playProj + leway - min > max - playProj - leway) firstDist = max - playProj + leway;
-                else firstDist = min - playProj - leway;
-            }
-
-            // gets the magnitude of how deep within the furniture it is from the other side
-            max = project(Points[0].x, Points[0].y, 1, nodes[nd].fur[f]);
-            min = project(Points[1].x, Points[1].y, 1, nodes[nd].fur[f]);
-
-            playProj = project((*pos).x, (*pos).z, 1, nodes[nd].fur[f]);
-            if (playProj + leway > min && playProj - leway < max) {
-                inside2 = true;
-                if (playProj + leway - min > max - playProj - leway) secondDist = max - playProj + leway;
-                else secondDist = min - playProj - leway;
-
-
-            }
-
-            // if inside it from both sides and the top then it must be moved out
-            if (inside1 && inside2 && (*pos).y < nodes[nd].fur[f].obj.pos.y + nodes[nd].fur[f].obj.sca.y) {
-                //choses the direction where the least movment nessesery is chosen
-                if (abs(firstDist) > abs(nodes[nd].fur[f].obj.sca.y + nodes[nd].fur[f].obj.sca.y - (*pos).y) && abs(secondDist) > abs(nodes[nd].fur[f].obj.sca.y + nodes[nd].fur[f].obj.sca.y - (*pos).y)) {
-                    (*pos).y = nodes[nd].fur[f].obj.pos.y + nodes[nd].fur[f].obj.sca.y - 0.001f;
-                    // if standing on top of the furniture its not in the air
-                    grnd = true;
-                }
-                else
-                    if (abs(firstDist) > abs(secondDist))
-                    {
-                        (*pos).x += sin(nodes[nd].fur[f].obj.rot.y) * secondDist;
-                        (*pos).z += cos(nodes[nd].fur[f].obj.rot.y) * secondDist;
-                    }
-                    else
-                    {
-                        (*pos).x += cos(nodes[nd].fur[f].obj.rot.y) * firstDist;
-                        (*pos).z += -sin(nodes[nd].fur[f].obj.rot.y) * firstDist;
-                    }
-
-            }
-
-        }
-
-
-        if (nodes[nd].fur[f].ColorTexture == 24) {
-            nodes[nd].fur[f].obj.pos.y *= 2.0f;
-            nodes[nd].fur[f].obj.sca.y *= 2.0f;
-        }
     }
 
     // if standing on the ground its not in the air

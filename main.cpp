@@ -35,7 +35,7 @@ bool ELocked = false;
 bool erere = false;
 int adee = 1;
 float adeee = 0;
-vec2 LightSetings = vec2(1.1,1.5);
+vec2 LightSetings = vec2(1.6,1.5);
 float deltaTime = 1.0f;
 double curTime = 0.0;
 float mapScale = 1.0f;
@@ -43,7 +43,6 @@ Maze mz;
 bool endGame = true;
 
 vec3 pathend;
-PlayerClassOld playerObj;
 // Define the random number generator and distribution
 std::random_device rd;  // Seed generator
 std::mt19937 gen(rd()); // Mersenne Twister engine
@@ -152,7 +151,7 @@ void doLightNew(createShadowFramebufferCube* shadowFB, unsigned int shaderShadow
 
         }
         glUniform1i(glGetUniformLocation(shaderShadowProgram, "cube"), 1);
-        for (int i = 0; i < enmi.size(); i++)if (distance(player.inp->pos, enmi[i].pos) < 7.0) enmi[i].draw(deltaTime, shaderShadowProgram);
+        for (int i = 0; i < enmi.size(); i++)if (distance(player.inp->pos, enmi[i].inp->pos) < 7.0) enmi[i].draw(deltaTime, shaderShadowProgram);
 
         player.draw(curTime, shaderShadowProgram);
     }
@@ -179,7 +178,7 @@ void doLightNew(createShadowFramebufferCube* shadowFB, unsigned int shaderShadow
     {
         // all the moving objects
         glUniform1i(glGetUniformLocation(shaderShadowProgram, "cube"), 1);
-        for (int i = 0; i < enmi.size(); i++)if (distance(player.inp->pos, enmi[i].pos) < 7.0) enmi[i].draw(deltaTime, shaderShadowProgram);
+        for (int i = 0; i < enmi.size(); i++)if (distance(player.inp->pos, enmi[i].inp->pos) < 7.0) enmi[i].draw(deltaTime, shaderShadowProgram);
 
         player.draw(curTime, shaderShadowProgram);
     }
@@ -232,6 +231,287 @@ void PathFindingFunction()
 }
 
 
+void rayCastRoom(int node, vec3 startOfRay, vec3 DirectionOfRay, vec3 * rayPoint, int perch[2]) {
+
+    vec3 wallPointx;
+    vec3 wallPointz;
+    vec3 xwallPoint;
+    vec3 zwallPoint;
+    float dx;
+    float dz;
+    float xd;
+    float zd;
+    // gets the plane intersection
+    wallPointx.x = (mz.nodes[node].x + mz.thk) * mz.size;
+    dx = (wallPointx.x - startOfRay.x) / DirectionOfRay.x;
+    wallPointx = startOfRay + DirectionOfRay * dx;
+
+    xwallPoint.x = (mz.nodes[node].x - mz.thk) * mz.size;
+    xd = (xwallPoint.x - startOfRay.x) / DirectionOfRay.x;
+    xwallPoint = startOfRay + DirectionOfRay * xd;
+
+    wallPointz.z = (mz.nodes[node].y + mz.thk) * mz.size;
+    dz = (wallPointz.z - startOfRay.z) / DirectionOfRay.z;
+    wallPointz = startOfRay + DirectionOfRay * dz;
+
+    zwallPoint.z = (mz.nodes[node].y - mz.thk) * mz.size;
+    zd = (zwallPoint.z - startOfRay.z) / DirectionOfRay.z;
+    zwallPoint = startOfRay + DirectionOfRay * zd;
+    
+    // gets the wall intersection
+    if (dx > 0 && !mz.nodes[node].sidesIsPath[3] && wallPointx.z >= (mz.nodes[node].y - 0.5f) * mz.size &&
+        wallPointx.z <= (mz.nodes[node].y + 0.5f) * mz.size) {
+        // updates the rays intersection point
+        if (distance(startOfRay, wallPointx) < distance(startOfRay, *rayPoint))
+        {
+            *rayPoint = wallPointx;
+        }
+    }
+    if (xd > 0 && !mz.nodes[node].sidesIsPath[2] && xwallPoint.z >= (mz.nodes[node].y - 0.5f) * mz.size &&
+        xwallPoint.z <= (mz.nodes[node].y + 0.5f) * mz.size) {
+        // updates the rays intersection point
+        if (distance(startOfRay, xwallPoint) < distance(startOfRay, *rayPoint))
+        {
+            *rayPoint = xwallPoint;
+        }
+    }
+    if (dz > 0 && !mz.nodes[node].sidesIsPath[0] && wallPointz.x >= (mz.nodes[node].x - 0.5f) * mz.size &&
+        wallPointz.x <= (mz.nodes[node].x + 0.5f) * mz.size) {
+        // updates the rays intersection point
+        if (distance(startOfRay, wallPointz) < distance(startOfRay, *rayPoint))
+        {
+           *rayPoint = wallPointz;
+        }
+    }
+    if (zd > 0 && !mz.nodes[node].sidesIsPath[1] && zwallPoint.x >= (mz.nodes[node].x - 0.5f) * mz.size &&
+        zwallPoint.x <= (mz.nodes[node].x + 0.5f) * mz.size) {
+        // updates the rays intersection point
+        if (distance(startOfRay, zwallPoint) < distance(startOfRay, *rayPoint))
+        {
+            *rayPoint = zwallPoint;
+        }
+    }
+    
+    
+    if (mz.nodes[node].sidesIsPath[1] &&
+        mz.nodes[node].sidesIsPath[2] && node > 0 && node + mz.count - 1 < mz.nodes.size()  &&
+        (
+            // the two nodes beside it have made a corner
+            !mz.nodes[node + mz.count - 1].sidesIsPath[0] ||
+            !mz.nodes[node + mz.count - 1].sidesIsPath[3]
+            )
+        ) {
+
+        if (dz > 0 && wallPointz.x >= (mz.nodes[node].x - 0.5) * mz.size &&
+            wallPointz.x <= (mz.nodes[node].x - mz.thk) * mz.size) {
+            // updates the rays intersection point
+            if (distance(startOfRay, wallPointz) < distance(startOfRay, *rayPoint))
+            {
+                *rayPoint = wallPointz;
+            }
+        }
+        if (xd > 0 && xwallPoint.z <= (mz.nodes[node].y + 0.5) * mz.size &&
+            xwallPoint.z >= (mz.nodes[node].y + mz.thk) * mz.size) {
+            // updates the rays intersection point
+            if (distance(startOfRay, xwallPoint) < distance(startOfRay, *rayPoint))
+            {
+                *rayPoint = xwallPoint;
+            }
+        }
+
+    }
+    
+    if (mz.nodes[node].sidesIsPath[0] &&
+        mz.nodes[node].sidesIsPath[2] && node > 0 && node - mz.count - 1 < mz.nodes.size() &&
+        (
+            // the two nodes beside it have made a corner
+            !mz.nodes[node - mz.count - 1].sidesIsPath[1] ||
+            !mz.nodes[node - mz.count - 1].sidesIsPath[3]
+            )
+        ) {
+
+        if (xd > 0 && xwallPoint.z >= (mz.nodes[node].y - 0.5f) * mz.size &&
+            xwallPoint.z <= (mz.nodes[node].y - mz.thk) * mz.size) {
+            // updates the rays intersection point
+            if (distance(startOfRay, xwallPoint) < distance(startOfRay, *rayPoint))
+            {
+                *rayPoint = xwallPoint;
+            }
+        }
+        if (zd > 0 && zwallPoint.x >= (mz.nodes[node].x - 0.5f) * mz.size &&
+            zwallPoint.x <= (mz.nodes[node].x - mz.thk) * mz.size) {
+            // updates the rays intersection point
+            if (distance(startOfRay, zwallPoint) < distance(startOfRay, *rayPoint))
+            {
+                *rayPoint = zwallPoint;
+            }
+        }
+
+
+    }
+    
+    if (mz.nodes[node].sidesIsPath[0] &&
+        mz.nodes[node].sidesIsPath[3] && node > 0 && node + mz.count + 1 < mz.nodes.size() &&
+        (
+            // the two nodes beside it have made a corner
+            !mz.nodes[node + mz.count + 1].sidesIsPath[1] ||
+            !mz.nodes[node + mz.count + 1].sidesIsPath[2]
+            )
+        ) {
+
+        if (dx > 0 && wallPointx.z <= (mz.nodes[node].y + 0.5f) * mz.size &&
+            wallPointx.z >= (mz.nodes[node].y + mz.thk) * mz.size) {
+            // updates the rays intersection point
+            if (distance(startOfRay, wallPointx) < distance(startOfRay, *rayPoint))
+            {
+                *rayPoint = wallPointx;
+            }
+        }
+
+        if (dz > 0 && wallPointz.x <= (mz.nodes[node].x + 0.5f) * mz.size &&
+            wallPointz.x >= (mz.nodes[node].x + mz.thk) * mz.size) {
+            // updates the rays intersection point
+            if (distance(startOfRay, wallPointz) < distance(startOfRay, *rayPoint))
+            {
+                *rayPoint = wallPointz;
+            }
+        }
+    }
+    
+    if (mz.nodes[node].sidesIsPath[3] &&
+        mz.nodes[node].sidesIsPath[1] && node > 0 && node - mz.count + 1 < mz.nodes.size() &&
+        (
+            // the two nodes beside it have made a corner
+            !mz.nodes[node - mz.count + 1].sidesIsPath[0] ||
+            !mz.nodes[node - mz.count + 1].sidesIsPath[2]
+            )
+        ) {
+        if (dx > 0 && wallPointx.z >= (mz.nodes[node].y - 0.5f) * mz.size &&
+            wallPointx.z <= (mz.nodes[node].y - mz.thk) * mz.size) {
+            // updates the rays intersection point
+            if (distance(startOfRay, wallPointx) < distance(startOfRay, *rayPoint))
+            {
+                *rayPoint = wallPointx;
+            }
+        }
+        if (zd > 0 && zwallPoint.x <= (mz.nodes[node].x + 0.5f) * mz.size &&
+            zwallPoint.x >= (mz.nodes[node].x + mz.thk) * mz.size) {
+            // updates the rays intersection point
+            if (distance(startOfRay, zwallPoint) < distance(startOfRay, *rayPoint))
+            {
+                *rayPoint = zwallPoint;
+            }
+        }
+
+    }
+    
+    
+
+    for (int j = 0; j < mz.nodes[node].fur.size(); j++)
+    {
+        if (!(perch[0] == node && perch[1] == j))
+        {
+            // transformes the rectangle into the furnatures size
+            mat4 modelViewMatrix;
+            modelViewMatrix = rotate(modelViewMatrix, mz.nodes[node].fur[j].obj.rot.z, glm::vec3(0, 0, 1));
+            modelViewMatrix = rotate(modelViewMatrix, mz.nodes[node].fur[j].obj.rot.y, glm::vec3(0, 1, 0));
+            modelViewMatrix = rotate(modelViewMatrix, mz.nodes[node].fur[j].obj.rot.x, glm::vec3(1, 0, 0));
+            modelViewMatrix = scale(modelViewMatrix, mz.nodes[node].fur[j].obj.sca);
+            // center of the 6 sides
+            vec3 P[6] = {
+                modelViewMatrix * vec4(1,0,0,1) ,
+                modelViewMatrix * vec4(0,1,0,1) ,
+                modelViewMatrix * vec4(0,0,1,1) ,
+                modelViewMatrix * vec4(-1,0,0,1),
+                modelViewMatrix * vec4(0,-1,0,1),
+                modelViewMatrix * vec4(0,0,-1,1)
+            };
+
+            bool clip = false;
+            // for each side
+            for (int i = 0; i < 6; i++)
+            {
+
+                // the four corners of a side
+                vec3 PP1 = (P[i] + P[(i + 1) % 6] + P[(i + 2) % 6]) + mz.nodes[node].fur[j].obj.pos;
+                vec3 PP2 = (P[i] + P[(i + 1) % 6] - P[(i + 2) % 6]) + mz.nodes[node].fur[j].obj.pos;
+                vec3 PP3 = (P[i] - P[(i + 1) % 6] - P[(i + 2) % 6]) + mz.nodes[node].fur[j].obj.pos;
+                vec3 PP4 = (P[i] - P[(i + 1) % 6] + P[(i + 2) % 6]) + mz.nodes[node].fur[j].obj.pos;
+                // the point of intersection with the plane
+                float t = dot(normalize(P[i]), ((P[i] + mz.nodes[node].fur[j].obj.pos) - startOfRay)) / dot(normalize(P[i]), DirectionOfRay);
+                vec3 asd = startOfRay + DirectionOfRay * t;
+
+                // restricting the plane to the four corners
+                if (t>0 && dot(normalize(PP1 - PP2), asd) > dot(normalize(PP1 - PP2), PP2) && dot(PP1 - PP2, asd) < dot(PP1 - PP2, PP1) &&
+                    dot(normalize(PP1 - PP4), asd) > dot(normalize(PP1 - PP4), PP4) && dot(PP1 - PP4, asd) < dot(PP1 - PP4, PP1) &&
+                    dot(normalize(DirectionOfRay), asd) > dot(normalize(DirectionOfRay), startOfRay))
+                {
+                    // updates the rays intersection point
+                    if (distance(startOfRay, asd) < distance(startOfRay, *rayPoint))
+                    {
+                        *rayPoint = asd;
+
+                    }
+                }
+
+            }
+        }
+    }
+}
+
+vec3 rayCast(vec3 startOfRay, vec3 endOfRay, int perch[2]) {
+
+    vec3 DirectionOfRay = normalize(endOfRay - startOfRay);
+    vec3 rayPoint = endOfRay;
+    vec3 carryPoint = startOfRay / mz.size;
+
+    // validation making sure the ray doesnt start on a a .5 decimal
+    if (carryPoint.x - (int)carryPoint.x == 0.5f || carryPoint.x - (int)carryPoint.x == -0.5f ||
+        carryPoint.z - (int)carryPoint.z == 0.5f || carryPoint.z - (int)carryPoint.z == -0.5f)
+    {
+        carryPoint -= DirectionOfRay * 0.01f;
+    }
+    int i = 0;
+    vec3 centerPoint;
+    vec3 xPoint;
+    vec3 yPoint;
+    float d1;
+    float d2;
+    do
+    {
+        centerPoint = vec3(round(carryPoint.x), 0, round(carryPoint.z));
+
+        // marks the point logic would be preformed on
+        int room = round(carryPoint.x) + round(carryPoint.z) * mz.count;
+        if(room>=0 && room < mz.nodes.size()) rayCastRoom(room, startOfRay, DirectionOfRay, &rayPoint, perch);
+          
+        // gets the x intersection with the horizontal boundery
+        xPoint.x = round(carryPoint.x);
+        if (DirectionOfRay.x > 0) xPoint.x += 0.5f;
+        else xPoint.x -= 0.5f;
+        // use the x value and direction to calculate the point
+        d1 = (xPoint.x - carryPoint.x) / DirectionOfRay.x;
+        xPoint = carryPoint + DirectionOfRay * d1;
+
+        // gets the y intersection with the vertical boundery
+        yPoint.z = round(carryPoint.z);
+        if (DirectionOfRay.z > 0) yPoint.z += 0.5f;
+        else yPoint.z -= 0.5f;
+        // use the y value and direction to calculate the point
+        d2 = (yPoint.z - carryPoint.z) / DirectionOfRay.z;
+        yPoint = carryPoint + DirectionOfRay * d2;
+
+        // cheaks to see wich point is within the current nodes boundery
+        // the next node will will continue from here
+        if (round(carryPoint.z) == round(xPoint.z)) carryPoint += DirectionOfRay * d1 * 1.001f;
+        else carryPoint += DirectionOfRay * d2 * 1.001f; // with a slight offset so its within the next  node
+
+        // fail safe that stops infinate loops
+        i++;
+    } while (centerPoint != vec3(round(endOfRay.x / mz.size), 0, round(endOfRay.z / mz.size)) && i < 10);
+
+    return rayPoint;
+}
 void UpdatingFunction() {
 
     playerIndex = int((player.inp->pos.x + 1) / mz.size) + int((player.inp->pos.z + 1) / mz.size) * mz.count;
@@ -330,28 +610,71 @@ void UpdatingFunction() {
 
     player.inp->Grounded = mz.collide(&player.inp->pos, 0.03f);
 
-    // when the end of the path is reached reset the path finder
-    if (pathf.pathP + 1 >= pathf.path.size()) {
-        pathf.OnPath = false;
-        pathf.pathP = 0;
+
+#pragma region Ray Cast
+
+    int rdi = 5;
+
+    // if (*menue.settings.debug)
+    bool playerLit = false;
+    // all the cells around the player
+    for (int t = 0; t < rdi * rdi; t++)
+    {
+        if (playerIndex + (t % rdi) - (rdi / 2) + (t / rdi - (rdi / 2)) * mz.count >= 0 &&
+            playerIndex + (t % rdi) - (rdi / 2) + (t / rdi - (rdi / 2)) * mz.count < mz.nodes.size()) {
+            int curIndex = playerIndex + (t % rdi) - (rdi / 2) + (t / rdi - (rdi / 2)) * mz.count;
+            // the lights in those cells
+            for (int tt = 0; tt < mz.nodes[curIndex].ligh.size(); tt++) {
+                vec3 endOfRay = player.inp->obj.pos;
+                vec3 startOfRay = mz.nodes[curIndex].ligh[tt].pos;
+                // closer than the length of light
+                if (distance(endOfRay, startOfRay) < LightSetings.x) {
+                    if (rayCast(startOfRay, endOfRay, mz.nodes[curIndex].ligh[tt].perch) == endOfRay) {
+                        playerLit = true;
+                    }
+                }
+            }
+        }
     }
-    if (pathf.OnPath) {   
-        // the cell grid the player is on
-        vec2 psss1 = pathf.path[int(pathf.pathP)]->pos * mz.size;  
-        // the cell grid the player is moving towards
-        vec2 psss2 = pathf.path[int(pathf.pathP + 1)]->pos * mz.size;  
-        // accelerate towardes the next point
-        player.inp->vel += 0.1f * ((player.inp->pos - vec3(psss2.x, player.inp->pos.y, psss2.y)) / distance(psss2, vec2(player.inp->pos.x, player.inp->pos.z)));     
-        // set the players hight to the cell grid hight
-        if (pathf.path[pathf.pathP + 1]->obstruction > 3 && player.inp->pos.y < pathf.path[pathf.pathP + 1]->hight * mz.size) {                                                                                                                                                   
-            player.inp->Grounded = true;                                                                                                                                 
-            player.inp->pos.y += 1.0f * deltaTime;                                                                                                                       
-            if (player.inp->pos.y > pathf.path[pathf.pathP + 1]->hight * mz.size)player.inp->pos.y = pathf.path[pathf.pathP + 1]->hight * mz.size;                       
-        }      
-        // when closer to the next point than the current point make it the new current point
-        if (distance(psss1, vec2(player.inp->pos.x, player.inp->pos.z)) > distance(psss2, vec2(player.inp->pos.x, player.inp->pos.z)))pathf.pathP++;                     
-   
+    for (int tt = 0; tt < enmi.size(); tt++) {
+
+        float playerFocus = player.inp->visible;
+        if (playerLit) playerFocus *= 2;
+        vec3 endOfRay = player.inp->obj.pos;
+        vec3 startOfRay = enmi[tt].inp->pos + vec3(0, enmi[tt].inp->obj.sca.y, 0);
+        if (distance(endOfRay, startOfRay) < 1.75) {
+            int nullperamiter[2] = { -1,-1 };
+            vec3 rayPoint = rayCast(startOfRay, endOfRay, nullperamiter);
+            vec3 DirectionOfRay = normalize(endOfRay - startOfRay);
+            bool seePlayer = false;
+            if (rayPoint == endOfRay) {
+                seePlayer = true;
+            }
+            // within the vision cone
+            if (angle(DirectionOfRay, -enmi[tt].inp->look) < 0.35) {
+                if (seePlayer)playerFocus *= 3;
+            }
+            // in front of the enemy
+            else if (angle(DirectionOfRay, -enmi[tt].inp->look) < 1.57) {
+                if (seePlayer)playerFocus *= 1.5f;
+            }
+            else {
+                playerFocus = -3;
+            }
+            glDrawArrays(GL_LINES, 0, 4);
+        }
+        else {
+            playerFocus = -10;
+        }
+        enmi[tt].inp->focus += playerFocus * deltaTime;
+        if (enmi[tt].inp->focus < 0)enmi[tt].inp->focus = 0;
+        if (enmi[tt].inp->focus > 7)enmi[tt].inp->focus = 7;
+
     }
+    cout << player.inp->grabed << endl;
+
+
+#pragma endregion
 }
 
 void processInput(GLFWwindow* window) {
@@ -480,14 +803,13 @@ void drawMap(bool center) {
         glUniform1f(glGetUniformLocation(shaderMazeFurnProgram, "sc1"), 0.1f);
         for (int i = 0; i < enmi.size(); i++)
         {
-            glUniform3f(glGetUniformLocation(shaderMazeFurnProgram, "campos"), ( - enmi[i].pos.x + plPos.x) / mz.size, ( - enmi[i].pos.z + plPos.z) / mz.size, 50);
+            glUniform3f(glGetUniformLocation(shaderMazeFurnProgram, "campos"), ( - enmi[i].inp->pos.x + plPos.x) / mz.size, ( - enmi[i].inp->pos.z + plPos.z) / mz.size, 50);
             glDrawArrays(GL_POINTS, 0, 1);
         }
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 }
-
 
 int main()
 {
@@ -621,12 +943,12 @@ int main()
                 glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 
-                menue.update( vec2(0), vec2(1), mousep,
+                menue.update(vec2(0), vec2(1), mousep,
                     glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS);
 
                 processInput(window);
 
-                menue.fullBox->children[0]->control(updown,leftright,inout,&lev,0,deltaTime);
+                menue.fullBox->children[0]->control(updown, leftright, inout, &lev, 0, deltaTime);
                 glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
                 glEnable(GL_DEPTH_TEST);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -659,21 +981,21 @@ int main()
                     {
                         vector<float> vertices;
                         FurnCount = 0;
-                       for (int i = 0; i < mz.nodes.size(); i++) {
-                           int typ = 0;
-                           if (mz.nodes[i].cage) typ = -5;
-                           else if (mz.nodes[i].treasure) typ = 5;
+                        for (int i = 0; i < mz.nodes.size(); i++) {
+                            int typ = 0;
+                            if (mz.nodes[i].cage) typ = -5;
+                            else if (mz.nodes[i].treasure) typ = 5;
 
-                           for (int j = 0; j < 9 * 9; j++) {
-                               if (mz.nodes[i].grid[j % 9][j / 9].obstruction > 1) {
-                                   vertices.push_back(mz.nodes[i].grid[j % 9][j / 9].pos.y);
-                                   vertices.push_back(mz.nodes[i].grid[j % 9][j / 9].pos.x);
-                                   if(j==40)vertices.push_back(typ);
-                                   else vertices.push_back(0);
-                                   FurnCount += 1;
-                               }
-                           }
-                       }
+                            for (int j = 0; j < 9 * 9; j++) {
+                                if (mz.nodes[i].grid[j % 9][j / 9].obstruction > 1) {
+                                    vertices.push_back(mz.nodes[i].grid[j % 9][j / 9].pos.y);
+                                    vertices.push_back(mz.nodes[i].grid[j % 9][j / 9].pos.x);
+                                    if (j == 40)vertices.push_back(typ);
+                                    else vertices.push_back(0);
+                                    FurnCount += 1;
+                                }
+                            }
+                        }
 
                         unsigned int VBO;
                         glGenVertexArrays(1, &FurnVAO);
@@ -694,7 +1016,7 @@ int main()
                         // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
                         glBindVertexArray(0);
                     }
-                    
+
 
 
                     drawMap(true);
@@ -705,7 +1027,7 @@ int main()
                 }
                 if (*menue.settings.gameStart)
                 {
-                    player.inp->pos = vec3(mz.count * mz.size * 0.5f,0.1f, mz.count * mz.size * 0.5f);
+                    player.inp->pos = vec3(mz.count * mz.size * 0.5f, 0.1f, mz.count * mz.size * 0.5f);
                     dynamic_cast<UIDIV*>(menue.fullBox->children[0])->cur = 2;
 
                     PathFindingThread = thread(PathFindingFunction);
@@ -714,7 +1036,7 @@ int main()
                     // adds the new ones
                     for (int i = 0; i < (int)(*menue.settings.enemies * 100.0f); i++)
                     {
-                        enmi.push_back(Enemy(vec3(int(Rand(gen) * mz.count) * mz.size, 0.0f, int(Rand(gen) * mz.count) * mz.size), vec3(0.0f, -3.1415 / 2.0f, 0.0f)));
+                        enmi.push_back(Enemy(&player,vec3(int(Rand(gen) * mz.count) * mz.size, 0.0f, int(Rand(gen) * mz.count) * mz.size), vec3(0.0f, -3.1415 / 2.0f, 0.0f)));
                     }
                     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
                     glfwSetCursorPos(window, (SCR_WIDTH / 2) + OFF_WIDTH, (SCR_HEIGHT / 2) + OFF_HEIGHT);
@@ -761,10 +1083,10 @@ int main()
                 }
                 for (int i = 0; i < enmi.size(); i++) {
                     glUniform1i(glGetUniformLocation(shaderShadowProgram, "cube"), 0);
-                    if (distance(enmi[i].vision.pos, player.inp->pos) < 7.0) doLightNew(&shadowFB, shaderShadowProgram, &enmi[i].vision, false);
+                    if (distance(enmi[i].inp->vision.pos, player.inp->pos) < 7.0) doLightNew(&shadowFB, shaderShadowProgram, &enmi[i].inp->vision, false);
                     else
                     {
-                        enmi[i].vision.activate(false);
+                        enmi[i].inp->vision.activate(false);
                     }
                 }
 
@@ -783,7 +1105,7 @@ int main()
                 glDisable(GL_CULL_FACE);
 
                 player.draw(curTime, shaderProgram);
-                for (int i = 0; i < enmi.size(); i++)if (distance(player.inp->pos, enmi[i].pos) < 7.0)enmi[i].draw(curTime, shaderProgram);
+                for (int i = 0; i < enmi.size(); i++)if (distance(player.inp->pos, enmi[i].inp->pos) < 7.0)enmi[i].draw(curTime, shaderProgram);
 
                 for (int j = 0; j < rdi * rdi; j++)
                 {
@@ -813,10 +1135,10 @@ int main()
                         }
                     }
                 }
-                for (int i = 0; i < enmi.size(); i++)if (distance(player.inp->pos, enmi[i].pos) < 7.0) {
-                    glUniform3f(glGetUniformLocation(shaderLightProgram, "color"), enmi[i].vision.col.x, enmi[i].vision.col.y, enmi[i].vision.col.z);
-                    enmi[i].vision.obj.pos = enmi[i].vision.pos;
-                    enmi[i].vision.obj.draw(shaderLightProgram);
+                for (int i = 0; i < enmi.size(); i++)if (distance(player.inp->pos, enmi[i].inp->pos) < 7.0) {
+                    glUniform3f(glGetUniformLocation(shaderLightProgram, "color"), enmi[i].inp->vision.col.x, enmi[i].inp->vision.col.y, enmi[i].inp->vision.col.z);
+                    enmi[i].inp->vision.obj.pos = enmi[i].inp->vision.pos;
+                    enmi[i].inp->vision.obj.draw(shaderLightProgram);
                 }
 
 #pragma endregion
@@ -874,19 +1196,19 @@ int main()
 
                 for (int i = 0; i < enmi.size(); i++)
                 {
-                    if (enmi[i].vision.active) {
+                    if (enmi[i].inp->vision.active) {
                         glActiveTexture(GL_TEXTURE4);
                         // shadow map
-                        glBindTexture(GL_TEXTURE_CUBE_MAP, enmi[i].vision.depthTex);
+                        glBindTexture(GL_TEXTURE_CUBE_MAP, enmi[i].inp->vision.depthTex);
 
                         // the direction of the vision cone
-                        glm::vec4 rotated = vec4(enmi[i].look, 1.0f);
+                        glm::vec4 rotated = vec4(enmi[i].inp->look, 1.0f);
                         glUniform3f(glGetUniformLocation(cam.shader, "rotcam"), rotated.x, rotated.y, rotated.z);
 
                         // limits the ememys vision cone to 0.7 radians
                         glUniform1f(glGetUniformLocation(cam.shader, "ConeAngle"), 0.7);
-                        glUniform3f(glGetUniformLocation(cam.shader, "lightPos"), enmi[i].vision.pos.x, enmi[i].vision.pos.y, enmi[i].vision.pos.z);
-                        glUniform3f(glGetUniformLocation(cam.shader, "lightCol"), enmi[i].vision.col.x, enmi[i].vision.col.y, enmi[i].vision.col.z);
+                        glUniform3f(glGetUniformLocation(cam.shader, "lightPos"), enmi[i].inp->vision.pos.x, enmi[i].inp->vision.pos.y, enmi[i].inp->vision.pos.z);
+                        glUniform3f(glGetUniformLocation(cam.shader, "lightCol"), enmi[i].inp->vision.col.x, enmi[i].inp->vision.col.y, enmi[i].inp->vision.col.z);
                         // the distance of vision and brightness of the cone
                         glUniform2f(glGetUniformLocation(cam.shader, "LightSetings"), 1.75, 5.0 * *menue.settings.tourchBrightness);
 
@@ -927,11 +1249,11 @@ int main()
                 glEnable(GL_DEPTH_TEST);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-                glViewport(OFF_WIDTH, OFF_HEIGHT, SCR_WIDTH, SCR_HEIGHT); 
-                glUseProgram(ShaderUI); 
-                glActiveTexture(GL_TEXTURE0); 
-                GLuint qweewq = texture(30); 
-                glBindTexture(GL_TEXTURE_2D, qweewq); 
+                glViewport(OFF_WIDTH, OFF_HEIGHT, SCR_WIDTH, SCR_HEIGHT);
+                glUseProgram(ShaderUI);
+                glActiveTexture(GL_TEXTURE0);
+                GLuint qweewq = texture(30);
+                glBindTexture(GL_TEXTURE_2D, qweewq);
 
                 menue.screen->children[0]->texture = cam.MFB.ColTex;
                 menue.screen->texture = cam.PFB1.ColTex;
@@ -944,205 +1266,6 @@ int main()
 
 #pragma endregion
 
-#pragma region Ray Cast
-
-                glUseProgram(ShaderDebug);
-                glUniformMatrix4fv(glGetUniformLocation(ShaderDebug, "mtr"), 1, GL_FALSE, glm::value_ptr(ma));
-                glBindVertexArray(VAO);
-                glLineWidth(5);
-
-                if (*menue.settings.debug)
-                {
-                    for (int t = 0; t < rdi * rdi * 0; t++)
-                    {
-                        if (playerIndex + (t % rdi) - (rdi / 2) + (t / rdi - (rdi / 2)) * mz.count >= 0 &&
-                            playerIndex + (t % rdi) - (rdi / 2) + (t / rdi - (rdi / 2)) * mz.count < mz.nodes.size()) {
-                            int curIndex = playerIndex + (t % rdi) - (rdi / 2) + (t / rdi - (rdi / 2)) * mz.count;
-                            for (int tt = 0; tt < mz.nodes[curIndex].ligh.size(); tt++) {
-                                vec3 ray = player.inp->obj.pos;
-                                vec3 startOfRay = mz.nodes[curIndex].ligh[tt].pos;
-                                if (distance(ray, startOfRay) < LightSetings.x) {
-
-                                    vec3 DirectionOfRay = normalize(ray - startOfRay);
-
-                                    vec3 rayPoint = ray;
-
-                                    for (int j = 0; j < 9; j++)
-                                    {
-                                        if (playerIndex + (j % 3) - 1 + (j / 3 - 1) * mz.count >= 0 &&
-                                            playerIndex + (j % 3) - 1 + (j / 3 - 1) * mz.count < mz.nodes.size()) {
-                                            int rp = playerIndex + (j % 3) - 1 + (j / 3 - 1) * mz.count;
-                                            for (int j = 0; j < mz.nodes[rp].fur.size(); j++)
-                                            {
-                                                if (mz.nodes[curIndex].ligh[tt].perch != vec2(rp, j)) {
-
-                                                    mat4 modelViewMatrix;
-                                                    modelViewMatrix = rotate(modelViewMatrix, mz.nodes[rp].fur[j].obj.rot.z, glm::vec3(0, 0, 1));
-                                                    modelViewMatrix = rotate(modelViewMatrix, mz.nodes[rp].fur[j].obj.rot.y, glm::vec3(0, 1, 0));
-                                                    modelViewMatrix = rotate(modelViewMatrix, mz.nodes[rp].fur[j].obj.rot.x, glm::vec3(1, 0, 0));
-                                                    modelViewMatrix = scale(modelViewMatrix, mz.nodes[rp].fur[j].obj.sca);
-                                                    vec3 P[6] = {
-                                                        modelViewMatrix * vec4(1,0,0,1) ,
-                                                        modelViewMatrix * vec4(0,1,0,1) ,
-                                                        modelViewMatrix * vec4(0,0,1,1) ,
-                                                        modelViewMatrix * vec4(-1,0,0,1),
-                                                        modelViewMatrix * vec4(0,-1,0,1),
-                                                        modelViewMatrix * vec4(0,0,-1,1)
-                                                    };
-
-                                                    bool clip = false;
-                                                    for (int i = 0; i < 6; i++)
-                                                    {
-
-                                                        //for math
-                                                        vec3 PP1 = (P[i] + P[(i + 1) % 6] + P[(i + 2) % 6]) + mz.nodes[rp].fur[j].obj.pos;
-                                                        vec3 PP2 = (P[i] + P[(i + 1) % 6] - P[(i + 2) % 6]) + mz.nodes[rp].fur[j].obj.pos;
-                                                        vec3 PP3 = (P[i] - P[(i + 1) % 6] - P[(i + 2) % 6]) + mz.nodes[rp].fur[j].obj.pos;
-                                                        vec3 PP4 = (P[i] - P[(i + 1) % 6] + P[(i + 2) % 6]) + mz.nodes[rp].fur[j].obj.pos;
-
-                                                        float t = dot(normalize(P[i]), ((P[i] + mz.nodes[rp].fur[j].obj.pos) - startOfRay)) / dot(normalize(P[i]), DirectionOfRay);
-                                                        vec3 asd = startOfRay + DirectionOfRay * t;
-
-
-                                                        if (dot(normalize(PP1 - PP2), asd) > dot(normalize(PP1 - PP2), PP2) && dot(PP1 - PP2, asd) < dot(PP1 - PP2, PP1) &&
-                                                            dot(normalize(PP1 - PP4), asd) > dot(normalize(PP1 - PP4), PP4) && dot(PP1 - PP4, asd) < dot(PP1 - PP4, PP1) &&
-                                                            dot(normalize(DirectionOfRay), asd) > dot(normalize(DirectionOfRay), startOfRay))
-                                                        {
-
-                                                            glUniform3f(glGetUniformLocation(ShaderDebug, "p2"), asd.x, asd.y, asd.z);
-                                                            glUniform3f(glGetUniformLocation(ShaderDebug, "p1"), asd.x, asd.y + 0.01f, asd.z);
-
-                                                            glUniform3f(glGetUniformLocation(ShaderDebug, "col"), 0, 1, 0);
-                                                            glDrawArrays(GL_LINES, 0, 4);
-
-                                                            if (distance(startOfRay, asd) < distance(startOfRay, rayPoint))
-                                                            {
-                                                                rayPoint = asd;
-
-                                                            }
-                                                        }
-
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    glUniform3f(glGetUniformLocation(ShaderDebug, "p1"), rayPoint.x, rayPoint.y, rayPoint.z);
-                                    glUniform3f(glGetUniformLocation(ShaderDebug, "p2"), startOfRay.x, startOfRay.y, startOfRay.z);
-                                    glUniform3f(glGetUniformLocation(ShaderDebug, "col"), 1, 0, 0);
-                                    if (distance(rayPoint, ray) < 0.05) glUniform3f(glGetUniformLocation(ShaderDebug, "col"), 0, 1, 0);
-                                    glDrawArrays(GL_LINES, 0, 4);
-
-
-                                }
-
-                            }
-                        }
-                    }
-
-                    for (int tt = 0; tt < enmi.size(); tt++) {
-                        vec3 ray = player.inp->obj.pos;
-                        vec3 startOfRay = enmi[tt].pos + vec3(0, enmi[tt].obj.sca.y, 0);
-                        if (distance(ray, startOfRay) < 1.75) {
-
-                            vec3 DirectionOfRay = normalize(ray - startOfRay);
-                            // where the ray intersects with an object
-                            vec3 rayPoint = ray;
-
-                            glUniform3f(glGetUniformLocation(ShaderDebug, "p1"), rayPoint.x, rayPoint.y, rayPoint.z); 
-                            glUniform3f(glGetUniformLocation(ShaderDebug, "p2"), startOfRay.x, startOfRay.y, startOfRay.z); 
-
-                            // within the vision cone
-                            if (angle(DirectionOfRay, -enmi[tt].look) < 0.35) { 
-                                glUniform3f(glGetUniformLocation(ShaderDebug, "col"), 0, 1, 0); 
-                            }
-                            // in front of the enemy
-                            else if (angle(DirectionOfRay, -enmi[tt].look) < 1.57) 
-                            {
-                                glUniform3f(glGetUniformLocation(ShaderDebug, "col"), 0, 0, 1); 
-                            }
-                            else
-                            {
-                                glUniform3f(glGetUniformLocation(ShaderDebug, "col"), 1, 0, 0); 
-                            }
-                            glDrawArrays(GL_LINES, 0, 4); 
-
-/*
-                            
-                            
-                            bool clip = false;
-                            
-                            for (int j = 0; j < 9; j++)
-                            {
-                                if (playerIndex + (j % 3) - 1 + (j / 3 - 1) * mz.count >= 0 &&
-                                    playerIndex + (j % 3) - 1 + (j / 3 - 1) * mz.count < mz.nodes.size()) {
-                                    int rp = playerIndex + (j % 3) - 1 + (j / 3 - 1) * mz.count;
-                                    for (int j = 0; j < mz.nodes[rp].fur.size(); j++)
-                                    {
-
-
-                                        mat4 modelViewMatrix;
-                                        modelViewMatrix = rotate(modelViewMatrix, mz.nodes[rp].fur[j].obj.rot.z, glm::vec3(0, 0, 1));
-                                        modelViewMatrix = rotate(modelViewMatrix, mz.nodes[rp].fur[j].obj.rot.y, glm::vec3(0, 1, 0));
-                                        modelViewMatrix = rotate(modelViewMatrix, mz.nodes[rp].fur[j].obj.rot.x, glm::vec3(1, 0, 0));
-                                        modelViewMatrix = scale(modelViewMatrix, mz.nodes[rp].fur[j].obj.sca);
-                                        vec3 P[6] = {
-                                            modelViewMatrix * vec4(1,0,0,1) ,
-                                            modelViewMatrix * vec4(0,1,0,1) ,
-                                            modelViewMatrix * vec4(0,0,1,1) ,
-                                            modelViewMatrix * vec4(-1,0,0,1),
-                                            modelViewMatrix * vec4(0,-1,0,1),
-                                            modelViewMatrix * vec4(0,0,-1,1)
-                                        };
-
-                                        for (int i = 0; i < 6; i++)
-                                        {
-
-                                            //for math
-                                            vec3 PP1 = (P[i] + P[(i + 1) % 6] + P[(i + 2) % 6]) + mz.nodes[rp].fur[j].obj.pos;
-                                            vec3 PP2 = (P[i] + P[(i + 1) % 6] - P[(i + 2) % 6]) + mz.nodes[rp].fur[j].obj.pos;
-                                            vec3 PP3 = (P[i] - P[(i + 1) % 6] - P[(i + 2) % 6]) + mz.nodes[rp].fur[j].obj.pos;
-                                            vec3 PP4 = (P[i] - P[(i + 1) % 6] + P[(i + 2) % 6]) + mz.nodes[rp].fur[j].obj.pos;
-
-                                            float t = dot(normalize(P[i]), P[i] + mz.nodes[rp].fur[j].obj.pos - startOfRay) / dot(normalize(P[i]), DirectionOfRay);
-                                            vec3 asd = startOfRay + DirectionOfRay * t;
-
-
-                                            if (dot(normalize(PP1 - PP2), asd) > dot(normalize(PP1 - PP2), PP2) && dot(PP1 - PP2, asd) < dot(PP1 - PP2, PP1) &&
-                                                dot(normalize(PP1 - PP4), asd) > dot(normalize(PP1 - PP4), PP4) && dot(PP1 - PP4, asd) < dot(PP1 - PP4, PP1) &&
-                                                dot(normalize(DirectionOfRay), asd) > dot(normalize(DirectionOfRay), startOfRay))
-                                            {
-                                                clip = true;
-                                                glUniform3f(glGetUniformLocation(ShaderDebug, "p2"), asd.x, asd.y, asd.z);
-                                                glUniform3f(glGetUniformLocation(ShaderDebug, "p1"), asd.x, asd.y + 0.01f, asd.z);
-
-                                                glUniform3f(glGetUniformLocation(ShaderDebug, "col"), 0, 1, 0);
-                                                glDrawArrays(GL_LINES, 0, 4);
-
-                                                if (distance(startOfRay, asd) < distance(startOfRay, rayPoint))
-                                                {
-                                                    rayPoint = asd;
-
-                                                }
-                                            }
-
-
-                                        }
-                                    }
-                                }
-                            }
-                            
-                            */
-
-
-                        }
-
-                    }
-                }
-
-
-#pragma endregion
 
 
                 UpdateThread.join();
@@ -1162,7 +1285,7 @@ int main()
                 glfwSetCursorPos(window, (SCR_WIDTH / 2) + OFF_WIDTH, (SCR_HEIGHT / 2) + OFF_HEIGHT);
 
                 glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-                
+
             }
             else {
 
@@ -1184,7 +1307,7 @@ int main()
 
                 processInput(window);
 
-                menue.fullBox->children[0]->control(updown, leftright, inout, &lev, 0,deltaTime);
+                menue.fullBox->children[0]->control(updown, leftright, inout, &lev, 0, deltaTime);
 
                 glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
                 glEnable(GL_DEPTH_TEST);
@@ -1239,7 +1362,7 @@ int main()
             }
 
         }
-        
+
 
         glfwPollEvents();
         glfwSwapBuffers(window);
