@@ -895,7 +895,7 @@ int main()
 
     thread PathFindingThread;
 
-    SpObj testObj = SpObj(vec3(0), vec3(0), glm::vec3(0.09f), initSpriteBuffer(), 27, 0);
+    SpObj inputPrompt = SpObj(vec3(0), vec3(0), vec3(0.016f,0.009f,0) * 3.0f, initSpriteBuffer(), 27, 0);
    
     #pragma endregion
     #pragma region Update
@@ -954,7 +954,6 @@ int main()
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
-                //glViewport(OFF_WIDTH + (SCR_WIDTH - SCR_HEIGHT) / 2, OFF_HEIGHT, SCR_HEIGHT, SCR_HEIGHT);
                 glViewport(OFF_WIDTH, OFF_HEIGHT, SCR_WIDTH, SCR_HEIGHT);
                 glUseProgram(ShaderUI);
                 glActiveTexture(GL_TEXTURE0);
@@ -1094,6 +1093,18 @@ int main()
 
 #pragma region draw to Gbuffer
 
+                cam.MFB.bind(true);
+                 
+                glUseProgram(ShaderUI);
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, texture(30));
+                
+                *menue.settings.completion = mz.nodes[playerIndex].completion;
+                menue.prompt->update(vec2(0), vec2(1), player.inp->whe, false);
+                menue.prompt->draw(cam.VAO, ShaderUI, vec2(0), vec2(1), false);
+
+                inputPrompt.text1 = cam.MFB.ColTex;
+
                 cam.GFB.bind(true);
                 glUseProgram(shaderProgram);
                 mat4 ma = cam.matrix(float(SCR_WIDTH) / float(SCR_HEIGHT));
@@ -1139,6 +1150,14 @@ int main()
                     glUniform3f(glGetUniformLocation(shaderLightProgram, "color"), enmi[i].inp->vision.col.x, enmi[i].inp->vision.col.y, enmi[i].inp->vision.col.z);
                     enmi[i].inp->vision.obj.pos = enmi[i].inp->vision.pos;
                     enmi[i].inp->vision.obj.draw(shaderLightProgram);
+                }
+                if (mz.nodes[playerIndex].treasure || mz.nodes[playerIndex].cage) {
+                    glUniform1f(glGetUniformLocation(shaderLightProgram, "tim"), -5);
+                    glUniform3f(glGetUniformLocation(shaderLightProgram, "color"), 1, 1, 1);
+                    inputPrompt.pos = vec3(mz.nodes[playerIndex].x, 0.15f, mz.nodes[playerIndex].y) * mz.size;
+                    inputPrompt.rot.y = atan2(inputPrompt.pos.x - player.inp->pos.x, inputPrompt.pos.z - player.inp->pos.z);
+                    inputPrompt.pos -= normalize(inputPrompt.pos - player.inp->pos) * 0.13f * mz.size;
+                    inputPrompt.draw(shaderLightProgram);
                 }
 
 #pragma endregion
@@ -1243,7 +1262,6 @@ int main()
 
                 drawMap(false);
 
-                glViewport(OFF_WIDTH, OFF_HEIGHT, SCR_WIDTH, SCR_HEIGHT);
 
                 glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
                 glEnable(GL_DEPTH_TEST);
@@ -1252,8 +1270,7 @@ int main()
                 glViewport(OFF_WIDTH, OFF_HEIGHT, SCR_WIDTH, SCR_HEIGHT);
                 glUseProgram(ShaderUI);
                 glActiveTexture(GL_TEXTURE0);
-                GLuint qweewq = texture(30);
-                glBindTexture(GL_TEXTURE_2D, qweewq);
+                glBindTexture(GL_TEXTURE_2D, texture(30));
 
                 menue.screen->children[0]->texture = cam.MFB.ColTex;
                 menue.screen->texture = cam.PFB1.ColTex;
@@ -1314,7 +1331,6 @@ int main()
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
-                //glViewport(OFF_WIDTH + (SCR_WIDTH - SCR_HEIGHT) / 2, OFF_HEIGHT, SCR_HEIGHT, SCR_HEIGHT);
                 glViewport(OFF_WIDTH, OFF_HEIGHT, SCR_WIDTH, SCR_HEIGHT);
                 glUseProgram(ShaderUI);
                 glActiveTexture(GL_TEXTURE0);

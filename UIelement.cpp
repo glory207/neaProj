@@ -594,6 +594,13 @@ UImenue::UImenue(GLuint teT) {
 		col1, vec4(0.0f),std::to_string(jkj), true));
 	}
 
+	//prompt
+	prompt = new UIDIV(vec2(1.0f), col2, vec4(1.0f), 1);
+
+	UIslider* test = new UIslider(vec2(0.9, 0.8), col1, vec4(1.0f), "completion", 0.0);
+	prompt->children.push_back(test);
+	settings.completion = &test->fraction;
+
 }
 void UImenue::draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, bool mouseD) {
 	UIelement::draw(VAO, ShaderUI, ps, sc, mouseD);

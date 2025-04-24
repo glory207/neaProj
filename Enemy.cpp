@@ -306,10 +306,6 @@ int drainingState::Enter() {
 int drainingState::update(float deltaTime, Maze* mz, queue<PathFind*>* pathfq) {
 	timer -= deltaTime;
 	inp->player->inp->grabed = true;
-	// makes the enemy hold the player
-	inp->player->inp->pos = vec3(inp->vision.pos.x, inp->obj.sca.y , inp->vision.pos.z)
-		+ vec3(inp->lookTarget.x, 0, inp->lookTarget.z) * -0.03f;
-	inp->player->inp->vel = vec3(0);
 
 	if (inp->pathFinder.OnPath) {
 		// the cell grid the enemy is on
@@ -339,6 +335,13 @@ int drainingState::update(float deltaTime, Maze* mz, queue<PathFind*>* pathfq) {
 		// gets a new path
 		inp->pathFinder.FindPath(inp->pos, vec3(Rand(gen) * mz->count * mz->size, 0, Rand(gen) * mz->count * mz->size), pathfq);
 	}
+
+
+	// makes the enemy hold the player
+	inp->player->inp->pos = vec3(inp->vision.pos.x, inp->obj.sca.y, inp->vision.pos.z)
+		+ vec3(inp->lookTarget.x, 0, inp->lookTarget.z) * -0.03f;
+	inp->player->inp->vel = vec3(0);
+
 	if (timer < 0) {
 		// after 10 secconds the player is released
 		inp->player->inp->vel = vec3(inp->lookTarget.x,0, inp->lookTarget.z) * 3.03f;

@@ -110,6 +110,8 @@ public:
 	bool* quitGame;
 	bool* generate;
 
+
+	float* completion;
 	UIsettings();
 
 };
@@ -119,6 +121,7 @@ public:
 	UImenue(GLuint texT);
 	UIDIV* fullBox;
 	UIDIV* screen;
+	UIDIV* prompt;
 	UIsettings settings;
 	virtual void draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, bool mouseD);
 	virtual void update(vec2 ps, vec2 sc, vec2 mouse, bool mouseD);

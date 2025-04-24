@@ -13,8 +13,8 @@
 
 void main() {
 
-    float corner = 0.01;
-    float edge = 0.7;
+    float corner = 0.03;
+    float edge = 0.8;
 
     if(chr == -1 || chr == 85)
     {

@@ -4,6 +4,7 @@ camera::camera(glm::vec3 pos, glm::vec3 rot){
     this->pos = pos;
     this->rot = rot;
     GFB = GframeBuffer(glm::vec2(512));
+    GFBUI = GframeBuffer(glm::vec2(512));
     MFB = FrameBuffer(glm::vec2(512));
     FB = FrameBuffer(glm::vec2(512));
     PFB1 = FrameBuffer(glm::vec2(512));

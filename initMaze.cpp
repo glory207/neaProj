@@ -698,10 +698,6 @@ Cell::Cell(int index, int count, float thk){
       this->connected = false;
       
   
-  
-      float posx = x;
-      float posy = y;
-
      
 }
 glm::vec2 Cell::pnt(int i, float thk) {

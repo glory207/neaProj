@@ -9,9 +9,15 @@
       uniform float tim;
       in vec3 pos; 
       void main() {
-      if(texture(uSampler1, vec2((pos.x + tim)/5.0f,pos.y) ).w < 0.5 ) discard;
+      if(tim > 0){
       
-        fragColor = vec4(texture(uSampler1,vec2((pos.x + tim)/5.0f,pos.y) ).xyz * color,1.0);
+      if(texture(uSampler1, vec2((pos.x + tim)/5.0f,pos.y) ).w < 0.5 ) discard;
+      fragColor = vec4(texture(uSampler1,vec2((pos.x + tim)/5.0f,pos.y) ).xyz * color,1.0);
+      }else{
+      
+      if(texture(uSampler1, pos.xy).w < 0.5 ) discard;
+      fragColor = vec4(texture(uSampler1,vec2(pos.x,1-pos.y)).xyz/4.0,1.0);
+      }
         gPos =  vec4(-1,-1,-1,1.0);
         gNorm = vec4(vec3(0.0),2.0);
         gNormF = vec4(vec3(0.0),2.0);
