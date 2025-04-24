@@ -66,6 +66,7 @@ public:
     int count;
     float prob;
     float completion = 0.2f;
+    int prize = -1;
     int tresure;
     int x;
     int y;

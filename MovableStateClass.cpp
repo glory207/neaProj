@@ -21,7 +21,6 @@ int MovableState::update(float deltaTime) {
 		cur = inAir;
 		cur->Enter();
 	}
-	inp->camArmTarget = vec3(2.57f, 0.25f, 1.55f) * inp->obj.sca.y;
 	// update the base state
 	cur->update(deltaTime);
 
@@ -113,6 +112,7 @@ int IdleStoodState::Enter() {
 	inp->animation.framecount = 7;
 	inp->animation.fps        = 7.0;
 	inp->visible = 1;
+	inp->camArmTarget = vec3(2.57f, 0.25f, 1.55f) * inp->obj.sca.y;
 	return 0;
 }
 int IdleStoodState::update(float deltaTime) {
@@ -136,11 +136,11 @@ int IdleCrouchState::Enter() {
 	inp->animation.fps        = 4.0;
 	// how visible the state makes you
 	inp->visible = 0.5f;
+	inp->camArmTarget = vec3(1.37f, 0.25f, 0.95) * inp->obj.sca.y;
 	return 0;
 }
 int IdleCrouchState::update(float deltaTime) {
 	// cout << "IdleCrouchState" << endl;
-	inp->camArmTarget = vec3(1.37f, 0.25f, 0.95) * inp->obj.sca.y;
 	if (!inp->SP) {
 		sender->cur = sender->stood;
 		sender->cur->Enter(); return 0;
@@ -211,6 +211,7 @@ int WalkState::Enter() {
 	inp->animation.fps        = 8.0;
 	inp->speed = 3.0;
 	inp->visible = 2;
+	inp->camArmTarget = vec3(2.57f, 0.25f, 1.55f) * inp->obj.sca.y;
 	return 0;
 }
 int WalkState::update(float deltaTime) {
@@ -250,6 +251,7 @@ int RunState::Enter() {
 	inp->speed = 6.0;
 	inp->jump = vec2(1.6,2.0);
 	inp->visible = 3;
+	inp->camArmTarget = vec3(2.57f, 0.25f, 1.55f) * inp->obj.sca.y;
 	return 0;
 }
 int RunState::update(float deltaTime) {
@@ -289,6 +291,7 @@ int CrawlState::Enter() {
 	inp->speed = 1.0;
 	inp->jump = vec2(0.7f, 1.5f);
 	inp->visible = 0.5f;
+	inp->camArmTarget = vec3(1.37f, 0.25f, 0.95) * inp->obj.sca.y;
 	return 0;
 
 }

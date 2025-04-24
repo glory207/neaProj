@@ -84,7 +84,7 @@ void UIDIV::update(vec2 ps, vec2 sc, vec2 mouse, bool mouseD) {
 			}
 			// if the directions match get sellected
 			else if (layout == 2 && glm::angle(children[n]->pos, normalize(mouse - (pos * sc + ps))) 
-				< (glm::radians((360.0f)) / (children.size()))) {
+				< (glm::radians((180.0f)) / (children.size()))) {
 				{
 					cur = n;
 				}
@@ -375,6 +375,8 @@ void UItoggler::control(int UpDown, int RightLeft, int InOut, int* level,int dep
 UImenue::UImenue(GLuint teT) {
 
 
+
+
 	texT = teT;
 
 	pos = vec2(0);
@@ -385,7 +387,7 @@ UImenue::UImenue(GLuint teT) {
 
 	vec4 col1 = vec4(vec3(0.88f), 1.0f);
 	vec4 col2 = vec4(vec3(172, 184, 192) / 255.0f, 1.0f);
-
+#pragma region menu
 	fullBox = new UIDIV(vec2(1.0f), col1, vec4(1.0f), 1);
 
 	//	top bar
@@ -560,6 +562,8 @@ UImenue::UImenue(GLuint teT) {
 	settings.close = &close->isTrue;
 	settings.generate = &generate->isTrue;
 
+#pragma endregion
+#pragma region HUD
 	// the full screen
 	screen = new UIDIV(vec2(1.0f), col1, vec4(1.0f), -1);
 	screen->chr = 85;
@@ -571,10 +575,10 @@ UImenue::UImenue(GLuint teT) {
 	screen->children.push_back(HUDMap);
 
 	// the objective
-	UIDIV* HUDMission = new UIDIV(vec2(0.3f,0.1f), col1,vec4(1.0f),-1);
+	UIslider* HUDMission = new UIslider(vec2(0.3f,0.1f), col1,vec4(1.0f),"soul stability ", 0.5f);
 	HUDMission->pos = vec2(-0.65f,0.85f);
-	HUDMission->text = "there are 6 cages remaining";
 	screen->children.push_back(HUDMission);
+	settings.soulStability = &HUDMission->fraction;
 
 	// the current item
 	UIDIV* HUDItem = new UIDIV(vec2(0.3f,0.1f),col1,vec4(1.0f),-1);
@@ -588,19 +592,48 @@ UImenue::UImenue(GLuint teT) {
 	HUDItemWheel->text = "";
 	HUDItemWheel->chr = 0;
 	screen->children.push_back(HUDItemWheel);
-	// the items the player is holding
-	for (int jkj = 0; jkj < 8; jkj++) {
-	HUDItemWheel->children.push_back(new UIButton(vec2(0.2f),
-		col1, vec4(0.0f),std::to_string(jkj), true));
-	}
 
-	//prompt
-	prompt = new UIDIV(vec2(1.0f), col2, vec4(1.0f), 1);
+#pragma endregion
+#pragma region prompt
+	prompt = new UIDIV(vec2(1.0f), col2, vec4(1.0f), -1);
 
-	UIslider* test = new UIslider(vec2(0.9, 0.8), col1, vec4(1.0f), "completion", 0.0);
-	prompt->children.push_back(test);
-	settings.completion = &test->fraction;
+	UIslider* progressBar = new UIslider(vec2(0.9, 0.2), col1, vec4(1.0f), "completion", 0.0);
+	progressBar->pos = vec2(0,0.75);
+	prompt->children.push_back(progressBar);
+	settings.completion = &progressBar->fraction;
 
+	UIDIV* cur = new UIDIV(vec2(0.45f), vec4(0.0f), vec4(0.0f), -1);
+	cur->pos = vec2(0,-0.4);
+	prompt->children.push_back(cur);
+	UIDIV* curP = new UIDIV(vec2(0.1f), col1, vec4(1.0f), -1);
+	cur->children.push_back(curP);
+
+	UIDIV* curT1 = new UIDIV(vec2(0.1f), vec4(0,1,0,1), vec4(1.0f), -1);
+	cur->children.push_back(curT1);
+	UIDIV* curT2 = new UIDIV(vec2(0.1f), vec4(0, 1, 0, 1), vec4(1.0f), -1);
+	cur->children.push_back(curT2);
+	UIDIV* curT3 = new UIDIV(vec2(0.1f), vec4(1, 0, 1, 1), vec4(1.0f), -1);
+	cur->children.push_back(curT3);
+	UIDIV* curT4 = new UIDIV(vec2(0.1f), vec4(1, 0, 1, 1), vec4(1.0f), -1);
+	cur->children.push_back(curT4);
+
+	UIDIV* messageBox = new UIDIV(vec2(0.4f,0.2f), col1, vec4(1.0f), -1);
+	messageBox->pos = vec2(-0.55, 0.35);
+	prompt->children.push_back(messageBox);
+
+	UIDIV* runBox = new UIDIV(vec2(0.2f,0.2f), col1, vec4(1.0f), -1);
+	runBox->pos = vec2(-0.75, -0.1);
+	prompt->children.push_back(runBox);
+
+	UIDIV* screenCover = new UIDIV(vec2(0.95f,0.75f), col1, vec4(1.0f), -1);
+	screenCover->pos = vec2(0, -0.2);
+	prompt->children.push_back(screenCover);
+
+	UIDIV* screenCoverText = new UIDIV(vec2(0.95f,0.3f), col2, vec4(1.0f), -1);
+	screenCoverText->pos = vec2(0);
+	screenCover->children.push_back(screenCoverText);
+
+#pragma endregion
 }
 void UImenue::draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, bool mouseD) {
 	UIelement::draw(VAO, ShaderUI, ps, sc, mouseD);

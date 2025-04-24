@@ -25,16 +25,10 @@ unsigned int OFF_WIDTH = 0;
 unsigned int OFF_HEIGHT = 0;
 int playerIndex;
 camera cam;
-Light tourch;
 PlayerClass player;
-PathFind pathf;
 vector<Enemy> enmi;
 float resolution = 1.0f;
 bool MouseLocked = false;
-bool ELocked = false;
-bool erere = false;
-int adee = 1;
-float adeee = 0;
 vec2 LightSetings = vec2(1.6,1.5);
 float deltaTime = 1.0f;
 double curTime = 0.0;
@@ -42,7 +36,6 @@ float mapScale = 1.0f;
 Maze mz;
 bool endGame = true;
 
-vec3 pathend;
 // Define the random number generator and distribution
 std::random_device rd;  // Seed generator
 std::mt19937 gen(rd()); // Mersenne Twister engine
@@ -75,6 +68,7 @@ int inout = 0;
 int leftright = 0;
 int updown = 0;
 
+int click = 0;
 
 
 
@@ -517,7 +511,7 @@ void UpdatingFunction() {
     playerIndex = int((player.inp->pos.x + 1) / mz.size) + int((player.inp->pos.z + 1) / mz.size) * mz.count;
 
 #pragma region Inputs
-    if (!ELocked && glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
     {
         player.inp->WH = true;
     }
@@ -556,6 +550,8 @@ void UpdatingFunction() {
 
     }
 
+    bool interact = glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS; 
+
     GLFWgamepadstate state;
     if (glfwGetGamepadState(GLFW_JOYSTICK_1, &state))
     {
@@ -577,24 +573,34 @@ void UpdatingFunction() {
 
         player.inp->lok.x -= (3 + 6 * (*menue.settings.controllerSensitivity - 0.5f)) * deltaTime * state.axes[GLFW_GAMEPAD_AXIS_RIGHT_X];
         player.inp->lok.y -= (3 + 6 * (*menue.settings.controllerSensitivity - 0.5f)) * deltaTime * state.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y];
+
+
+        interact = interact || state.buttons[GLFW_GAMEPAD_BUTTON_X];
+
+
+        if (state.buttons[GLFW_GAMEPAD_BUTTON_DPAD_UP])   mapScale *= 1.1f;
+        if (state.buttons[GLFW_GAMEPAD_BUTTON_DPAD_DOWN])   mapScale /= 1.1f;
     }
 
 
+    // the out key or controller button is pressed
+
+    if (interact) {
+        // if its the first time set it to 1
+        // if not set it to 2
+        if (click > 0)click = 2;
+        else {
+            click = 1;
+        }
+    }
+    else
+    {
+        click = 0;
+    }
 
 
     if (glfwGetKey(window, GLFW_KEY_KP_7) == GLFW_PRESS)   mapScale *= 1.1f;
     if (glfwGetKey(window, GLFW_KEY_KP_8) == GLFW_PRESS)   mapScale /= 1.1f;
-
-    if (glfwGetKey(window, GLFW_KEY_KP_5) == GLFW_PRESS) {
-        pathend = player.inp->pos;
-
-    }
-    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) pathend = vec3((Rand(gen) * mz.size * mz.count),0, (Rand(gen) * mz.size * mz.count));
-    if (glfwGetKey(window, GLFW_KEY_KP_6) == GLFW_PRESS) {
-        pathf.EndPath = true;
-        pathf.FindPath(player.inp->pos,
-            pathend, &pathfq);
-    }
 
 
 
@@ -671,7 +677,7 @@ void UpdatingFunction() {
         if (enmi[tt].inp->focus > 7)enmi[tt].inp->focus = 7;
 
     }
-    cout << player.inp->grabed << endl;
+
 
 
 #pragma endregion
@@ -698,7 +704,8 @@ void processInput(GLFWwindow* window) {
 
     }
 
-    // the out key or controller button is pressed
+
+
     if (out) {
         // if its the first time set it to 1
         // if not set it to 2
@@ -811,6 +818,119 @@ void drawMap(bool center) {
 
 }
 
+
+int hit = 0;
+float run = 1;
+float curP = 0;
+float Pnt = 3.14f;
+float speed = 3.5f;
+int   direction = 1;
+string message;
+vec3 messageColor;
+
+void skillCheck() {
+    float score = mz.nodes[playerIndex].completion * 50.0f;
+    // moves the point
+    curP += speed * direction * deltaTime;
+    // the input has been clicked
+    if (click == 1)
+    {
+        // the point hit the target
+        if (abs(curP - Pnt) < 0.5)
+        {
+            // transforms 1 2 3 to 1 3 5
+            score += 2 * (int)run - 1;
+            run += 0.25f;
+            if (run > 3) run = 3;
+            hit = 1;
+
+            // the point hit the target perfectly
+            if (abs(curP - Pnt) < 0.15)
+            {
+                score += 2 * (int)run - 1;
+                run += 0.25f;
+                if (run > 3) run = 3;
+                hit = 2;
+            }
+
+            // gets a new target point 
+            if (Rand(gen) >= 0.6f) direction *= -1;
+            if (Rand(gen) >= 0.6f)
+                speed = Rand(gen) * 3.6f + 2.4f;
+
+                Pnt = curP + Rand(gen) * 3.141592f * 0.5f + 3.141592f * direction;
+        }
+        else
+        {
+            // the click was too early
+            hit = 3;
+            score--;
+            run = 1;
+        }
+    }
+
+    if ((curP - Pnt) * direction > 0.5)
+    {
+        // the click was too late
+        // gets a new target point 
+        if (Rand(gen) >= 0.6f) direction *= -1;
+        if (Rand(gen) >= 0.6f) speed = Rand(gen) * 3.6f + 2.4f;
+        Pnt = curP + Rand(gen) * 3.141592f * 0.5f + 3.141592f * direction;
+        score--;
+        run = 1;
+        hit = 4;
+    }
+
+
+    if (hit == 1)
+    {
+        menue.prompt->children[2]->text = "good";
+        menue.prompt->children[2]->back = vec4(0,1,0,1);
+    }
+    if (hit == 2)
+    {
+        menue.prompt->children[2]->text = "perfect";
+        menue.prompt->children[2]->back = vec4(1, 0, 1, 1);
+    }
+    if (hit == 3)
+    {
+        menue.prompt->children[2]->text = "too early";
+        menue.prompt->children[2]->back = vec4(1, 0, 0, 1);
+    }
+    if (hit == 4)
+    {
+        menue.prompt->children[2]->text = "too late";
+        menue.prompt->children[2]->back = vec4(1, 0, 0, 1);
+    }
+
+
+    if ((int)run == 1) menue.prompt->children[3]->back = vec4(0.5, 0.2, 0.1, 1);
+    if ((int)run == 2) menue.prompt->children[3]->back =vec4(0.6,0.6,0.6,1);
+    if ((int)run == 3) menue.prompt->children[3]->back =vec4(1,0.9,0,1);
+    menue.prompt->children[3]->text = "X" + to_string(2 * (int)run -1);
+
+    menue.prompt->children[1]->children[0]->pos = vec2(sin(curP), cos(curP));
+    menue.prompt->children[1]->children[1]->pos = vec2(sin(Pnt+0.5), cos(Pnt+0.5));
+    menue.prompt->children[1]->children[2]->pos = vec2(sin(Pnt-0.5), cos(Pnt-0.5));
+    menue.prompt->children[1]->children[3]->pos = vec2(sin(Pnt+0.15), cos(Pnt+0.15));
+    menue.prompt->children[1]->children[4]->pos = vec2(sin(Pnt-0.15), cos(Pnt-0.15));
+    mz.nodes[playerIndex].completion = score / 50.0f;
+    if (mz.nodes[playerIndex].completion < 0)
+        mz.nodes[playerIndex].prize = 1;
+    if (mz.nodes[playerIndex].completion > 1) {
+        if (mz.nodes[playerIndex].treasure) {
+            mz.nodes[playerIndex].prize = 3;
+            player.inp->inventory.push_back(0);
+        }
+        if (mz.nodes[playerIndex].cage) {
+            player.inp->soulStability += 20;
+            mz.nodes[playerIndex].prize = 2;
+        }
+    }
+
+}
+
+
 int main()
 {
     #pragma region Start
@@ -890,7 +1010,6 @@ int main()
     double timeDif;
     unsigned int counter = 0;
     cam.updateSize(vec2(SCR_WIDTH, SCR_HEIGHT) * resolution);
-    tourch = Light(vec3(0));
 
 
     thread PathFindingThread;
@@ -1026,6 +1145,10 @@ int main()
                 }
                 if (*menue.settings.gameStart)
                 {
+                    // resets the players stats
+                    player.inp->soulStability = 50;
+                    player.inp->inventory.clear();
+
                     player.inp->pos = vec3(mz.count * mz.size * 0.5f, 0.1f, mz.count * mz.size * 0.5f);
                     dynamic_cast<UIDIV*>(menue.fullBox->children[0])->cur = 2;
 
@@ -1073,13 +1196,6 @@ int main()
 
                 }
 
-                if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
-                {
-                    tourch.pos = cam.pos + vec3(0, 0.1, 0);
-                    doLightNew(&shadowFB, shaderShadowProgram, &tourch, false);
-
-
-                }
                 for (int i = 0; i < enmi.size(); i++) {
                     glUniform1i(glGetUniformLocation(shaderShadowProgram, "cube"), 0);
                     if (distance(enmi[i].inp->vision.pos, player.inp->pos) < 7.0) doLightNew(&shadowFB, shaderShadowProgram, &enmi[i].inp->vision, false);
@@ -1099,7 +1215,53 @@ int main()
                 glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, texture(30));
                 
+                if (mz.nodes[playerIndex].prize <= 0 && distance(vec2(player.inp->pos.x, player.inp->pos.z), vec2(mz.nodes[playerIndex].x, mz.nodes[playerIndex].y) * mz.size) < 0.3f) {
+                    if (click == 1) {
+                        if (mz.nodes[playerIndex].prize == -1) {
+                            menue.prompt->children[4]->active = false;
+                            mz.nodes[playerIndex].prize = 0;
+                        }
+                        else if(mz.nodes[playerIndex].prize == -2 && menue.screen->children[3]->cur >= 0 && menue.screen->children[3]->cur < player.inp->inventory.size() &&
+                            player.inp->inventory[menue.screen->children[3]->cur] == 0) {
+                            player.inp->inventory.erase(player.inp->inventory.begin() + menue.screen->children[3]->cur);
+                            menue.screen->children[3]->cur = -1;
+                            menue.prompt->children[4]->active = false;
+                            mz.nodes[playerIndex].prize = 0;
+                        }
+                    }
+                }
+                else 
+                {
+                    run = 1;
+                    curP = 0;
+                    Pnt = 3.14f;
+                    speed = 3.5f;
+                    direction = 1;
+                    menue.prompt->children[4]->active = true;
+                    if (mz.nodes[playerIndex].prize <= 0) {
+                        if (mz.nodes[playerIndex].treasure) {
+                            mz.nodes[playerIndex].prize = -1;
+                            menue.prompt->children[4]->children[0]->text = "press F or X to start";
+                        }
+                        if (mz.nodes[playerIndex].cage) {
+                            mz.nodes[playerIndex].prize = -2;
+                            menue.prompt->children[4]->children[0]->text = "You NEED a KEY press F or X to start";
+                        }
+                    }
+                    else if (mz.nodes[playerIndex].prize == 1) {
+                        menue.prompt->children[4]->children[0]->text = "You have lost this prize";
+                    }
+                    else if (mz.nodes[playerIndex].prize == 2) {
+                        menue.prompt->children[4]->children[0]->text = "You have gaind some lost soul";
+                    }
+                    else if (mz.nodes[playerIndex].prize == 3) {
+                        menue.prompt->children[4]->children[0]->text = "You have gaind a key";
+                    }
+                }
+
                 *menue.settings.completion = mz.nodes[playerIndex].completion;
+
+
                 menue.prompt->update(vec2(0), vec2(1), player.inp->whe, false);
                 menue.prompt->draw(cam.VAO, ShaderUI, vec2(0), vec2(1), false);
 
@@ -1158,6 +1320,9 @@ int main()
                     inputPrompt.rot.y = atan2(inputPrompt.pos.x - player.inp->pos.x, inputPrompt.pos.z - player.inp->pos.z);
                     inputPrompt.pos -= normalize(inputPrompt.pos - player.inp->pos) * 0.13f * mz.size;
                     inputPrompt.draw(shaderLightProgram);
+
+                    if(mz.nodes[playerIndex].prize == 0)skillCheck();
+
                 }
 
 #pragma endregion
@@ -1276,7 +1441,22 @@ int main()
                 menue.screen->texture = cam.PFB1.ColTex;
 
                 // only opent the item wheel when pressed
+
+                if (menue.screen->children[3]->children.size() != player.inp->inventory.size()) {
+                    menue.screen->children[3]->children.clear();
+                    for (int i = 0; i < player.inp->inventory.size(); i++) {
+                        menue.screen->children[3]->children.push_back(new UIButton(vec2(0.2f), vec4(vec3(0.88f), 1.0f), vec4(0.0f),"key", true));
+                    }
+                }
+                if (menue.screen->children[3]->cur >= 0 && menue.screen->children[3]->cur < player.inp->inventory.size()) {
+                    menue.screen->children[2]->text = "Item: Key";
+                }
+                else {
+                    menue.screen->children[2]->text = "no Item in hand";
+                }
                 menue.screen->children[3]->active = player.inp->WH;
+                *menue.settings.soulStability = player.inp->soulStability/100.0f;
+                player.inp->soulStability -= deltaTime * 0.05f;
                 // sends the mouses offset
                 menue.screen->update(vec2(0), vec2(1), player.inp->whe, false);
                 menue.screen->draw(cam.VAO, ShaderUI, vec2(0), vec2(1), false);
@@ -1302,7 +1482,18 @@ int main()
                 glfwSetCursorPos(window, (SCR_WIDTH / 2) + OFF_WIDTH, (SCR_HEIGHT / 2) + OFF_HEIGHT);
 
                 glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+                if (player.inp->soulStability < 0 || player.inp->soulStability > 100) {
+                    lev = 0;
+                    endGame = false;
+                    if (PathFindingThread.joinable()) PathFindingThread.join();
+                    endGame = true;
 
+                    dynamic_cast<UIDIV*>(menue.fullBox->children[0])->cur = 1;
+                    *menue.settings.quitToMain = false;
+                    *menue.settings.gameStart = false;
+                    *menue.settings.generate = true;
+                    MouseLocked = true;
+                }
             }
             else {
 

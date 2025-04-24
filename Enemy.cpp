@@ -306,14 +306,14 @@ int drainingState::Enter() {
 int drainingState::update(float deltaTime, Maze* mz, queue<PathFind*>* pathfq) {
 	timer -= deltaTime;
 	inp->player->inp->grabed = true;
-
+	inp->player->inp->soulStability -= deltaTime;
 	if (inp->pathFinder.OnPath) {
 		// the cell grid the enemy is on
 		vec2 psss1 = inp->pathFinder.path[int(inp->pathFinder.pathP)]->pos * mz->size;
 		// the cell grid the player is moving towards
 		vec2 psss2 = inp->pathFinder.path[int(inp->pathFinder.pathP + 1)]->pos * mz->size;
 		// velelerate towardes the next point
-		inp->vel += 9.0f * deltaTime * ((inp->pos - vec3(psss2.x, inp->pos.y, psss2.y)) / distance(psss2, vec2(inp->pos.x, inp->pos.z)));
+		inp->vel += 20.0f * deltaTime * ((inp->pos - vec3(psss2.x, inp->pos.y, psss2.y)) / distance(psss2, vec2(inp->pos.x, inp->pos.z)));
 		// set the players hight to the cell grid hight
 		if (inp->pathFinder.path[inp->pathFinder.pathP + 1]->obstruction > 3 && inp->pos.y < inp->pathFinder.path[inp->pathFinder.pathP + 1]->hight * mz->size) {
 			inp->pos.y += 0.5f * deltaTime;

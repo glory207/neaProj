@@ -27,6 +27,7 @@ public:
 	bool active = true;
 	vector<UIelement*> children;
 
+	int cur = 0;
 	string text = "";
 	int texture = -1;
 	virtual ~UIelement() {}
@@ -39,7 +40,6 @@ class UIDIV:public UIelement
 {
 public:
 	UIDIV(vec2 sca,vec4 back,vec4 four, int hrv);
-	int cur = 0;
 	int layout = 1;
 	virtual void draw(GLuint VAO, GLuint ShaderUI, vec2 ps, vec2 sc, bool mouseD);
 	virtual void update(vec2 ps, vec2 sc, vec2 mouse, bool mouseD);
@@ -112,6 +112,7 @@ public:
 
 
 	float* completion;
+	float* soulStability;
 	UIsettings();
 
 };
