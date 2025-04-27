@@ -446,13 +446,3 @@ int FallingState::update(float deltaTime) {
 	return 0;
 }
 
-
-
-
-
-/*
-stateName::stateName(InputObject* inp, StateClass* sender) {}
-int stateName::Enter() {}
-int stateName::update(float deltaTime) {}
-void stateName::Exit() {}
-*/

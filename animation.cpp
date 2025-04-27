@@ -16,7 +16,9 @@ AnimationClass::AnimationClass() {
 }
 vec4 AnimationClass::sprite() {
 	return vec4(
+		// the number of sprites
 		(int)(current) % (framecount - 1),
+		// the 8 directions
 		dir % 8,
 		1.0 / framecount,
 		1.0 / 8.0);

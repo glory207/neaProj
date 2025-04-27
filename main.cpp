@@ -915,13 +915,18 @@ void skillCheck() {
     menue.prompt->children[1]->children[3]->pos = vec2(sin(Pnt+0.15), cos(Pnt+0.15));
     menue.prompt->children[1]->children[4]->pos = vec2(sin(Pnt-0.15), cos(Pnt-0.15));
     mz.nodes[playerIndex].completion = score / 50.0f;
+
+    // doesnt give anything to the player and can no longer be interacted with
     if (mz.nodes[playerIndex].completion < 0)
         mz.nodes[playerIndex].prize = 1;
+
     if (mz.nodes[playerIndex].completion > 1) {
+        // chests add a key to the inventory 
         if (mz.nodes[playerIndex].treasure) {
             mz.nodes[playerIndex].prize = 3;
             player.inp->inventory.push_back(0);
         }
+        // cages add to the soulStability
         if (mz.nodes[playerIndex].cage) {
             player.inp->soulStability += 20;
             mz.nodes[playerIndex].prize = 2;
@@ -1207,22 +1212,26 @@ int main()
 
 #pragma endregion
 
-#pragma region draw to Gbuffer
 
+#pragma region draw to interaction prompt
                 cam.MFB.bind(true);
                  
                 glUseProgram(ShaderUI);
                 glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, texture(30));
-                
+                // the object isn't locked out of interaction AND the player is close enough to interact with it
                 if (mz.nodes[playerIndex].prize <= 0 && distance(vec2(player.inp->pos.x, player.inp->pos.z), vec2(mz.nodes[playerIndex].x, mz.nodes[playerIndex].y) * mz.size) < 0.3f) {
+
                     if (click == 1) {
+                        // chest goes into interacting state
                         if (mz.nodes[playerIndex].prize == -1) {
                             menue.prompt->children[4]->active = false;
                             mz.nodes[playerIndex].prize = 0;
                         }
+                        // cage can only go into interacting state when a key is heald
                         else if(mz.nodes[playerIndex].prize == -2 && menue.screen->children[3]->cur >= 0 && menue.screen->children[3]->cur < player.inp->inventory.size() &&
                             player.inp->inventory[menue.screen->children[3]->cur] == 0) {
+                            // removes the key after use
                             player.inp->inventory.erase(player.inp->inventory.begin() + menue.screen->children[3]->cur);
                             menue.screen->children[3]->cur = -1;
                             menue.prompt->children[4]->active = false;
@@ -1232,12 +1241,15 @@ int main()
                 }
                 else 
                 {
+                    // reset interaction
                     run = 1;
                     curP = 0;
                     Pnt = 3.14f;
                     speed = 3.5f;
                     direction = 1;
+
                     menue.prompt->children[4]->active = true;
+                    // displays text on top
                     if (mz.nodes[playerIndex].prize <= 0) {
                         if (mz.nodes[playerIndex].treasure) {
                             mz.nodes[playerIndex].prize = -1;
@@ -1258,7 +1270,7 @@ int main()
                         menue.prompt->children[4]->children[0]->text = "You have gaind a key";
                     }
                 }
-
+                // links the objects compleation to the UI
                 *menue.settings.completion = mz.nodes[playerIndex].completion;
 
 
@@ -1267,6 +1279,9 @@ int main()
 
                 inputPrompt.text1 = cam.MFB.ColTex;
 
+#pragma endregion
+
+#pragma region draw to Gbuffer
                 cam.GFB.bind(true);
                 glUseProgram(shaderProgram);
                 mat4 ma = cam.matrix(float(SCR_WIDTH) / float(SCR_HEIGHT));
@@ -1313,14 +1328,16 @@ int main()
                     enmi[i].inp->vision.obj.pos = enmi[i].inp->vision.pos;
                     enmi[i].inp->vision.obj.draw(shaderLightProgram);
                 }
+
                 if (mz.nodes[playerIndex].treasure || mz.nodes[playerIndex].cage) {
+                    // draw when the node is a treasure node or a cage node
                     glUniform1f(glGetUniformLocation(shaderLightProgram, "tim"), -5);
                     glUniform3f(glGetUniformLocation(shaderLightProgram, "color"), 1, 1, 1);
                     inputPrompt.pos = vec3(mz.nodes[playerIndex].x, 0.15f, mz.nodes[playerIndex].y) * mz.size;
                     inputPrompt.rot.y = atan2(inputPrompt.pos.x - player.inp->pos.x, inputPrompt.pos.z - player.inp->pos.z);
                     inputPrompt.pos -= normalize(inputPrompt.pos - player.inp->pos) * 0.13f * mz.size;
                     inputPrompt.draw(shaderLightProgram);
-
+                    // prize 0 means its ready for interaction
                     if(mz.nodes[playerIndex].prize == 0)skillCheck();
 
                 }
@@ -1596,6 +1613,7 @@ int main()
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
+    // makes sure the screen is 16 by 9
    if (width * 9 > height * 16)
    {
        SCR_WIDTH = height * (16.0/ 9.0);

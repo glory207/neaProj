@@ -6,6 +6,7 @@ std::vector<const char*> Fls = {
 
 std::string get_file_contents(const char* filename)
 {
+	// reads the file
 	std::ifstream in(filename, std::ios::binary);
 	if (in)
 	{
@@ -22,7 +23,7 @@ std::string get_file_contents(const char* filename)
 }
 
 unsigned int initShader(const char* vert, const char* frag){
-
+	// gets a vetex and fragment shader
 	std::string vertexCode = get_file_contents(vert);
 	std::string fragmentCode = get_file_contents(frag);
 
@@ -74,6 +75,7 @@ unsigned int initShader(const char* vert, const char* frag){
 
 unsigned int initShader(const char* vert, const char* geom, const char* frag) {
 
+	// gets a vetex, geometry and fragment shader
 	
 	std::string vertexCode = get_file_contents(vert);
 	std::string fragmentCode = get_file_contents(frag);

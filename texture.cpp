@@ -8,22 +8,22 @@ std::vector<const char*> texturesNames = {"img/brick.jpg","img/playerAni/walk000
     "img/playerAni/run0001-Sheet.png",
     "img/playerAni/runNormal0001-Sheet.png",
     "img/MapOverlay.png",
-    "img/cage.png", // 11
-    "img/wood-normal.jpg",//0
-    "img/treasureCh.png",//7
+    "img/cage.png",
+    "img/wood-normal.jpg",
+    "img/treasureCh.png",
     "img/SpriteNorm-0000.png",
-    "img/cubeTableTexture.png",//1
-    "img/cubeBedTexture.png",//2
+    "img/cubeTableTexture.png",
+    "img/cubeBedTexture.png",
     "img/playerAni/crouch0001-Sheet.png",
     "img/playerAni/crouchNormal0001-Sheet.png",
     "img/playerAni/roll0001-Sheet.png",
     "img/playerAni/rollNormal0001-Sheet.png",
     "img/playerAni/dive0001-Sheet.png",
     "img/playerAni/diveNormal0001-Sheet.png",
-    "img/torch.png",//3
-    "img/chair.png",//4
-    "img/bookshelf.png",//5
-    "img/Pillar.png",//6,
+    "img/torch.png",
+    "img/chair.png",
+    "img/bookshelf.png",
+    "img/Pillar.png",
     "img/flame.png",
     "img/txttt-Sheet.png",
     "img/enemyAni/M_drain0001-Sheet.png",

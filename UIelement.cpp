@@ -608,10 +608,12 @@ UImenue::UImenue(GLuint teT) {
 	UIDIV* curP = new UIDIV(vec2(0.1f), col1, vec4(1.0f), -1);
 	cur->children.push_back(curP);
 
+	// the current target points
 	UIDIV* curT1 = new UIDIV(vec2(0.1f), vec4(0,1,0,1), vec4(1.0f), -1);
 	cur->children.push_back(curT1);
 	UIDIV* curT2 = new UIDIV(vec2(0.1f), vec4(0, 1, 0, 1), vec4(1.0f), -1);
 	cur->children.push_back(curT2);
+	// the purfect point
 	UIDIV* curT3 = new UIDIV(vec2(0.1f), vec4(1, 0, 1, 1), vec4(1.0f), -1);
 	cur->children.push_back(curT3);
 	UIDIV* curT4 = new UIDIV(vec2(0.1f), vec4(1, 0, 1, 1), vec4(1.0f), -1);

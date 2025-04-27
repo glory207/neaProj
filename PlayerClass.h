@@ -9,12 +9,12 @@ class InputObject
 {
 public:
     vector<int> inventory;
+    float soulStability = 50;
     bool grabed = false;
     SpObj obj;
     int spd;
     float speed;
     float visible = 1;
-    float soulStability = 50;
     vec3 pos;
     vec3 rot;
     vec3 vel;

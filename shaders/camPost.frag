@@ -8,6 +8,7 @@
       in vec2 texPos;
       
 void main() {
+// darkens the screen
    float dist = length(texture(PosT,texPos).xyz);
    float dst = 3.0;
    if(dist > dst)fragColor = vec4(mix(vec3(0.0),texture(ColT,texPos).xyz,pow(2.0,-pow((dst -dist)/2.0,2.0))),1.0);

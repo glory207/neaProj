@@ -17,7 +17,6 @@ public:
 	int perch[2] = {-1,-1};
 	int size;
 	Light(glm::vec3 pos);
-	void update(float deltaTime);
 	glm::vec3 acc;
 	glm::vec3 pos;
 	glm::vec3 col;

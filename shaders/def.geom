@@ -20,6 +20,7 @@ in DATA
 
 void main()
 {
+// calculate the normal
     vec3 edge0 = vec3(gl_in[2].gl_Position - gl_in[0].gl_Position);
     vec3 edge1 = vec3(gl_in[1].gl_Position - gl_in[0].gl_Position);
 

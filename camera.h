@@ -21,7 +21,6 @@ public:
     void updateSize(glm::vec2 sz);
     glm::mat4 matrix(float aspect);
     GframeBuffer GFB;
-    GframeBuffer GFBUI;
     FrameBuffer FB;
     FrameBuffer PFB1;
     FrameBuffer MFB;

@@ -84,23 +84,4 @@ void Light::activate(bool act) {
 Light::Light() {
 
 }
-void Light::update(float deltaTime) {
-
-
-	//acc.y -= 2.1 * deltaTime;
-	acc.x *= 0.985;
-	acc.y *= 0.985;
-	acc.z *= 0.985;
-
-	pos.x += acc.x * deltaTime;
-	pos.y += acc.y * deltaTime;
-	pos.z += acc.z * deltaTime;
-	obj.pos = pos;
-	obj.rot = rot;
-	rotationMatrix = glm::mat4();
-	rotationMatrix = glm::rotate(rotationMatrix, -rot.x, glm::vec3(1, 0, 0));
-	rotationMatrix = glm::rotate(rotationMatrix, -rot.y, glm::vec3(0, 1, 0));
-	rotationMatrix = glm::rotate(rotationMatrix, -rot.z, glm::vec3(0, 0, 1));
-}
-
 

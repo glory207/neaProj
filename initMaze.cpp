@@ -387,7 +387,6 @@ bool Maze::collide(glm::vec3* pos, float leway) {
         if (!nodes[nd].sidesIsPath[1] && (int)((*pos).z + 0.5f) - (*pos).z > (thk + leway)) {
             (*pos).z += (int)((*pos).z + 0.5f) - (*pos).z - (thk + leway);
         }
-
         if (!nodes[nd].sidesIsPath[2] && (int)((*pos).x + 0.5f) - (*pos).x > (thk + leway)) {
             (*pos).x += (int)((*pos).x + 0.5f) - (*pos).x - (thk + leway);
         }
@@ -465,9 +464,7 @@ bool Maze::collide(glm::vec3* pos, float leway) {
 
         // scale the world
         (*pos) *= size;
-
         leway *= -size;
-
         for (int f = 0; f < nodes[nd].fur.size(); f++) {
             // the hight of the chair collider is half that of its model
             // so must be halfed
@@ -527,29 +524,27 @@ bool Maze::collide(glm::vec3* pos, float leway) {
                     inside2 = true;
                     if (playProj + leway - min > max - playProj - leway) secondDist = max - playProj + leway;
                     else secondDist = min - playProj - leway;
-
-
                 }
 
                 // if inside it from both sides and the top then it must be moved out
                 if (inside1 && inside2 && (*pos).y < nodes[nd].fur[f].obj.pos.y + nodes[nd].fur[f].obj.sca.y) {
                     //choses the direction where the least movment nessesery is chosen
-                    if (abs(firstDist) > abs(nodes[nd].fur[f].obj.sca.y + nodes[nd].fur[f].obj.sca.y - (*pos).y) && abs(secondDist) > abs(nodes[nd].fur[f].obj.sca.y + nodes[nd].fur[f].obj.sca.y - (*pos).y)) {
+                    if (abs(firstDist) > abs(nodes[nd].fur[f].obj.sca.y + nodes[nd].fur[f].obj.sca.y - (*pos).y) &&
+                        abs(secondDist) > abs(nodes[nd].fur[f].obj.sca.y + nodes[nd].fur[f].obj.sca.y - (*pos).y)) {
                         (*pos).y = nodes[nd].fur[f].obj.pos.y + nodes[nd].fur[f].obj.sca.y - 0.001f;
                         // if standing on top of the furniture its not in the air
                         grnd = true;
                     }
+                    else if (abs(firstDist) > abs(secondDist))
+                    {
+                        (*pos).x += sin(nodes[nd].fur[f].obj.rot.y) * secondDist;
+                        (*pos).z += cos(nodes[nd].fur[f].obj.rot.y) * secondDist;
+                    }
                     else
-                        if (abs(firstDist) > abs(secondDist))
-                        {
-                            (*pos).x += sin(nodes[nd].fur[f].obj.rot.y) * secondDist;
-                            (*pos).z += cos(nodes[nd].fur[f].obj.rot.y) * secondDist;
-                        }
-                        else
-                        {
-                            (*pos).x += cos(nodes[nd].fur[f].obj.rot.y) * firstDist;
-                            (*pos).z += -sin(nodes[nd].fur[f].obj.rot.y) * firstDist;
-                        }
+                    {
+                        (*pos).x += cos(nodes[nd].fur[f].obj.rot.y) * firstDist;
+                        (*pos).z += -sin(nodes[nd].fur[f].obj.rot.y) * firstDist;
+                    }
 
                 }
 
@@ -814,7 +809,7 @@ void Landmark::set(std::vector<Landmark*>* marks, float min, float max) {
                         vec2 mv2 = (*(*marks)[j]).Pos;
                         vec2 mv3 = (*(*marks)[i]).Pos;
                         mv = glm::normalize(mv) * (glm::distance((*(*marks)[i]).Pos, (*(*marks)[j]).Pos) - ((*(*marks)[i]).Size + (*(*marks)[j]).Size + 0.01f));
-
+                        // moves landmarks away from each other
                         (*(*marks)[j]).Pos += mv * 0.5f;
                         (*(*marks)[i]).Pos -= mv * 0.5f;
                         isfixed = false;

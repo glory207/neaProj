@@ -1,5 +1,6 @@
 #include "frameBuffer.h"
 GframeBuffer::GframeBuffer(glm::vec2 sz) {
+	// the 4 textures used for lighting
 	size = sz;
 	glGenTextures(1, &ColTex);
 	glGenTextures(1, &PosTex);
@@ -163,7 +164,7 @@ createShadowFramebufferCube::createShadowFramebufferCube(int sz) {
 
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
+	// the four textures of the cubes sides
 	face = { 
 		GL_TEXTURE_CUBE_MAP_POSITIVE_X, 
 		GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
@@ -172,6 +173,7 @@ createShadowFramebufferCube::createShadowFramebufferCube(int sz) {
 		GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 
 		GL_TEXTURE_CUBE_MAP_NEGATIVE_Z 
 	};
+	// the directions of the sides
 	target = {
 		glm::vec3(1, 0, 0),
 		glm::vec3(-1, 0, 0),
@@ -180,6 +182,7 @@ createShadowFramebufferCube::createShadowFramebufferCube(int sz) {
 		glm::vec3(0, 0, 1),
 		glm::vec3(0, 0, -1)
 	};
+	// the vector chosen to be uppwards when drawing
 	up = {
 		glm::vec3(0, -1, 0),
 		glm::vec3(0, -1, 0),

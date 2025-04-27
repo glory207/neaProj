@@ -23,7 +23,6 @@
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="Enemy.cpp" />
     <ClCompile Include="frameBuffer.cpp" />
-    <ClCompile Include="Furniture.cpp" />
     <ClCompile Include="glad.c" />
     <ClCompile Include="include\glm\detail\dummy.cpp" />
     <ClCompile Include="include\glm\detail\glm.cpp" />
@@ -43,8 +42,6 @@
     <ClInclude Include="animation.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="Enemy.h" />
-    <ClInclude Include="frameBuffer.h" />
-    <ClInclude Include="Furniture.h" />
     <ClInclude Include="include\glad\glad.h" />
     <ClInclude Include="include\GLFW\glfw3.h" />
     <ClInclude Include="include\GLFW\glfw3native.h" />
